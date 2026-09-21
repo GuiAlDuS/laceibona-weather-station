@@ -89,3 +89,15 @@ test("lightning events keep minutes with strikes only", () => {
   const ev = lightningEvents([row(T), row(T + 60, { lcount: 3, ldist: 12.34 }), noDistance]);
   assert.deepEqual(ev, [[T + 60, 12.3, 3], [T + 120, null, 1]]);
 });
+
+test("mergeHours fills slots in place, creates a missing month, and ignores hours of other months", async () => {
+  const { mergeHours, lastFilledHour } = await import("../src/hourly.js");
+  const hours = aggregateHours([row(T, { temp: 30 }), row(Date.UTC(2026, 7, 31, 20) / 1000, { temp: 1 })]);
+  const doc = mergeHours(null, hours, "2026-09");
+  assert.equal(doc.cols.t[(T - doc.start) / 3600], 30);
+  assert.equal(doc.cols.n.filter((n) => n).length, 1);
+  assert.equal(lastFilledHour(doc), T);
+  const again = mergeHours(doc, aggregateHours([row(T, { temp: 31 })]), "2026-09");
+  assert.equal(again.cols.t[(T - doc.start) / 3600], 31);
+  assert.equal(lastFilledHour(buildMonth(new Map(), "2026-09")), null);
+});

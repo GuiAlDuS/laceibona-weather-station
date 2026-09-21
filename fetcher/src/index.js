@@ -1,5 +1,7 @@
 import { buildDaily } from "./daily.js";
 import { buildCurrent, localMidnightSec } from "./current.js";
+import { buildWind24h } from "./wind.js";
+import { aggregateHours, mergeHours, lastFilledHour, monthKeyLocal } from "./hourly.js";
 import { handleRequest } from "./api.js";
 
 const TEMPEST_BASE = "https://swd.weatherflow.com/swd/rest";
@@ -33,17 +35,45 @@ async function refreshCurrent(env) {
   return doc;
 }
 
+async function refreshWind(env) {
+  const now = Date.now();
+  const body = await tempestGet(env, `/observations/device/${env.DEVICE_ID}?time_start=${Math.floor(now / 1000) - 86400}&time_end=${Math.floor(now / 1000)}`);
+  const doc = buildWind24h(body.obs ?? [], now);
+  await env.WEATHER_DATA.put("wind24h", JSON.stringify(doc));
+  return doc;
+}
+
+// Appends the finished hours to the monthly `obs:` documents. Runs in the first tick of each hour. It starts
+// after the last hour already stored (at most 36 h back, and 6 h back when there is nothing to go on), so a
+// missed tick heals itself on the next one.
+async function refreshObs(env, scheduledMs = Date.now()) {
+  const hourStart = Math.floor(scheduledMs / 3600_000) * 3600;
+  const prevKey = monthKeyLocal(hourStart - 3600);
+  const existing = await env.WEATHER_DATA.get(`obs:${prevKey}`, "json");
+  const last = existing ? lastFilledHour(existing) : null;
+  const from = last === null ? hourStart - 6 * 3600 : Math.min(Math.max(last + 3600, hourStart - 36 * 3600), hourStart - 3600);
+  const body = await tempestGet(env, `/observations/device/${env.DEVICE_ID}?time_start=${from}&time_end=${hourStart - 1}`);
+  const hours = aggregateHours(body.obs ?? []);
+  const keys = [...new Set([...hours.keys()].map(monthKeyLocal))];
+  for (const key of keys) {
+    const doc = key === prevKey ? existing : await env.WEATHER_DATA.get(`obs:${key}`, "json");
+    await env.WEATHER_DATA.put(`obs:${key}`, JSON.stringify(mergeHours(doc, hours, key)));
+  }
+  return keys;
+}
+
 export default {
   fetch: handleRequest,
 
   async scheduled(controller, env, ctx) {
-    // One 5-minute cron drives everything: `current` every run, and `daily:all` once a day at 07:00 UTC (01:00 local).
+    // One 5-minute cron drives everything: `current` and `wind24h` every run, `obs:` once an hour, and `daily:all` once a day at 07:00 UTC (01:00 local).
     const t = new Date(controller.scheduledTime);
-    const jobs = [refreshCurrent];
+    const jobs = [refreshCurrent, refreshWind];
+    if (t.getUTCMinutes() < 5) jobs.push(refreshObs);
     if (t.getUTCHours() === 7 && t.getUTCMinutes() < 5) jobs.push(refreshDailyStats);
     for (const job of jobs) {
       ctx.waitUntil(
-        job(env).catch(async (err) => {
+        job(env, t.getTime()).catch(async (err) => {
           console.error(`${job.name} failed:`, err.message);
           // Only failures are recorded (successes are visible as fresh data), so this costs no writes normally.
           await env.WEATHER_DATA.put("status:last_error", JSON.stringify({ job: job.name, at: new Date().toISOString(), error: String(err.message).slice(0, 500) }));

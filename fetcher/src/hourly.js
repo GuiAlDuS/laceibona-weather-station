@@ -87,6 +87,24 @@ export function buildMonth(hours, key) {
   return { month: key, start, hours: size, cols };
 }
 
+// Adds hourly records to an existing monthly document (or a new one when `doc` is null). Hours outside the
+// month are ignored; a record replaces whatever the slot held (the newest aggregate of an hour wins).
+export function mergeHours(doc, hours, key) {
+  const out = doc ?? buildMonth(new Map(), key);
+  for (const [h, rec] of hours) {
+    if (monthKeyLocal(h) !== key) continue;
+    const i = (h - out.start) / 3600;
+    for (const c of COLS) out.cols[c][i] = rec[c];
+  }
+  return out;
+}
+
+// Unix seconds of the last hour in the document that has data, or null.
+export function lastFilledHour(doc) {
+  for (let i = doc.cols.n.length - 1; i >= 0; i--) if (doc.cols.n[i]) return doc.start + i * 3600;
+  return null;
+}
+
 // Minutes with at least one strike: [unix seconds, mean distance km or null, strike count].
 export function lightningEvents(rows) {
   const out = [];

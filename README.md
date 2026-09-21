@@ -8,17 +8,19 @@ A public, always-on weather dashboard for a [WeatherFlow Tempest](https://tempes
 Tempest API
     | every 5 min (cron)
 Cloudflare Worker  (fetcher/)      -> writes ->  Cloudflare KV
-    | serves /api/current, /api/daily, /api/status   <- reads
+    | serves /api/current, /api/daily, /api/wind24h, /api/obs/YYYY-MM, /api/status   <- reads
 Cloudflare Pages  (frontend/)  plain HTML + Plotly.js, no build step
 ```
 
 ## What it shows
 
-- **Current conditions**: temperature, humidity, wind, pressure trend, rain, UV, solar, lightning; flags stale data.
-- **Cumulative water balance** (rain minus ETo) by day of year, year over year.
-- **Monthly rain vs ETo** for the last 13 months.
-- **Cumulative rain** and **cumulative lightning** by day of year, year over year.
-- **Monthly solar irradiation** (kWh/m²) and a **year-over-year comparison** of temperature, ETo and solar irradiation over the same period of each year.
+A section menu on the left jumps between the groups below.
+
+- **Now**: current conditions (temperature, humidity, wind, pressure trend, rain, UV, solar, lightning; flags stale data) and a wind rose for the last 24 hours.
+- **This week**: hourly temperature for the last 7 days, daily rain and ETo bars with hours of rain, and wind direction hour by hour.
+- **A typical day**: month-by-hour heatmaps of temperature and wind speed, and a month-by-direction heatmap of wind direction.
+- **Month by month**: rain vs ETo for the last 13 months, and box plots of monthly temperature and wind speed.
+- **Year over year**: box plots of temperature per year (same calendar window), cumulative rain, cumulative lightning and the cumulative water balance (rain minus ETo) by day of year.
 
 ETo is the FAO-56 Penman-Monteith daily reference evapotranspiration, computed from the station's own readings (`fetcher/src/eto.js`, validated against the worked example in FAO Irrigation and Drainage Paper 56).
 
@@ -26,7 +28,7 @@ ETo is the FAO-56 Penman-Monteith daily reference evapotranspiration, computed f
 
 | Path | What |
 |---|---|
-| `fetcher/` | Cloudflare Worker: cron job, data transforms (`daily.js`, `current.js`, `eto.js`), read API (`api.js`) |
+| `fetcher/` | Cloudflare Worker: cron job, data transforms (`daily.js`, `current.js`, `eto.js`, `hourly.js`, `wind.js`), read API (`api.js`), and `scripts/backfill.mjs` for the one-off hourly history |
 | `frontend/` | Static site: pure calculation modules (`js/*.js`), Plotly views, tests |
 | `PROJECT.md` | Design notes, Tempest data-format findings, and known issues |
 

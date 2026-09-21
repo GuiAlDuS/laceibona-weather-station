@@ -1,16 +1,28 @@
 import { API_BASE } from "./config.js";
-import { $, narrowScreen, setStatus } from "./common.js";
+import { initNav } from "./nav.js";
+import { $, narrowScreen, setStatus, longDate } from "./common.js";
 import { cumulativeByYear } from "./balance.js";
 import { monthlyTotals } from "./monthly.js";
 import { cumulativeRainByYear, cumulativeLightningByYear } from "./cumulative.js";
 import { renderWaterBalanceChart, renderWaterBalanceText } from "./waterbalance-view.js";
 import { renderMonthlyChart, renderMonthlyText } from "./monthly-view.js";
 import { RAIN, LIGHTNING, renderCumulativeChart, renderCumulativeText } from "./cumulative-view.js";
+import { lastRainDays } from "./rainweek.js";
+import { renderRainWeekChart, renderRainWeekText } from "./rainweek-view.js";
 import { renderCurrent, renderCurrentUnavailable } from "./current-view.js";
-import { monthlyIrradiation } from "./solar.js";
-import { sameWindowSummary } from "./annual.js";
-import { renderMonthlySolarChart, renderMonthlySolarText } from "./solar-view.js";
-import { renderAnnualCharts, renderAnnualText } from "./annual-view.js";
+import { getMonths, monthKeys } from "./obs-data.js";
+import { lastDays } from "./tempdaily.js";
+import { monthHourMeans } from "./heatmap.js";
+import { monthDirectionFrequency } from "./winddir.js";
+import { renderWindDirChart, renderWindDirText } from "./winddir-view.js";
+import { recentHours } from "./winddaily.js";
+import { renderWindDailyChart, renderWindDailyText } from "./winddaily-view.js";
+import { monthlyBoxes, yearlyBoxes } from "./tempbox.js";
+import { WIND as WIND_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
+import { VIRIDIS, renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
+import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
+import { windRose } from "./windrose.js";
+import { renderWindRose } from "./windrose-view.js";
 
 let currentDoc = null;
 
@@ -42,11 +54,10 @@ let balance = null;
 let months = null;
 let rain = null;
 let lightning = null;
-let solarMonthly = null;
-let annual = null;
+let rainWeek = null;
 
-const FRAMES = ["wb-frame", "mo-frame", "rn-frame", "lt-frame", "sm-frame", "an-frame"];
-const STATUSES = ["wb-status", "mo-status", "rn-status", "lt-status", "sm-status", "an-status"];
+const FRAMES = ["wb-frame", "mo-frame", "rn-frame", "lt-frame", "rw-frame"];
+const STATUSES = ["wb-status", "mo-status", "rn-status", "lt-status", "rw-status"];
 
 async function load() {
   for (const id of FRAMES) $(id).classList.add("reloading");
@@ -59,22 +70,19 @@ async function load() {
     months = monthlyTotals(doc.days);
     rain = cumulativeRainByYear(doc.days);
     lightning = cumulativeLightningByYear(doc.days);
-    solarMonthly = monthlyIrradiation(doc.days);
-    annual = sameWindowSummary(doc.days);
-    if (balance.length === 0 || months.length === 0 || rain.length === 0 || lightning.length === 0 || !annual) throw new Error("no usable data yet");
+    rainWeek = lastRainDays(doc.days);
+    if (balance.length === 0 || months.length === 0 || rain.length === 0 || lightning.length === 0 || rainWeek.length === 0) throw new Error("no usable data yet");
     renderWaterBalanceText(balance);
     renderMonthlyText(months);
     renderCumulativeText(RAIN, rain);
     renderCumulativeText(LIGHTNING, lightning);
-    renderMonthlySolarText(solarMonthly);
-    renderAnnualText(annual);
+    renderRainWeekText(rainWeek);
     await Promise.all([
       renderWaterBalanceChart(balance),
       renderMonthlyChart(months),
       renderCumulativeChart(RAIN, rain),
       renderCumulativeChart(LIGHTNING, lightning),
-      renderMonthlySolarChart(solarMonthly),
-      renderAnnualCharts(annual),
+      renderRainWeekChart(rainWeek),
     ]);
     for (const id of STATUSES) setStatus(id, "");
   } catch (err) {
@@ -85,23 +93,154 @@ async function load() {
   }
 }
 
+let rose = null;
+let roseDoc = null;
+
+async function loadWind() {
+  $("wr-frame").classList.add("reloading");
+  if (!rose) setStatus("wr-status", "Loading…");
+  try {
+    const res = await fetch(`${API_BASE}/api/wind24h`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    roseDoc = await res.json();
+    if (roseDoc.available === false) throw new Error("no wind data yet");
+    rose = windRose([roseDoc]);
+    if (rose.hours === 0) throw new Error("no usable data yet");
+    drawWind();
+    setStatus("wr-status", "");
+  } catch (err) {
+    console.error(err);
+    if (!rose) setStatus("wr-status", `Could not load data (${err.message}). `, loadWind);
+  } finally {
+    $("wr-frame").classList.remove("reloading");
+  }
+}
+
+function drawWind() {
+  if (!rose) return;
+  const to = new Date(roseDoc.to);
+  renderWindRose(rose, `the 24 hours to ${to.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "America/Costa_Rica" })} on ${longDate(new Date(to - 6 * 3600_000).toISOString().slice(0, 10))}`);
+}
+
+// Charts built from the monthly `obs:` documents. Each is [id prefix, draw(docs)]; one failure does not stop the others.
+const TEMP_HEAT = { prefix: "th", unit: "°C", decimals: 1, colorToken: "--hot", high: "Warmest", low: "Coolest", what: "Average temperature" };
+const WIND_HEAT = { prefix: "wh", unit: "m/s", decimals: 2, ramp: VIRIDIS, high: "Windiest", low: "Calmest", what: "Average wind speed" };
+const obsState = {};
+const last13 = (docs) => docs.filter((d) => d.month >= monthKeys(13)[0]);
+const OBS_CHARTS = [
+  ["td", (docs, live) => {
+    const days = lastDays(docs, 7, live?.hourly);
+    if (days.length === 0) throw new Error("no usable data yet");
+    obsState.td = days;
+  }, () => {
+    renderTempDailyText(obsState.td);
+    return renderTempDailyChart(obsState.td);
+  }],
+  ["th", (docs) => {
+    obsState.th = monthHourMeans(last13(docs), "t");
+    if (obsState.th.months.length === 0) throw new Error("no usable data yet");
+  }, () => {
+    renderMonthHourText(TEMP_HEAT, obsState.th);
+    return renderMonthHourChart(TEMP_HEAT, obsState.th);
+  }],
+  ["wh", (docs) => {
+    obsState.wh = monthHourMeans(last13(docs), "ws");
+    if (obsState.wh.months.length === 0) throw new Error("no usable data yet");
+  }, () => {
+    renderMonthHourText(WIND_HEAT, obsState.wh);
+    return renderMonthHourChart(WIND_HEAT, obsState.wh);
+  }],
+  ["wd", (docs) => {
+    obsState.wd = monthDirectionFrequency(last13(docs));
+    if (obsState.wd.months.length === 0) throw new Error("no usable data yet");
+  }, () => {
+    renderWindDirText(obsState.wd);
+    return renderWindDirChart(obsState.wd);
+  }],
+  ["ds", (docs) => {
+    obsState.ds = recentHours(docs, 7);
+    if (obsState.ds.length === 0) throw new Error("no usable data yet");
+  }, () => {
+    renderWindDailyText(obsState.ds);
+    return renderWindDailyChart(obsState.ds);
+  }],
+  ["bm", (docs) => {
+    obsState.bm = monthlyBoxes(last13(docs));
+    if (obsState.bm.length === 0) throw new Error("no usable data yet");
+  }, () => {
+    renderTempBoxMonthlyText(obsState.bm);
+    return renderTempBoxMonthly(obsState.bm);
+  }],
+  ["wk", (docs) => {
+    obsState.wk = monthlyBoxes(last13(docs), "ws");
+    if (obsState.wk.length === 0) throw new Error("no usable data yet");
+  }, () => {
+    renderTempBoxMonthlyText(obsState.wk, WIND_BOX);
+    return renderTempBoxMonthly(obsState.wk, WIND_BOX);
+  }],
+  ["by", (docs) => {
+    obsState.by = yearlyBoxes(docs);
+    if (obsState.by.length === 0) throw new Error("no usable data yet");
+  }, () => {
+    renderTempBoxYearlyText(obsState.by);
+    return renderTempBoxYearly(obsState.by);
+  }],
+];
+
+async function loadObsCharts() {
+  const ids = OBS_CHARTS.map(([p]) => p);
+  for (const p of ids) $(`${p}-frame`).classList.add("reloading");
+  let docs;
+  let live = null; // the last 24 h feed; the charts still work without it, just up to an hour behind
+  try {
+    [docs, live] = await Promise.all([getMonths(24), fetch(`${API_BASE}/api/wind24h`).then((r) => (r.ok ? r.json() : null)).catch(() => null)]);
+  } catch (err) {
+    console.error(err);
+    for (const p of ids) if (!obsState[p]) setStatus(`${p}-status`, `Could not load data (${err.message}). `, loadObsCharts);
+    for (const p of ids) $(`${p}-frame`).classList.remove("reloading");
+    return;
+  }
+  for (const [p, prepare, draw] of OBS_CHARTS) {
+    try {
+      prepare(docs, live);
+      await draw();
+      setStatus(`${p}-status`, "");
+    } catch (err) {
+      console.error(err);
+      if (!obsState[p]) setStatus(`${p}-status`, `Could not load data (${err.message}). `, loadObsCharts);
+    } finally {
+      $(`${p}-frame`).classList.remove("reloading");
+    }
+  }
+}
+
+function drawObsCharts() {
+  for (const [p, , draw] of OBS_CHARTS) if (obsState[p]) draw();
+}
+
+setInterval(loadWind, 300_000);
+setInterval(loadObsCharts, 300_000);
+
 function redraw() {
+  drawWind();
+  drawObsCharts();
   if (!balance) return;
   renderWaterBalanceText(balance);
   renderMonthlyText(months);
   renderCumulativeText(RAIN, rain);
   renderCumulativeText(LIGHTNING, lightning);
-  renderMonthlySolarText(solarMonthly);
-  renderAnnualText(annual);
+  renderRainWeekText(rainWeek);
   renderWaterBalanceChart(balance);
   renderMonthlyChart(months);
   renderCumulativeChart(RAIN, rain);
   renderCumulativeChart(LIGHTNING, lightning);
-  renderMonthlySolarChart(solarMonthly);
-  renderAnnualCharts(annual);
+  renderRainWeekChart(rainWeek);
 }
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
 narrowScreen.addEventListener("change", redraw);
 
+initNav();
 loadCurrent();
 load();
+loadWind();
+loadObsCharts();

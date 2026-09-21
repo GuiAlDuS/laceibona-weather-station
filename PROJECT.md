@@ -122,8 +122,12 @@ interchangeable; no need to prefer one.
 current           → latest obs snapshot, overwritten every 5 min
 daily:all         → full daily stats history (from stats/station)
                     + computed ETo per day, rebuilt once daily
-obs:YYYY-MM       → raw 5-min observations, current + prior 12 months
-                    (only what heatmaps/boxplots/daily-lines need)
+obs:YYYY-MM       → hourly observations, columnar (see fetcher/src/hourly.js).
+                    Back-filled Dec 2024 - Sep 2026 by
+                    fetcher/scripts/backfill.mjs; NOT yet appended live
+lightning:YYYY    → one [ts, distance_km, count] per minute with strikes
+wind24h           → per-minute wind speed/direction, last 24 h, every 5 min
+                    (write budget is now ~577/day: current + wind24h + daily)
 ```
 
 Write budget: ~288 (`current`) + 1 (`daily:all`) + 288 (`obs` append) ≈
@@ -252,7 +256,7 @@ whole category of bug is structurally impossible in this architecture.
   build (it's what revealed the 2026 El Niño drought clearly); prioritize it
 - ~~Rain-hours + intensity, monthly~~ — **dropped by the owner** (also removed
   from the HA dashboard); do not build it.
-- Daily/monthly/annual solar irradiation bars (convert W/m² sum to kWh/m²)
+- ~~Daily/monthly/annual solar irradiation bars~~ — **monthly bars built, then dropped by the owner**; do not rebuild
 - Annual temperature/ETo/irradiation summary bars
 
 **Tier 2 — needs `obs:*`:**
@@ -265,14 +269,17 @@ whole category of bug is structurally impossible in this architecture.
 - Monthly + annual temperature boxplots
 - Monthly wind speed boxplot
 
-**Tier 3 — lower priority / accept imperfect parity:**
-- Wind rose — no Plotly equivalent to the HA `windrose-card`; a
-  `barpolar` chart gets close but won't look identical. Acceptable.
-- Lightning distance-by-year, categorized (<5 / 5–10 / 10–20 / >20 km) —
-  historically only computable via hourly `max` as a rough proxy (see 4.1C);
-  genuinely accurate per-strike data only exists going forward if raw
-  non-zero pulses are captured as discrete events from the day this
-  project starts logging them.
+**Tier 3 — lower priority / accept imperfect parity:** *(complete)*
+- [x] Wind rose — hand-drawn SVG (the vendored Plotly bundle has no
+  `barpolar`), 16 directions x 4 speed bands, **last 24 hours only** (owner's
+  choice), fed by the `wind24h` KV key (`GET /api/wind24h`, per-minute
+  speed/direction, rewritten every 5 min). Intentionally approximate versus
+  the HA `windrose-card`.
+- ~~Lightning distance-by-year, categorized~~ — **built, then dropped by the
+  owner**; do not rebuild. (Per-strike-minute distances are in `lightning:YYYY`
+  and served at `/api/lightning/YYYY`, so it is cheap to revive.)
+- ~~Annual temperature/ETo/irradiation summary bars~~ (Tier 1 "Year over
+  year") — **also dropped by the owner**.
 
 **Deliberately out of scope:** SPEI (drought index). Already
 investigated at length — the station's record (~1.5–2 years) is far too
@@ -397,7 +404,9 @@ development. Already reflected in the ETo formula in 4.2.
 - [ ] Build Tier 1 charts (Section 5) before touching `obs:*`-dependent ones
 
 **Phase 5 — `obs:*` fetching + Tier 2/3 charts**
-- [ ] Extend fetcher to append 5-min observations to `obs:YYYY-MM`
-- [ ] Build Tier 2 charts
-- [ ] Tier 3 as time allows; document wind rose as intentionally
-      approximate rather than trying to pixel-match the HA version
+- [x] Back-fill hourly `obs:YYYY-MM` and `lightning:YYYY` (Dec 2024 - Sep 2026)
+      and serve them at `/api/obs/YYYY-MM` and `/api/lightning/YYYY`
+- [x] Fetcher appends finished hours to `obs:YYYY-MM` hourly (self-healing, up to
+      36 h back); `wind24h` also carries hourly temperature incl. the hour in progress
+- [x] Build Tier 2 charts (all 7, on the test site; not yet on production Pages)
+- [x] Tier 3 (wind rose done; the other two items dropped by the owner)

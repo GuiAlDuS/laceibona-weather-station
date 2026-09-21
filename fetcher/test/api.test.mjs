@@ -40,3 +40,17 @@ test("/api/status reports no error when none is stored, and the stored error oth
   const res = await handleRequest(req("/api/status"), env({ "status:last_error": '{"job":"refreshCurrent","error":"boom"}' }));
   assert.deepEqual(await res.json(), { job: "refreshCurrent", error: "boom" });
 });
+
+test("/api/obs/YYYY-MM and /api/lightning/YYYY serve the back-filled documents; missing ones are 404", async () => {
+  const data = { "obs:2025-03": '{"month":"2025-03"}', "lightning:2025": '{"year":"2025"}' };
+  assert.deepEqual(await (await handleRequest(req("/api/obs/2025-03"), env(data))).json(), { month: "2025-03" });
+  assert.deepEqual(await (await handleRequest(req("/api/lightning/2025"), env(data))).json(), { year: "2025" });
+  assert.equal((await handleRequest(req("/api/lightning/2024"), env(data))).status, 404);
+  assert.equal((await handleRequest(req("/api/obs/2025-13"), env(data))).status, 404);
+  assert.equal((await handleRequest(req("/api/obs/meta"), env(data))).status, 404);
+});
+
+test("/api/wind24h passes stored JSON through, and is a placeholder before the first run", async () => {
+  assert.deepEqual(await (await handleRequest(req("/api/wind24h"), env({ wind24h: '{"cols":{}}' }))).json(), { cols: {} });
+  assert.deepEqual(await (await handleRequest(req("/api/wind24h"), env({}))).json(), { available: false });
+});

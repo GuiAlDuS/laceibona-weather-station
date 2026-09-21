@@ -8,6 +8,17 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="layout">
+    <nav class="side-nav" aria-label="Dashboard sections">
+      <ul>
+        <li><a href="#now">Now</a></li>
+        <li><a href="#week">This week</a></li>
+        <li><a href="#typical-day">A typical day</a></li>
+        <li><a href="#monthly">Month by month</a></li>
+        <li><a href="#yearly">Year over year</a></li>
+      </ul>
+    </nav>
+
   <main>
     <header class="page-head">
       <h1>La Ceibona Weather Station</h1>
@@ -15,125 +26,281 @@
       <p class="muted">A Tempest Weather Station</p>
     </header>
 
-    <section class="card" aria-labelledby="cc-title">
-      <div class="cc-head">
-        <h2 id="cc-title">Current conditions</h2>
-        <p id="cc-updated" class="muted small" aria-live="polite"></p>
-      </div>
-      <p id="cc-stale" class="stale" role="status" hidden></p>
-      <div id="cc-body"><p class="muted">Loading…</p></div>
-    </section>
+    <section class="group" id="now" aria-labelledby="now-heading">
+      <h2 id="now-heading" class="group-title">Now</h2>
 
-    <section class="card" aria-labelledby="wb-title">
-      <h2 id="wb-title">Cumulative water balance</h2>
-      <p class="muted">Rain minus evapotranspiration (ETo) since 1 January, in mm. Below zero, the atmosphere has taken more water than the rain has supplied.</p>
-      <p id="wb-summary" class="summary" aria-live="polite"></p>
-
-      <div id="wb-frame" class="chart-frame">
-        <div id="wb-chart" role="img" aria-label="Line chart of cumulative water balance by day of year, one line per year"></div>
-        <p id="wb-status" class="status">Loading…</p>
-      </div>
-      <ul id="wb-legend" class="legend" aria-label="Legend"></ul>
-      <p id="wb-note" class="muted small"></p>
-
-      <details class="table-view">
-        <summary>Table view</summary>
-        <div class="table-scroll"><table id="wb-table"></table></div>
-      </details>
-    </section>
-
-    <section class="card" aria-labelledby="mo-title">
-      <h2 id="mo-title">Monthly rain vs ETo</h2>
-      <p class="muted">Rain against the water the atmosphere could evaporate, month by month, for the last 13 months.</p>
-      <p id="mo-summary" class="summary" aria-live="polite"></p>
-
-      <div id="mo-frame" class="chart-frame">
-        <div id="mo-chart" role="img" aria-label="Grouped bar chart of monthly rain and ETo in millimetres for the last 13 months"></div>
-        <p id="mo-status" class="status">Loading…</p>
-      </div>
-      <ul id="mo-legend" class="legend" aria-label="Legend"></ul>
-      <p id="mo-note" class="muted small"></p>
-
-      <details class="table-view">
-        <summary>Table view</summary>
-        <div class="table-scroll"><table id="mo-table"></table></div>
-      </details>
-    </section>
-
-    <section class="card" aria-labelledby="rn-title">
-      <h2 id="rn-title">Cumulative rain</h2>
-      <p class="muted">Rain added up from 1 January, year over year, in mm.</p>
-      <p id="rn-summary" class="summary" aria-live="polite"></p>
-
-      <div id="rn-frame" class="chart-frame">
-        <div id="rn-chart" role="img" aria-label="Line chart of cumulative rain by day of year, one line per year"></div>
-        <p id="rn-status" class="status">Loading…</p>
-      </div>
-      <ul id="rn-legend" class="legend" aria-label="Legend"></ul>
-      <p id="rn-note" class="muted small"></p>
-
-      <details class="table-view">
-        <summary>Table view</summary>
-        <div class="table-scroll"><table id="rn-table"></table></div>
-      </details>
-    </section>
-
-    <section class="card" aria-labelledby="lt-title">
-      <h2 id="lt-title">Cumulative lightning</h2>
-      <p class="muted">Lightning strikes added up from 1 January, year over year.</p>
-      <p id="lt-summary" class="summary" aria-live="polite"></p>
-
-      <div id="lt-frame" class="chart-frame">
-        <div id="lt-chart" role="img" aria-label="Line chart of cumulative lightning strikes by day of year, one line per year"></div>
-        <p id="lt-status" class="status">Loading…</p>
-      </div>
-      <ul id="lt-legend" class="legend" aria-label="Legend"></ul>
-      <p id="lt-note" class="muted small"></p>
-
-      <details class="table-view">
-        <summary>Table view</summary>
-        <div class="table-scroll"><table id="lt-table"></table></div>
-      </details>
-    </section>
-
-    <section class="card" aria-labelledby="sm-title">
-      <h2 id="sm-title">Monthly solar irradiation</h2>
-      <p class="muted">Solar energy received each month for the last 13 months, in kWh per square metre.</p>
-      <p id="sm-summary" class="summary" aria-live="polite"></p>
-
-      <div id="sm-frame" class="chart-frame">
-        <div id="sm-chart" role="img" aria-label="Bar chart of monthly solar irradiation in kWh per square metre for the last 13 months"></div>
-        <p id="sm-status" class="status">Loading…</p>
-      </div>
-      <p id="sm-note" class="muted small"></p>
-
-      <details class="table-view">
-        <summary>Table view</summary>
-        <div class="table-scroll tall"><table id="sm-table"></table></div>
-      </details>
-    </section>
-
-    <section class="card" aria-labelledby="an-title">
-      <h2 id="an-title">Year over year</h2>
-      <p class="muted">Temperature, evapotranspiration and solar irradiation for each year, over the same period so a partial year is compared fairly.</p>
-      <p id="an-summary" class="summary" aria-live="polite"></p>
-
-      <div id="an-frame" class="chart-frame ann-frame">
-        <div class="ann-grid">
-          <div class="ann-panel"><h3 id="an-temp-title"></h3><p id="an-temp-delta" class="muted small delta"></p><div id="an-temp" class="mini-chart" role="img" aria-label="Bar chart of mean temperature by year"></div></div>
-          <div class="ann-panel"><h3 id="an-eto-title"></h3><p id="an-eto-delta" class="muted small delta"></p><div id="an-eto" class="mini-chart" role="img" aria-label="Bar chart of mean daily ETo by year"></div></div>
-          <div class="ann-panel"><h3 id="an-kwh-title"></h3><p id="an-kwh-delta" class="muted small delta"></p><div id="an-kwh" class="mini-chart" role="img" aria-label="Bar chart of mean daily solar irradiation by year"></div></div>
+      <section class="card" aria-labelledby="cc-title">
+        <div class="cc-head">
+          <h3 id="cc-title">Current conditions</h3>
+          <p id="cc-updated" class="muted small" aria-live="polite"></p>
         </div>
-        <p id="an-status" class="status">Loading…</p>
-      </div>
-      <p id="an-note" class="muted small"></p>
+        <p id="cc-stale" class="stale" role="status" hidden></p>
+        <div id="cc-body"><p class="muted">Loading…</p></div>
+      </section>
 
-      <details class="table-view">
-        <summary>Table view</summary>
-        <div class="table-scroll"><table id="an-table"></table></div>
-      </details>
+      <section class="card" aria-labelledby="wr-title">
+        <h3 id="wr-title">Wind rose</h3>
+        <p class="muted">How often the wind blew from each direction over the last 24 hours, and how fast.</p>
+        <p id="wr-summary" class="summary" aria-live="polite"></p>
+
+        <div id="wr-frame" class="chart-frame">
+          <div id="wr-chart" class="wind-rose"></div>
+          <p id="wr-status" class="status">Loading…</p>
+        </div>
+        <ul id="wr-legend" class="legend" aria-label="Legend"></ul>
+        <p id="wr-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll"><table id="wr-table"></table></div>
+        </details>
+      </section>
+    </section>
+
+    <section class="group" id="week" aria-labelledby="week-heading">
+      <h2 id="week-heading" class="group-title">This week</h2>
+
+      <section class="card" aria-labelledby="td-title">
+        <h3 id="td-title">Temperature, last 7 days</h3>
+        <p class="muted">Hour-by-hour temperature for the past week, one colour per day.</p>
+        <p id="td-summary" class="summary" aria-live="polite"></p>
+
+        <div id="td-frame" class="chart-frame">
+          <div id="td-chart" role="img" aria-label="Line chart of hourly temperature by hour of day, one line per day for the last 7 days"></div>
+          <p id="td-status" class="status">Loading…</p>
+        </div>
+        <ul id="td-legend" class="legend" aria-label="Legend"></ul>
+        <p id="td-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll tall"><table id="td-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="rw-title">
+        <h3 id="rw-title">Rain and ETo, last 7 days</h3>
+        <p class="muted">Each day's rain and evapotranspiration (top), and how many hours it rained (bottom).</p>
+        <p id="rw-summary" class="summary" aria-live="polite"></p>
+
+        <div id="rw-frame" class="chart-frame">
+          <div id="rw-chart" role="img" aria-label="Grouped bars of daily rain and ETo in millimetres, with the hours of rain per day in a panel below, for the last 7 days"></div>
+          <p id="rw-status" class="status">Loading…</p>
+        </div>
+        <ul id="rw-legend" class="legend" aria-label="Legend"></ul>
+        <p id="rw-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll"><table id="rw-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="ds-title">
+        <h3 id="ds-title">Wind direction, day by day</h3>
+        <p class="muted">Wind direction and speed for every hour of the last 7 days.</p>
+        <p id="ds-summary" class="summary" aria-live="polite"></p>
+
+        <div id="ds-frame" class="chart-frame">
+          <div id="ds-chart" role="img" aria-label="Scatter plot of hourly wind direction by day for the last 7 days, coloured by wind speed"></div>
+          <p id="ds-status" class="status">Loading…</p>
+        </div>
+        <p id="ds-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll tall"><table id="ds-table"></table></div>
+        </details>
+      </section>
+    </section>
+
+    <section class="group" id="typical-day" aria-labelledby="typical-day-heading">
+      <h2 id="typical-day-heading" class="group-title">A typical day</h2>
+
+      <section class="card" aria-labelledby="th-title">
+        <h3 id="th-title">Temperature by month and hour</h3>
+        <p class="muted">Average temperature for each hour of the day, month by month, for the last 13 months.</p>
+        <p id="th-summary" class="summary" aria-live="polite"></p>
+
+        <div id="th-frame" class="chart-frame">
+          <div id="th-chart" role="img" aria-label="Heatmap of average temperature by month and hour of day"></div>
+          <p id="th-status" class="status">Loading…</p>
+        </div>
+        <p id="th-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll tall"><table id="th-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="wh-title">
+        <h3 id="wh-title">Wind speed by month and hour</h3>
+        <p class="muted">Average wind speed for each hour of the day, month by month, for the last 13 months.</p>
+        <p id="wh-summary" class="summary" aria-live="polite"></p>
+
+        <div id="wh-frame" class="chart-frame">
+          <div id="wh-chart" role="img" aria-label="Heatmap of average wind speed by month and hour of day"></div>
+          <p id="wh-status" class="status">Loading…</p>
+        </div>
+        <p id="wh-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll tall"><table id="wh-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="wd-title">
+        <h3 id="wd-title">Wind direction by month</h3>
+        <p class="muted">How often the wind blows from each direction, month by month, for the last 13 months.</p>
+        <p id="wd-summary" class="summary" aria-live="polite"></p>
+
+        <div id="wd-frame" class="chart-frame">
+          <div id="wd-chart" role="img" aria-label="Heatmap of the share of hours the wind blew from each direction, by month"></div>
+          <p id="wd-status" class="status">Loading…</p>
+        </div>
+        <p id="wd-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll tall"><table id="wd-table"></table></div>
+        </details>
+      </section>
+    </section>
+
+    <section class="group" id="monthly" aria-labelledby="monthly-heading">
+      <h2 id="monthly-heading" class="group-title">Month by month</h2>
+
+      <section class="card" aria-labelledby="mo-title">
+        <h3 id="mo-title">Monthly rain vs ETo</h3>
+        <p class="muted">Rain against the water the atmosphere could evaporate, month by month, for the last 13 months.</p>
+        <p id="mo-summary" class="summary" aria-live="polite"></p>
+
+        <div id="mo-frame" class="chart-frame">
+          <div id="mo-chart" role="img" aria-label="Grouped bar chart of monthly rain and ETo in millimetres for the last 13 months"></div>
+          <p id="mo-status" class="status">Loading…</p>
+        </div>
+        <ul id="mo-legend" class="legend" aria-label="Legend"></ul>
+        <p id="mo-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll"><table id="mo-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="bm-title">
+        <h3 id="bm-title">Temperature range by month</h3>
+        <p class="muted">How hot and cold each month gets, based on every hour of the month.</p>
+        <p id="bm-summary" class="summary" aria-live="polite"></p>
+
+        <div id="bm-frame" class="chart-frame">
+          <div id="bm-chart" role="img" aria-label="Box plot of hourly temperature for each month"></div>
+          <p id="bm-status" class="status">Loading…</p>
+        </div>
+        <p id="bm-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll tall"><table id="bm-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="wk-title">
+        <h3 id="wk-title">Wind speed range by month</h3>
+        <p class="muted">How windy each month gets, based on every hour of the month.</p>
+        <p id="wk-summary" class="summary" aria-live="polite"></p>
+
+        <div id="wk-frame" class="chart-frame">
+          <div id="wk-chart" role="img" aria-label="Box plot of hourly wind speed for each month"></div>
+          <p id="wk-status" class="status">Loading…</p>
+        </div>
+        <p id="wk-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll tall"><table id="wk-table"></table></div>
+        </details>
+      </section>
+    </section>
+
+    <section class="group" id="yearly" aria-labelledby="yearly-heading">
+      <h2 id="yearly-heading" class="group-title">Year over year</h2>
+
+      <section class="card" aria-labelledby="by-title">
+        <h3 id="by-title">Temperature range by year</h3>
+        <p class="muted">The same, for each year over the same stretch of the calendar.</p>
+        <p id="by-summary" class="summary" aria-live="polite"></p>
+
+        <div id="by-frame" class="chart-frame">
+          <div id="by-chart" role="img" aria-label="Box plot of hourly temperature for each year"></div>
+          <p id="by-status" class="status">Loading…</p>
+        </div>
+        <p id="by-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll tall"><table id="by-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="rn-title">
+        <h3 id="rn-title">Cumulative rain</h3>
+        <p class="muted">Rain added up from 1 January, year over year, in mm.</p>
+        <p id="rn-summary" class="summary" aria-live="polite"></p>
+
+        <div id="rn-frame" class="chart-frame">
+          <div id="rn-chart" role="img" aria-label="Line chart of cumulative rain by day of year, one line per year"></div>
+          <p id="rn-status" class="status">Loading…</p>
+        </div>
+        <ul id="rn-legend" class="legend" aria-label="Legend"></ul>
+        <p id="rn-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll"><table id="rn-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="lt-title">
+        <h3 id="lt-title">Cumulative lightning</h3>
+        <p class="muted">Lightning strikes added up from 1 January, year over year.</p>
+        <p id="lt-summary" class="summary" aria-live="polite"></p>
+
+        <div id="lt-frame" class="chart-frame">
+          <div id="lt-chart" role="img" aria-label="Line chart of cumulative lightning strikes by day of year, one line per year"></div>
+          <p id="lt-status" class="status">Loading…</p>
+        </div>
+        <ul id="lt-legend" class="legend" aria-label="Legend"></ul>
+        <p id="lt-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll"><table id="lt-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="wb-title">
+        <h3 id="wb-title">Cumulative water balance</h3>
+        <p class="muted">Rain minus evapotranspiration (ETo) since 1 January, in mm. Below zero, the atmosphere has taken more water than the rain has supplied.</p>
+        <p id="wb-summary" class="summary" aria-live="polite"></p>
+
+        <div id="wb-frame" class="chart-frame">
+          <div id="wb-chart" role="img" aria-label="Line chart of cumulative water balance by day of year, one line per year"></div>
+          <p id="wb-status" class="status">Loading…</p>
+        </div>
+        <ul id="wb-legend" class="legend" aria-label="Legend"></ul>
+        <p id="wb-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll"><table id="wb-table"></table></div>
+        </details>
+      </section>
     </section>
   </main>
+  </div>
 
   <script src="vendor/plotly-cartesian.min.js"></script>
   <script type="module" src="js/app.js"></script>

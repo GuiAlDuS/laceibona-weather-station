@@ -11,7 +11,7 @@ const STATS = {
 };
 const OBS = { status: { status_code: 0 }, obs: [[1790000000, 0, 0.5, 1, 90, 3, 1000, 27, 80, 30000, 3, 250, 0, 0, 0, 0, 2.6, 1]] };
 
-function setup({ failCurrent = false } = {}) {
+function setup({ failCurrent = false, stored = {} } = {}) {
   const writes = {};
   const calls = [];
   globalThis.fetch = async (url) => {
@@ -24,7 +24,7 @@ function setup({ failCurrent = false } = {}) {
     STATION_ID: "1",
     DEVICE_ID: "2",
     TEMPEST_TOKEN: "t",
-    WEATHER_DATA: { put: async (k, v) => void (writes[k] = v) },
+    WEATHER_DATA: { put: async (k, v) => void (writes[k] = v), get: async (k) => (stored[k] ? JSON.parse(stored[k]) : null) },
   };
   const pending = [];
   const ctx = { waitUntil: (p) => pending.push(p) };
@@ -37,7 +37,7 @@ test("an ordinary tick refreshes only `current`", async () => {
   const s = setup();
   await worker.scheduled(at("2026-09-21T16:35:00Z"), s.env, s.ctx);
   await s.done();
-  assert.deepEqual(Object.keys(s.writes), ["current"]);
+  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "wind24h"]);
   assert.ok(s.calls.every((u) => u.includes("/observations/device/2")));
 });
 
@@ -45,7 +45,7 @@ test("the 07:00 UTC tick also rebuilds daily:all", async () => {
   const s = setup();
   await worker.scheduled(at("2026-09-22T07:00:11Z"), s.env, s.ctx);
   await s.done();
-  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "daily:all"]);
+  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "daily:all", "obs:2026-09", "wind24h"]);
 });
 
 test("the 07:05 tick and the 06:55 tick do not rebuild daily:all", async () => {
@@ -53,17 +53,17 @@ test("the 07:05 tick and the 06:55 tick do not rebuild daily:all", async () => {
     const s = setup();
     await worker.scheduled(at(iso), s.env, s.ctx);
     await s.done();
-    assert.deepEqual(Object.keys(s.writes), ["current"], iso);
+    assert.deepEqual(Object.keys(s.writes).sort(), ["current", "wind24h"], iso);
   }
 });
 
-test("a failing job records status:last_error and leaves `current` untouched", async () => {
+test("a failing job records status:last_error and leaves `current` and `wind24h` untouched", async () => {
   const s = setup({ failCurrent: true });
   await worker.scheduled(at("2026-09-21T16:35:00Z"), s.env, s.ctx);
   await s.done();
   assert.deepEqual(Object.keys(s.writes), ["status:last_error"]);
   const err = JSON.parse(s.writes["status:last_error"]);
-  assert.equal(err.job, "refreshCurrent");
+  assert.ok(["refreshCurrent", "refreshWind"].includes(err.job));
   assert.match(err.error, /HTTP 500/);
 });
 
@@ -72,4 +72,18 @@ test("the Tempest token goes in a header, never in the URL", async () => {
   await worker.scheduled(at("2026-09-22T07:00:11Z"), s.env, s.ctx);
   await s.done();
   assert.ok(s.calls.every((u) => !u.includes("token=")));
+});
+
+test("the first tick of an hour appends the finished hours to obs:YYYY-MM, starting after the last stored hour", async () => {
+  const hourStart = Date.parse("2026-09-21T16:00:00Z") / 1000;
+  const start = Date.UTC(2026, 8, 1, 6) / 1000;
+  const cols = Object.fromEntries(["t", "tmin", "tmax", "rh", "p", "ws", "gust", "wd", "rain", "solar", "uv", "ltn", "n"].map((c) => [c, new Array(720).fill(null)]));
+  cols.n[(hourStart - 2 * 3600 - start) / 3600] = 60; // 14:00Z is the last stored hour
+  const stored = { "obs:2026-09": JSON.stringify({ month: "2026-09", start, hours: 720, cols }) };
+  const s = setup({ stored });
+  await worker.scheduled(at("2026-09-21T16:00:11Z"), s.env, s.ctx);
+  await s.done();
+  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "obs:2026-09", "wind24h"]);
+  const call = s.calls.find((u) => u.includes("time_end=" + (hourStart - 1)));
+  assert.ok(call.includes(`time_start=${hourStart - 3600}`), call); // resumes right after the stored hour
 });
