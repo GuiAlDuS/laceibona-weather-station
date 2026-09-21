@@ -392,13 +392,10 @@ development. Already reflected in the ETo formula in 4.2.
   Logs are enabled (`[observability] enabled = true`). The 07:00 UTC `daily:all`
   rebuild path is covered by `fetcher/test/scheduled.test.mjs` but has not yet run
   in production (first chance: 2026-09-22 07:00 UTC).
-- [x] Tier 1: monthly solar irradiation bars (13 months, † for partial months;
-      the daily bars were built and then **dropped by the owner**), and a year-over-year
+- [x] Tier 1: monthly solar irradiation bars and a year-over-year
       comparison (mean temperature, ETo/day, solar kWh/m²/day) over the same
-      1 Jan–latest-date window in each year. Logic in `frontend/js/solar.js` and
-      `annual.js`; kWh comes from one function (`kwhPerDay`) so a solar-bias
-      correction, if HA confirms it, is a one-line change. All three show the
-      solar-bias caveat. Standalone "monthly rain bars" was judged covered by the
+      1 Jan–latest-date window in each year. **Both were later removed by the owner** (code deleted in
+      commit d82c312, see Phase 6); the solar-bias caveat still shows on the water balance note. Standalone "monthly rain bars" was judged covered by the
       monthly rain vs ETo chart. **Tier 1 is complete.**
 - [x] Production deployment to Pages: https://laceibona-weather.pages.dev (`./deploy.sh main`).
 - [ ] Build Tier 1 charts (Section 5) before touching `obs:*`-dependent ones
@@ -408,5 +405,36 @@ development. Already reflected in the ETo formula in 4.2.
       and serve them at `/api/obs/YYYY-MM` and `/api/lightning/YYYY`
 - [x] Fetcher appends finished hours to `obs:YYYY-MM` hourly (self-healing, up to
       36 h back); `wind24h` also carries hourly temperature incl. the hour in progress
-- [x] Build Tier 2 charts (all 7, on the test site; not yet on production Pages)
+- [x] Build Tier 2 charts (all 7; live on production Pages)
 - [x] Tier 3 (wind rose done; the other two items dropped by the owner)
+
+**Phase 6 — Dashboard as shipped (Sept 2026)** — live at https://laceibona-weather.pages.dev
+
+Page order, with a sticky left menu (top bar on narrow screens) over five groups:
+- **Now**: current conditions; wind rose (last 24 h, from `wind24h`, SVG).
+- **This week**: temperature last 7 days (one categorical colour per day, older days fade:
+  each day back keeps 70% opacity of the next, floor 20%; the hour in progress comes from
+  `wind24h.hourly`); rain + ETo bars over a rain-duration line in hours (two aligned
+  panels, no dual axis; today has no ETo because it is only computed for finished days);
+  wind direction day by day (hourly dots at their actual hour, viridis by speed).
+- **A typical day**: month x hour heatmaps of temperature and wind speed (midnight at the
+  top; wind uses viridis, yellow = windiest), month x direction heatmap (16 sectors, south at
+  top and bottom, calm hours excluded).
+- **Month by month**: rain vs ETo (13 months); box plots of monthly temperature and wind speed.
+- **Year over year**: temperature box plot per year over the same 1 Jan - latest-date window;
+  cumulative rain; cumulative lightning; cumulative water balance.
+
+Owner decisions worth remembering:
+- **Dropped, do not rebuild**: rain-hours/intensity monthly, lightning distance by year,
+  annual summary bars, solar irradiation bars, daily temperature range (line and box versions:
+  "doesn't show anything interesting").
+- Charts are reviewed one at a time on the `test` Pages branch (`./deploy.sh test`, alias
+  https://test.laceibona-weather.pages.dev) before `./deploy.sh main`.
+- Worker cron (every 5 min): `current` + `wind24h` each run, `obs:YYYY-MM` append in the first
+  tick of each hour, `daily:all` at 07:00 UTC. About 577 KV writes/day of the 1,000 free.
+- `/api/lightning/YYYY` and its `lightning:*` data are kept although no chart uses them.
+- Plotly gotchas hit: the cartesian bundle has no `barpolar`; date-axis ticks are formatted in
+  the viewer's timezone (count days on a numeric axis instead); ids must not clash (`wb-` is the
+  water balance).
+- Still open from earlier phases: the ETo comparison against the old HA values, and the
+  solar-bias caveat (stats averages ~4% high since April 2026).
