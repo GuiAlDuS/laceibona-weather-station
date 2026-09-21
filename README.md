@@ -59,6 +59,10 @@ cd ../frontend
 
 Set `STATION_ID` and `DEVICE_ID` in `fetcher/wrangler.toml`, and the API address in `frontend/js/config.js`.
 
+## License
+
+MIT, see [LICENSE](LICENSE). The vendored Plotly.js keeps its own MIT license (`frontend/vendor/LICENSE-plotly`).
+
 ## Credits
 
 Plotly.js (MIT, license in `frontend/vendor/LICENSE-plotly`) is vendored in `frontend/vendor/`. Weather data comes from the WeatherFlow Tempest API.
