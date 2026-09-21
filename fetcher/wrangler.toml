@@ -1,0 +1,20 @@
+name = "laceibona-fetcher"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# One 5-minute cron: src/index.js refreshes `current` every run (288 KV writes/day) and also
+# rebuilds `daily:all` in the 07:00 UTC slot (01:00 local, UTC-6).
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+STATION_ID = "163576"
+DEVICE_ID = "391086"
+
+[[kv_namespaces]]
+binding = "WEATHER_DATA"
+id = "f9988657b7f34bd3b04fa5ffc5818a57"
+preview_id = "b5f84d48cb21407bb179ccbe7399eced"
+
+[observability]
+enabled = true

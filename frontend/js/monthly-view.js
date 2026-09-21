@@ -1,0 +1,117 @@
+import { $, token, nf, narrowScreen, MONTHS, chartFont, hoverLabel, fillLegend } from "./common.js";
+import { summarizeMonths, peak } from "./monthly.js";
+
+export const monthName = (key) => MONTHS[+key.slice(5, 7) - 1];
+export const longLabel = (m) =>
+  `${monthName(m.month)} ${m.month.slice(0, 4)}${m.partial ? ` — ${m.days} of ${m.daysInMonth} days` : ""}`;
+export const tickLabel = (m) => `${monthName(m.month)}${m.partial ? "†" : ""}<br>${m.month.slice(2, 4)}`;
+
+export function renderMonthlyChart(months) {
+  const font = chartFont();
+  const muted = token("--text-muted");
+  const x = months.map(longLabel);
+  const labelOnly = (key) => {
+    const i = peak(months, key);
+    return months.map((m, j) => (j === i ? nf.format(Math.round(m[key])) : ""));
+  };
+  const bar = (name, key, color) => ({
+    type: "bar",
+    name,
+    x,
+    y: months.map((m) => m[key]),
+    marker: { color, cornerradius: 4 },
+    text: labelOnly(key),
+    textposition: "outside",
+    textfont: { color: font.color, size: 12 },
+    constraintext: "none",
+    cliponaxis: false,
+    customdata: months.map((m) => (m.partial ? ` (${m.days} of ${m.daysInMonth} days)` : "")),
+    hovertemplate: "%{y:,.0f} mm%{customdata}",
+  });
+
+  const layout = {
+    font,
+    paper_bgcolor: "rgba(0,0,0,0)",
+    plot_bgcolor: "rgba(0,0,0,0)",
+    margin: { l: 56, r: 12, t: 24, b: 48 },
+    showlegend: false,
+    barmode: "group",
+    bargap: 0.3,
+    bargroupgap: 0.06,
+    hovermode: "x unified",
+    hoverlabel: hoverLabel(),
+    xaxis: {
+      type: "category",
+      tickmode: "array",
+      tickvals: x.filter((_, i) => !narrowScreen.matches || i % 2 === (months.length - 1) % 2),
+      ticktext: months.map(tickLabel).filter((_, i) => !narrowScreen.matches || i % 2 === (months.length - 1) % 2),
+      tickangle: 0,
+      showgrid: false,
+      showspikes: true,
+      spikemode: "across",
+      spikesnap: "cursor",
+      spikecolor: token("--baseline"),
+      spikethickness: 1,
+      spikedash: "solid",
+      showline: true,
+      linecolor: token("--baseline"),
+      tickfont: { color: muted, size: 12 },
+      fixedrange: true,
+    },
+    yaxis: {
+      title: { text: "mm per month", font: { color: muted, size: 12 }, standoff: 8 },
+      tickformat: ",d",
+      rangemode: "tozero",
+      gridcolor: token("--grid"),
+      gridwidth: 1,
+      zeroline: true,
+      zerolinecolor: token("--baseline"),
+      zerolinewidth: 1,
+      tickfont: { color: muted, size: 12 },
+      fixedrange: true,
+    },
+  };
+
+  return Plotly.react(
+    $("mo-chart"),
+    [bar("Rain", "rain", token("--series-1")), bar("ETo", "eto", token("--series-2"))],
+    layout,
+    { displayModeBar: false, responsive: true },
+  );
+}
+
+export function renderMonthlyText(months) {
+  fillLegend(
+    $("mo-legend"),
+    [
+      { label: "Rain", color: token("--series-1") },
+      { label: "ETo (evapotranspiration)", color: token("--series-2") },
+    ],
+    "rect",
+  );
+
+  const s = summarizeMonths(months);
+  $("mo-summary").textContent = `Rain exceeded ETo in ${s.rainAboveEto} of the last ${s.total} months.`;
+
+  const partial = months.filter((m) => m.partial);
+  $("mo-note").textContent =
+    "Monthly totals add up only days with complete sensor data. " +
+    (partial.length ? "† marks a month with missing days (or the month in progress), so its totals read low." : "");
+
+  const t = $("mo-table");
+  t.replaceChildren();
+  const head = t.createTHead().insertRow();
+  for (const h of ["Month", "Rain (mm)", "ETo (mm)", "Days with data"]) {
+    const th = document.createElement("th");
+    th.textContent = h;
+    head.append(th);
+  }
+  const body = t.createTBody();
+  for (const m of months) {
+    const row = body.insertRow();
+    row.insertCell().textContent = `${monthName(m.month)} ${m.month.slice(0, 4)}`;
+    row.insertCell().textContent = m.rain === null ? "" : nf.format(Math.round(m.rain));
+    row.insertCell().textContent = m.eto === null ? "" : nf.format(Math.round(m.eto));
+    row.insertCell().textContent = `${m.days} of ${m.daysInMonth}`;
+  }
+}
