@@ -7,7 +7,15 @@ export const dayLabel = (iso) => {
 };
 
 // One categorical colour per day, latest day first (blue), then orange, aqua, yellow, magenta, green, violet.
-export const dayColor = (i, count) => token(`--series-${count - i}`);
+const dayHex = (i, count) => token(`--series-${count - i}`);
+
+// Older days fade quickly: the latest day is fully opaque and each day back keeps 70% of the one after it
+// (1, 0.7, 0.49, 0.34, ...), never below 20%, so the last two or three days clearly stand out.
+const FADE = 0.7;
+const MIN_ALPHA = 0.2;
+export const dayAlpha = (i, count) => Math.max(MIN_ALPHA, FADE ** (count - 1 - i));
+const rgba = (hex, a) => `rgba(${[1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16)).join(",")},${a.toFixed(2)})`;
+export const dayColor = (i, count) => rgba(dayHex(i, count), dayAlpha(i, count));
 
 const hourLabel = (h) => `${String(h).padStart(2, "0")}:00`;
 
@@ -31,7 +39,7 @@ export function renderTempDailyChart(days) {
     mode: "markers",
     x: [last.hour],
     y: [last.t],
-    marker: { size: 9, color: dayColor(latestIdx, days.length), line: { color: surface, width: 2 } },
+    marker: { size: 9, color: dayHex(latestIdx, days.length), line: { color: surface, width: 2 } },
     hoverinfo: "skip",
     showlegend: false,
   });
@@ -86,7 +94,7 @@ export function renderTempDailyText(days) {
   const hi = Math.max(...latest.points.map((p) => p.tmax ?? p.t));
   $("td-summary").textContent = `${dayLabel(latest.date)}: ${lo.toFixed(1)} to ${hi.toFixed(1)} °C${latest.points.length < 24 ? " so far" : ""}.`;
   $("td-note").textContent =
-    "Hourly mean temperature by local hour (UTC-6), for the last 7 days with data. Each day has its own colour, starting with blue for the most recent day; the legend lists them in that order. The hour in progress is shown as its average so far.";
+    "Hourly mean temperature by local hour (UTC-6), for the last 7 days with data. Each day has its own colour, starting with blue for the most recent day, and older days fade so the recent ones stand out; the legend lists them in that order. The hour in progress is shown as its average so far.";
 
   const t = $("td-table");
   t.replaceChildren();

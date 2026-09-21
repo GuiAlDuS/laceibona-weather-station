@@ -1,25 +1,28 @@
 import { $, token, narrowScreen, chartFont, hoverLabel } from "./common.js";
-import { mix } from "./heatmap-view.js";
+import { VIRIDIS } from "./heatmap-view.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { SECTORS } from "./windrose.js";
 import { sectorName, daySummaries } from "./winddaily.js";
 
-const CMAX = 3; // m/s at and above which the colour stops getting darker
 const DAY_MS = 86400_000;
+const CMIN = 0.5; // the calm cut-off; nothing slower is drawn
 
-const dayMs = (iso) => Date.parse(iso);
+// Whole days since the first date shown. The x axis counts days, not dates: Plotly formats date ticks in the
+// viewer's timezone, which would shift these local-time labels by a day.
+const dayIndex = (iso, first) => Math.round((Date.parse(iso) - Date.parse(first)) / DAY_MS);
 
 export function renderWindDailyChart(hours) {
   const font = chartFont();
   const muted = token("--text-muted");
-  const dates = hours.map((h) => h.date);
-  const first = dayMs(dates[0]);
-  const last = dayMs(dates.at(-1));
-  const low = mix(token("--surface"), token("--series-1"), 0.4);
+  const first = hours[0].date;
+  const span = dayIndex(hours.at(-1).date, first) + 1;
+  // Top of the colour scale: the fastest hour, rounded up to 0.5 m/s, and never below 2 so a calm week is not stretched.
+  const cmax = Math.max(2, Math.ceil(Math.max(...hours.map((h) => h.ws)) * 2) / 2);
+  const cticks = Array.from({ length: Math.round((cmax - CMIN) / 0.5) + 1 }, (_, i) => CMIN + i * 0.5);
   const trace = {
     type: "scatter",
     mode: "markers",
-    x: hours.map((h) => dayMs(h.date) + ((h.hour + 0.5) / 24) * DAY_MS), // each dot at its own hour, so time runs left to right
+    x: hours.map((h) => dayIndex(h.date, first) + (h.hour + 0.5) / 24), // each dot at its own hour, so time runs left to right
     y: hours.map((h) => h.y),
     customdata: hours.map((h) => `${dayLabel(h.date)}, ${String(h.hour).padStart(2, "0")}:00<br>from ${sectorName(h.dir)} (${Math.round(h.dir)}°)`),
     hovertemplate: "%{customdata}<br>%{marker.color:.1f} m/s<extra></extra>",
@@ -27,10 +30,10 @@ export function renderWindDailyChart(hours) {
       size: 7,
       opacity: 0.85,
       color: hours.map((h) => h.ws),
-      cmin: 0.5,
-      cmax: CMAX,
-      colorscale: [[0, low], [1, token("--series-1")]],
-      colorbar: { title: { text: "m/s", font: { color: muted, size: 12 } }, thickness: 12, len: 0.9, outlinewidth: 0, tickfont: { color: muted, size: 12 }, tickvals: [0.5, 1, 1.5, 2, 2.5, 3], ticktext: ["0.5", "1", "1.5", "2", "2.5", "3+"] },
+      cmin: CMIN,
+      cmax,
+      colorscale: VIRIDIS, // same scale as the wind speed heatmap: the strongest wind is the yellowest
+      colorbar: { title: { text: "m/s", font: { color: muted, size: 12 } }, thickness: 12, len: 0.9, outlinewidth: 0, tickfont: { color: muted, size: 12 }, tickvals: cticks, ticktext: cticks.map(String) },
     },
   };
   const names = [...SECTORS.slice(8), ...SECTORS.slice(0, 9)]; // S..N..S, the same wrap as the direction heatmap
@@ -42,13 +45,13 @@ export function renderWindDailyChart(hours) {
     hovermode: "closest",
     hoverlabel: hoverLabel(),
     xaxis: {
-      type: "date",
-      range: [first, last + DAY_MS],
-      dtick: (narrowScreen.matches ? 2 : 1) * DAY_MS,
-      tick0: first,
-      tickformat: "%a %-d",
+      range: [0, span],
+      tickmode: "array",
+      tickvals: Array.from({ length: span }, (_, i) => i).filter((i) => !narrowScreen.matches || i % 2 === 0),
+      ticktext: Array.from({ length: span }, (_, i) => dayLabel(new Date(Date.parse(first) + i * DAY_MS).toISOString().slice(0, 10))).filter((_, i) => !narrowScreen.matches || i % 2 === 0),
       tickangle: 0,
-      showgrid: false,
+      showgrid: true,
+      gridcolor: token("--grid"),
       showline: true,
       linecolor: token("--baseline"),
       tickfont: { color: muted, size: 12 },

@@ -44,7 +44,7 @@ export function renderMonthHourChart(cfg, hm) {
       tickmode: "array",
       tickvals: [0, 3, 6, 9, 12, 15, 18, 21],
       ticktext: [0, 3, 6, 9, 12, 15, 18, 21].map(hourLabel),
-      range: [-0.5, 23.5],
+      range: [23.5, -0.5], // reversed: midnight at the top, so time reads downwards
       showgrid: false,
       ticks: "",
       tickfont: { color: muted, size: 12 },
