@@ -1,5 +1,5 @@
 import { $, token, fillLegend } from "./common.js";
-import { SECTORS, SPEED_BINS } from "./windrose.js";
+import { SECTORS, SPEED_BINS, CALM_BELOW_KMH_TEXT } from "./windrose.js";
 
 const seqColors = () => [token("--seq-1"), token("--seq-2"), token("--seq-3"), token("--seq-4")];
 
@@ -64,7 +64,7 @@ export function renderWindRose(rose, periodText) {
     "rect",
   );
   const busiest = [...rose.sectors].sort((a, b) => b.percent - a.percent)[0];
-  $("wr-summary").textContent = `Most often from ${busiest.name} (${f1(busiest.percent)} of the time). Calm (under 0.5 m/s): ${f1(rose.calmPercent)}.`;
+  $("wr-summary").textContent = `Most often from ${busiest.name} (${f1(busiest.percent)} of the time). Calm (under ${CALM_BELOW_KMH_TEXT}): ${f1(rose.calmPercent)}.`;
   $("wr-note").textContent =
     `Each wedge is the share of time the wind came from that direction, split by its one-minute average speed; ${periodText}. ` +
     "Gusts are not shown, so speeds read low. This is a close approximation of a classic wind rose, not an exact copy.";

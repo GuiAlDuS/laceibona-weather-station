@@ -1,11 +1,13 @@
 // Wind rose from wind columns (hourly in `obs:*`, per-minute in `wind24h`) (`ws` m/s, `wd` degrees). Pure functions; no DOM.
 export const SECTORS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+export const MS_TO_KMH = 3.6;
 export const CALM_BELOW = 0.5; // m/s; slower hours have no meaningful direction
-export const SPEED_BINS = [
-  { label: "0.5–1 m/s", max: 1 },
-  { label: "1–2 m/s", max: 2 },
-  { label: "2–3 m/s", max: 3 },
-  { label: "3 m/s or more", max: Infinity },
+export const CALM_BELOW_KMH_TEXT = "1.8 km/h"; // the same cut-off as shown to the reader
+export const SPEED_BINS = [ // `max` in m/s (the data unit); labels in km/h (what the reader sees)
+  { label: "1.8–3.6 km/h", max: 1 },
+  { label: "3.6–7.2 km/h", max: 2 },
+  { label: "7.2–10.8 km/h", max: 3 },
+  { label: "10.8 km/h or more", max: Infinity },
 ];
 
 // docs: any documents with `cols.ws` and `cols.wd`. Samples missing either value are not counted.

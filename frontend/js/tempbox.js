@@ -21,11 +21,11 @@ export function boxStats(values) {
 const nums = (a) => a.filter((v) => typeof v === "number");
 
 // One box per month, oldest first. Months with no data are left out.
-export function monthlyBoxes(docs, col = "t") {
+export function monthlyBoxes(docs, col = "t", scale = 1) {
   return [...docs]
     .sort((a, b) => a.month.localeCompare(b.month))
     .map((doc) => {
-      const v = nums(doc.cols[col]);
+      const v = nums(doc.cols[col]).map((x) => x * scale);
       return { key: doc.month, partial: v.length < doc.cols[col].length * PARTIAL_BELOW, stats: boxStats(v) };
     })
     .filter((m) => m.stats);

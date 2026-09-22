@@ -2,6 +2,7 @@ import { buildDaily } from "./daily.js";
 import { buildCurrent, localMidnightSec } from "./current.js";
 import { buildWind24h } from "./wind.js";
 import { aggregateHours, mergeHours, lastFilledHour, monthKeyLocal } from "./hourly.js";
+import { aggregateFine, mergeFine, lastFilledBucket, windowEnd } from "./fine.js";
 import { handleRequest } from "./api.js";
 
 const TEMPEST_BASE = "https://swd.weatherflow.com/swd/rest";
@@ -62,14 +63,28 @@ async function refreshObs(env, scheduledMs = Date.now()) {
   return keys;
 }
 
+// Refreshes the 10-minute `fine7d` window. Runs in the first tick of each 10 minutes. It re-reads from the newest
+// stored bucket (so a minute that arrived late corrects it), at most 24 h back, and 6 h back when nothing is stored.
+async function refreshFine(env, scheduledMs = Date.now()) {
+  const end = windowEnd(scheduledMs / 1000);
+  const existing = await env.WEATHER_DATA.get("fine7d", "json");
+  const last = existing ? lastFilledBucket(existing) : null;
+  const from = last === null ? end - 6 * 3600 : Math.max(last, end - 86400);
+  const body = await tempestGet(env, `/observations/device/${env.DEVICE_ID}?time_start=${from}&time_end=${end - 1}`);
+  const doc = mergeFine(existing, aggregateFine(body.obs ?? []), end);
+  await env.WEATHER_DATA.put("fine7d", JSON.stringify(doc));
+  return doc;
+}
+
 export default {
   fetch: handleRequest,
 
   async scheduled(controller, env, ctx) {
-    // One 5-minute cron drives everything: `current` and `wind24h` every run, `obs:` once an hour, and `daily:all` once a day at 07:00 UTC (01:00 local).
+    // One 5-minute cron drives everything: `current` and `wind24h` every run, `obs:` once an hour, `fine7d` every 10 minutes, and `daily:all` once a day at 07:00 UTC (01:00 local).
     const t = new Date(controller.scheduledTime);
     const jobs = [refreshCurrent, refreshWind];
     if (t.getUTCMinutes() < 5) jobs.push(refreshObs);
+    if (t.getUTCMinutes() % 10 < 5) jobs.push(refreshFine);
     if (t.getUTCHours() === 7 && t.getUTCMinutes() < 5) jobs.push(refreshDailyStats);
     for (const job of jobs) {
       ctx.waitUntil(

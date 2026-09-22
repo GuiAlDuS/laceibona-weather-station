@@ -2,7 +2,7 @@ import { $, token, MONTHS, chartFont, hoverLabel } from "./common.js";
 import { monthName, longMonth, tick } from "./heatmap-view.js";
 
 const TEMP = { prefix: "bm", unit: "°C", decimals: 1, basis: "hourly temperatures", high: "Highest typical temperature", low: "Lowest" };
-export const WIND = { prefix: "wk", unit: "m/s", decimals: 2, basis: "hourly wind speeds", high: "Windiest", low: "Calmest" };
+export const WIND = { prefix: "wk", unit: "km/h", decimals: 1, basis: "hourly wind speeds", high: "Windiest", low: "Calmest" };
 const f1 = (v) => v.toFixed(1);
 const COLS = ["Minimum", "Lower quartile", "Median", "Upper quartile", "Maximum", "Mean"];
 const cells = (s, d = 1) => [s.min, s.q1, s.median, s.q3, s.max, s.mean].map((v) => v.toFixed(d));

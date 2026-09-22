@@ -2,8 +2,8 @@ name = "laceibona-fetcher"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
 
-# One 5-minute cron: src/index.js refreshes `current` every run (288 KV writes/day) and also
-# rebuilds `daily:all` in the 07:00 UTC slot (01:00 local, UTC-6).
+# One 5-minute cron: src/index.js refreshes `current` and `wind24h` every run (576 KV writes/day), `fine7d`
+# every second run (144), `obs:` hourly and `daily:all` in the 07:00 UTC slot (01:00 local, UTC-6).
 [triggers]
 crons = ["*/5 * * * *"]
 

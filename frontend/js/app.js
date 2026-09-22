@@ -9,6 +9,8 @@ import { renderMonthlyChart, renderMonthlyText } from "./monthly-view.js";
 import { RAIN, LIGHTNING, renderCumulativeChart, renderCumulativeText } from "./cumulative-view.js";
 import { lastRainDays } from "./rainweek.js";
 import { renderRainWeekChart, renderRainWeekText } from "./rainweek-view.js";
+import { fineBuckets } from "./rainfine.js";
+import { renderRainFineChart, renderRainFineText, initRainFineToggle } from "./rainfine-view.js";
 import { renderCurrent, renderCurrentUnavailable } from "./current-view.js";
 import { getMonths, monthKeys } from "./obs-data.js";
 import { lastDays } from "./tempdaily.js";
@@ -21,7 +23,7 @@ import { monthlyBoxes, yearlyBoxes } from "./tempbox.js";
 import { WIND as WIND_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
 import { VIRIDIS, renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
-import { windRose } from "./windrose.js";
+import { windRose, MS_TO_KMH } from "./windrose.js";
 import { renderWindRose } from "./windrose-view.js";
 
 let currentDoc = null;
@@ -122,9 +124,38 @@ function drawWind() {
   renderWindRose(rose, `the 24 hours to ${to.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "America/Costa_Rica" })} on ${longDate(new Date(to - 6 * 3600_000).toISOString().slice(0, 10))}`);
 }
 
+let fineBucketsData = null;
+
+async function loadRainFine() {
+  $("rf-frame").classList.add("reloading");
+  if (!fineBucketsData) setStatus("rf-status", "Loading…");
+  try {
+    const res = await fetch(`${API_BASE}/api/fine7d`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const doc = await res.json();
+    if (doc.available === false) throw new Error("no data yet");
+    fineBucketsData = fineBuckets(doc);
+    if (fineBucketsData.every((b) => b.rate === null && b.p === null && b.solar === null)) throw new Error("no usable data yet");
+    drawRainFine();
+    setStatus("rf-status", "");
+    $("rf-solar-toggle").disabled = false;
+  } catch (err) {
+    console.error(err);
+    if (!fineBucketsData) setStatus("rf-status", `Could not load data (${err.message}). `, loadRainFine);
+  } finally {
+    $("rf-frame").classList.remove("reloading");
+  }
+}
+
+function drawRainFine() {
+  if (!fineBucketsData) return;
+  renderRainFineText(fineBucketsData);
+  renderRainFineChart(fineBucketsData);
+}
+
 // Charts built from the monthly `obs:` documents. Each is [id prefix, draw(docs)]; one failure does not stop the others.
 const TEMP_HEAT = { prefix: "th", unit: "°C", decimals: 1, colorToken: "--hot", high: "Warmest", low: "Coolest", what: "Average temperature" };
-const WIND_HEAT = { prefix: "wh", unit: "m/s", decimals: 2, ramp: VIRIDIS, high: "Windiest", low: "Calmest", what: "Average wind speed" };
+const WIND_HEAT = { prefix: "wh", unit: "km/h", decimals: 1, ramp: VIRIDIS, high: "Windiest", low: "Calmest", what: "Average wind speed" };
 const obsState = {};
 const last13 = (docs) => docs.filter((d) => d.month >= monthKeys(13)[0]);
 const OBS_CHARTS = [
@@ -144,7 +175,7 @@ const OBS_CHARTS = [
     return renderMonthHourChart(TEMP_HEAT, obsState.th);
   }],
   ["wh", (docs) => {
-    obsState.wh = monthHourMeans(last13(docs), "ws");
+    obsState.wh = monthHourMeans(last13(docs), "ws", MS_TO_KMH);
     if (obsState.wh.months.length === 0) throw new Error("no usable data yet");
   }, () => {
     renderMonthHourText(WIND_HEAT, obsState.wh);
@@ -172,7 +203,7 @@ const OBS_CHARTS = [
     return renderTempBoxMonthly(obsState.bm);
   }],
   ["wk", (docs) => {
-    obsState.wk = monthlyBoxes(last13(docs), "ws");
+    obsState.wk = monthlyBoxes(last13(docs), "ws", MS_TO_KMH);
     if (obsState.wk.length === 0) throw new Error("no usable data yet");
   }, () => {
     renderTempBoxMonthlyText(obsState.wk, WIND_BOX);
@@ -220,10 +251,12 @@ function drawObsCharts() {
 
 setInterval(loadWind, 300_000);
 setInterval(loadObsCharts, 300_000);
+setInterval(loadRainFine, 300_000);
 
 function redraw() {
   drawWind();
   drawObsCharts();
+  drawRainFine();
   if (!balance) return;
   renderWaterBalanceText(balance);
   renderMonthlyText(months);
@@ -240,7 +273,9 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", red
 narrowScreen.addEventListener("change", redraw);
 
 initNav();
+initRainFineToggle();
 loadCurrent();
 load();
 loadWind();
 loadObsCharts();
+loadRainFine();

@@ -1,5 +1,5 @@
 // Hourly wind direction and speed for the most recent days, for the daily scatter. Pure functions; no DOM.
-import { SECTORS, CALM_BELOW } from "./windrose.js";
+import { SECTORS, CALM_BELOW, MS_TO_KMH } from "./windrose.js";
 
 const LOCAL_OFFSET_S = -6 * 3600;
 
@@ -9,7 +9,7 @@ export const windY = (deg) => ((deg - 180 + 360) % 360) / 22.5;
 export const sectorName = (deg) => SECTORS[Math.round(deg / 22.5) % 16];
 
 // docs: obs:YYYY-MM documents. Returns hours from the last `n` calendar days ending at the latest day with
-// data, oldest first: { date, hour, dir, ws, y }. Calm hours (direction is noise) are left out.
+// data, oldest first: { date, hour, dir, ws (km/h), y }. Calm hours (direction is noise) are left out.
 export function recentHours(docs, n = 30) {
   const all = [];
   for (const doc of docs) {
@@ -26,7 +26,7 @@ export function recentHours(docs, n = 30) {
   return all
     .filter((h) => h.date >= first && !h.calm)
     .sort((a, b) => (a.date === b.date ? a.hour - b.hour : a.date < b.date ? -1 : 1))
-    .map((h) => ({ date: h.date, hour: h.hour, dir: h.dir, ws: h.ws, y: windY(h.dir) }));
+    .map((h) => ({ date: h.date, hour: h.hour, dir: h.dir, ws: h.ws * MS_TO_KMH, y: windY(h.dir) }));
 }
 
 // One row per day: most common direction (sector), mean and peak hourly speed.

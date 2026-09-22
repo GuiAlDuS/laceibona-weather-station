@@ -45,7 +45,7 @@ test("the 07:00 UTC tick also rebuilds daily:all", async () => {
   const s = setup();
   await worker.scheduled(at("2026-09-22T07:00:11Z"), s.env, s.ctx);
   await s.done();
-  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "daily:all", "obs:2026-09", "wind24h"]);
+  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "daily:all", "fine7d", "obs:2026-09", "wind24h"]);
 });
 
 test("the 07:05 tick and the 06:55 tick do not rebuild daily:all", async () => {
@@ -83,7 +83,18 @@ test("the first tick of an hour appends the finished hours to obs:YYYY-MM, start
   const s = setup({ stored });
   await worker.scheduled(at("2026-09-21T16:00:11Z"), s.env, s.ctx);
   await s.done();
-  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "obs:2026-09", "wind24h"]);
+  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "fine7d", "obs:2026-09", "wind24h"]);
   const call = s.calls.find((u) => u.includes("time_end=" + (hourStart - 1)));
   assert.ok(call.includes(`time_start=${hourStart - 3600}`), call); // resumes right after the stored hour
+});
+
+test("fine7d is refreshed every second tick (:00, :10, ...) and only with finished buckets", async () => {
+  const s = setup();
+  await worker.scheduled(at("2026-09-21T16:10:11Z"), s.env, s.ctx);
+  await s.done();
+  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "fine7d", "wind24h"]);
+  const end = Date.parse("2026-09-21T16:10:00Z") / 1000;
+  assert.ok(s.calls.some((u) => u.includes(`time_start=${end - 6 * 3600}&time_end=${end - 1}`)), s.calls.join("\n")); // empty store: 6 h back
+  const doc = JSON.parse(s.writes.fine7d);
+  assert.equal(doc.start + doc.slots * doc.step, end);
 });

@@ -49,7 +49,7 @@ export function renderWindDirText(hm) {
   $("wd-summary").textContent = `Prevailing direction: from ${top.name}, about ${f1(top.percent)} of hours in a typical month.`;
   const partial = hm.months.filter((m) => m.partial);
   $("wd-note").textContent =
-    "Share of each month's hours the wind blew from each direction (hourly average direction; calm hours under 0.5 m/s left out). South is at both top and bottom, so the north and east winds sit together in the middle. Gray cells never occurred." +
+    "Share of each month's hours the wind blew from each direction (hourly average direction; calm hours under 1.8 km/h left out). South is at both top and bottom, so the north and east winds sit together in the middle. Gray cells never occurred." +
     (partial.length ? " † marks a month with missing data (or the month in progress)." : "");
 
   const t = $("wd-table");

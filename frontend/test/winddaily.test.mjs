@@ -30,10 +30,10 @@ test("nothing in, nothing out", () => {
   assert.deepEqual(recentHours([]), []);
 });
 
-test("daySummaries gives the most common sector, mean and peak per day", () => {
+test("daySummaries gives the most common sector, mean and peak per day, in km/h", () => {
   const [d] = daySummaries(recentHours([doc([[0, 1, 88], [1, 3, 92], [2, 2, 200]])]));
   assert.equal(d.direction, "E");
-  assert.equal(d.mean, 2);
-  assert.equal(d.peak, 3);
+  assert.equal(d.mean, 7.2); // (1+3+2)/3 m/s * 3.6
+  assert.equal(d.peak, 10.8); // 3 m/s * 3.6
   assert.equal(d.hours, 3);
 });

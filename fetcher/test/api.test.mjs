@@ -54,3 +54,8 @@ test("/api/wind24h passes stored JSON through, and is a placeholder before the f
   assert.deepEqual(await (await handleRequest(req("/api/wind24h"), env({ wind24h: '{"cols":{}}' }))).json(), { cols: {} });
   assert.deepEqual(await (await handleRequest(req("/api/wind24h"), env({}))).json(), { available: false });
 });
+
+test("/api/fine7d passes stored JSON through, and is a placeholder before the first run", async () => {
+  assert.deepEqual(await (await handleRequest(req("/api/fine7d"), env({ fine7d: '{"cols":{}}' }))).json(), { cols: {} });
+  assert.deepEqual(await (await handleRequest(req("/api/fine7d"), env({}))).json(), { available: false });
+});
