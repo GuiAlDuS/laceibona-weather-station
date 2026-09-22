@@ -3,6 +3,7 @@ import { buildCurrent, localMidnightSec } from "./current.js";
 import { buildWind24h } from "./wind.js";
 import { aggregateHours, mergeHours, lastFilledHour, monthKeyLocal } from "./hourly.js";
 import { aggregateFine, mergeFine, lastFilledBucket, windowEnd } from "./fine.js";
+import { buildForecast } from "./forecast.js";
 import { handleRequest } from "./api.js";
 
 const TEMPEST_BASE = "https://swd.weatherflow.com/swd/rest";
@@ -76,15 +77,24 @@ async function refreshFine(env, scheduledMs = Date.now()) {
   return doc;
 }
 
+// Refreshes the 7-day (today + 6) forecast. Runs twice an hour; forecasts don't move minute to minute.
+async function refreshForecast(env) {
+  const body = await tempestGet(env, `/better_forecast?station_id=${env.STATION_ID}&units_temp=c&units_wind=kph&units_pressure=hpa&units_precip=mm`);
+  const doc = buildForecast(body);
+  await env.WEATHER_DATA.put("forecast", JSON.stringify(doc));
+  return doc;
+}
+
 export default {
   fetch: handleRequest,
 
   async scheduled(controller, env, ctx) {
-    // One 5-minute cron drives everything: `current` and `wind24h` every run, `obs:` once an hour, `fine7d` every 10 minutes, and `daily:all` once a day at 07:00 UTC (01:00 local).
+    // One 5-minute cron drives everything: `current` and `wind24h` every run, `obs:` once an hour, `fine7d` every 10 minutes, `forecast` every 30 minutes, and `daily:all` once a day at 07:00 UTC (01:00 local).
     const t = new Date(controller.scheduledTime);
     const jobs = [refreshCurrent, refreshWind];
     if (t.getUTCMinutes() < 5) jobs.push(refreshObs);
     if (t.getUTCMinutes() % 10 < 5) jobs.push(refreshFine);
+    if (t.getUTCMinutes() % 30 < 5) jobs.push(refreshForecast);
     if (t.getUTCHours() === 7 && t.getUTCMinutes() < 5) jobs.push(refreshDailyStats);
     for (const job of jobs) {
       ctx.waitUntil(

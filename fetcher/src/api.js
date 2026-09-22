@@ -13,7 +13,7 @@ const json = (body, status, cacheSeconds) =>
     },
   });
 
-const KEYS = { "/api/daily": ["daily:all", 300], "/api/current": ["current", 60], "/api/status": ["status:last_error", 30], "/api/wind24h": ["wind24h", 60], "/api/fine7d": ["fine7d", 120] };
+const KEYS = { "/api/daily": ["daily:all", 300], "/api/current": ["current", 60], "/api/status": ["status:last_error", 30], "/api/wind24h": ["wind24h", 60], "/api/fine7d": ["fine7d", 120], "/api/forecast": ["forecast", 600] };
 
 // Back-filled history: /api/obs/YYYY-MM -> obs:YYYY-MM, /api/lightning/YYYY -> lightning:YYYY.
 // These documents change rarely, so they are cached longer, and a missing one is a plain 404.
@@ -38,7 +38,7 @@ export async function handleRequest(request, env) {
     if (optional) return json(JSON.stringify({ error: "not found" }), 404, 300);
     if (key === "status:last_error") return json(JSON.stringify({ last_error: null }), 200, 30);
     // `current` is empty until the 5-minute fetcher has run once.
-    const live = key === "current" || key === "wind24h" || key === "fine7d";
+    const live = key === "current" || key === "wind24h" || key === "fine7d" || key === "forecast";
     const body = live ? { available: false } : { error: "no data yet" };
     return json(JSON.stringify(body), live ? 200 : 503, 30);
   }

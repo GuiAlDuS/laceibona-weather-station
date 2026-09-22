@@ -4,6 +4,26 @@ export const $ = (id) => document.getElementById(id);
 export const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 export const narrowScreen = window.matchMedia("(max-width: 600px)");
 
+export const el = (tag, className, text) => {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+};
+
+export const num = (v, digits = 1) => (typeof v === "number" ? v.toFixed(digits) : "—");
+
+// A bordered stat box: a label, a value with an optional unit, and any number of muted sub-lines.
+export function tile(label, value, unit, subs = []) {
+  const box = el("div", "tile");
+  box.append(el("div", "tile-label", label));
+  const v = el("div", "tile-value", value);
+  if (unit) v.append(el("span", "tile-unit", ` ${unit}`));
+  box.append(v);
+  for (const s of subs) if (s) box.append(el("div", "tile-sub", s));
+  return box;
+}
+
 export { nf, MONTHS };
 export const mm = (v) => {
   const r = Math.round(v);

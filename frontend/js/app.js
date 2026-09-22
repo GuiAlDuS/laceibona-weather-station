@@ -13,6 +13,8 @@ import { renderRainWeekChart, renderRainWeekText } from "./rainweek-view.js";
 import { fineBuckets } from "./rainfine.js";
 import { renderRainFineChart, renderRainFineText, initRainFineToggle } from "./rainfine-view.js";
 import { renderCurrent, renderCurrentUnavailable } from "./current-view.js";
+import { forecastDays, forecastHours } from "./forecast.js";
+import { renderForecast, renderForecastUnavailable, renderForecastHourlyChart, renderForecastHourlyText } from "./forecast-view.js";
 import { getMonths, monthKeys } from "./obs-data.js";
 import { lastDays } from "./tempdaily.js";
 import { monthHourMeans } from "./heatmap.js";
@@ -64,6 +66,43 @@ async function loadCurrent() {
 // Ages advance between fetches, so re-render from the last document without refetching.
 setInterval(() => currentDoc && renderCurrent(currentDoc, Date.now()), 30_000);
 setInterval(loadCurrent, 60_000);
+
+let forecast = null;
+let forecastHourly = null;
+
+async function loadForecast() {
+  $("fc-body").classList.add("reloading");
+  $("fh-frame").classList.add("reloading");
+  if (!forecastHourly) setStatus("fh-status", t("Loading…", "Cargando…"));
+  try {
+    const res = await fetch(`${API_BASE}/api/forecast`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const doc = await res.json();
+    if (doc.available === false) {
+      const msg = t("The forecast will appear once the station data feed is running.", "El pronóstico aparecerá en cuanto el flujo de datos de la estación esté funcionando.");
+      renderForecastUnavailable(msg);
+      if (!forecastHourly) setStatus("fh-status", msg);
+    } else {
+      forecast = forecastDays(doc);
+      if (forecast.length === 0) throw NO_USABLE_DATA();
+      renderForecast(forecast);
+
+      forecastHourly = forecastHours(doc);
+      if (forecastHourly.length === 0) throw NO_USABLE_DATA();
+      renderForecastHourlyText(forecastHourly);
+      await renderForecastHourlyChart(forecastHourly);
+      setStatus("fh-status", "");
+    }
+  } catch (err) {
+    console.error(err);
+    if (!forecast) renderForecastUnavailable(couldNotLoad(err.message));
+    if (!forecastHourly) setStatus("fh-status", couldNotLoad(err.message), loadForecast);
+  } finally {
+    $("fc-body").classList.remove("reloading");
+    $("fh-frame").classList.remove("reloading");
+  }
+}
+setInterval(loadForecast, 600_000);
 
 let balance = null;
 let months = null;
@@ -303,6 +342,7 @@ function redraw() {
   drawWind();
   drawObsCharts();
   drawRainFine();
+  if (forecastHourly) renderForecastHourlyChart(forecastHourly);
   if (!balance) return;
   renderWaterBalanceText(balance);
   renderMonthlyText(months);
@@ -322,6 +362,7 @@ initNav();
 initRainFineToggle();
 initWindRoseToggle();
 loadCurrent();
+loadForecast();
 load();
 loadWind();
 loadObsCharts();

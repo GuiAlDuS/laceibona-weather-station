@@ -10,6 +10,7 @@ const STATS = {
   stats_day: [],
 };
 const OBS = { status: { status_code: 0 }, obs: [[1790000000, 0, 0.5, 1, 90, 3, 1000, 27, 80, 30000, 3, 250, 0, 0, 0, 0, 2.6, 1]] };
+const FORECAST = { status: { status_code: 0 }, forecast: { daily: [{ day_start_local: 1790000000, conditions: "Clear", icon: "clear-day", air_temp_high: 30, air_temp_low: 21, precip_probability: 10, precip_type: "rain" }] } };
 
 function setup({ failCurrent = false, stored = {} } = {}) {
   const writes = {};
@@ -18,6 +19,7 @@ function setup({ failCurrent = false, stored = {} } = {}) {
     calls.push(String(url));
     if (String(url).includes("/stats/station/")) return Response.json(STATS);
     if (failCurrent) return new Response("nope", { status: 500 });
+    if (String(url).includes("/better_forecast")) return Response.json(FORECAST);
     return Response.json(OBS);
   };
   const env = {
@@ -41,11 +43,11 @@ test("an ordinary tick refreshes only `current`", async () => {
   assert.ok(s.calls.every((u) => u.includes("/observations/device/2")));
 });
 
-test("the 07:00 UTC tick also rebuilds daily:all", async () => {
+test("the 07:00 UTC tick also rebuilds daily:all and forecast", async () => {
   const s = setup();
   await worker.scheduled(at("2026-09-22T07:00:11Z"), s.env, s.ctx);
   await s.done();
-  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "daily:all", "fine7d", "obs:2026-09", "wind24h"]);
+  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "daily:all", "fine7d", "forecast", "obs:2026-09", "wind24h"]);
 });
 
 test("the 07:05 tick and the 06:55 tick do not rebuild daily:all", async () => {
@@ -83,7 +85,7 @@ test("the first tick of an hour appends the finished hours to obs:YYYY-MM, start
   const s = setup({ stored });
   await worker.scheduled(at("2026-09-21T16:00:11Z"), s.env, s.ctx);
   await s.done();
-  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "fine7d", "obs:2026-09", "wind24h"]);
+  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "fine7d", "forecast", "obs:2026-09", "wind24h"]);
   const call = s.calls.find((u) => u.includes("time_end=" + (hourStart - 1)));
   assert.ok(call.includes(`time_start=${hourStart - 3600}`), call); // resumes right after the stored hour
 });

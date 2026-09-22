@@ -17,6 +17,7 @@
     <nav class="side-nav" aria-label="Secciones del panel">
       <ul>
         <li><a href="#now">Ahora</a></li>
+        <li><a href="#forecast">Pronóstico</a></li>
         <li><a href="#week">Esta semana</a></li>
         <li><a href="#typical-day">Un día típico</a></li>
         <li><a href="#monthly">Mes a mes</a></li>
@@ -28,7 +29,7 @@
     <header class="page-head">
       <h1>Estación Meteorológica La Ceibona</h1>
       <p class="muted">Mojón de Esparza, Puntarenas, Costa Rica</p>
-      <p class="muted">Una estación meteorológica Tempest</p>
+      <p class="station-id">Registrando desde el 21 dic 2024 · 9.98° N, 84.70° O · 88 m alt. · <a href="https://tempestwx.com/station/163576/">Tempest</a></p>
     </header>
 
     <section class="group" id="now" aria-labelledby="now-heading">
@@ -65,6 +66,34 @@
         <details class="table-view">
           <summary>Ver tabla</summary>
           <div class="table-scroll"><table id="wr-table"></table></div>
+        </details>
+      </section>
+    </section>
+
+    <section class="group" id="forecast" aria-labelledby="forecast-heading">
+      <h2 id="forecast-heading" class="group-title">Pronóstico</h2>
+
+      <section class="card" aria-labelledby="fc-title">
+        <h3 id="fc-title">Hoy y los próximos 6 días</h3>
+        <p class="muted">Modelo de pronóstico de Tempest, no una medición — todo lo demás en esta página es observado.</p>
+        <div id="fc-body" class="cc-grid"><p class="muted">Cargando…</p></div>
+      </section>
+
+      <section class="card" aria-labelledby="fh-title">
+        <h3 id="fh-title">Hoy, hora por hora</h3>
+        <p class="muted">Probabilidad de lluvia por hora, con las horas de riesgo de tormenta marcadas y la temperatura junto a ellas.</p>
+        <p id="fh-summary" class="summary" aria-live="polite"></p>
+
+        <div id="fh-frame" class="chart-frame">
+          <div id="fh-chart" role="img" aria-label="Gráfico de barras de la probabilidad de lluvia por hora de hoy, coloreado según el riesgo de tormenta, con la temperatura como línea"></div>
+          <p id="fh-status" class="status">Cargando…</p>
+        </div>
+        <ul id="fh-legend" class="legend" aria-label="Leyenda"></ul>
+        <p id="fh-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Ver tabla</summary>
+          <div class="table-scroll"><table id="fh-table"></table></div>
         </details>
       </section>
     </section>

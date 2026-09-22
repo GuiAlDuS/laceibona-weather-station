@@ -1,25 +1,6 @@
-import { $ } from "./common.js";
+import { $, el, num, tile } from "./common.js";
 import { t } from "./i18n.js";
 import { cardinal, kmh, ageMinutes, formatAge, isStale, uvBand, pressureTrend, lastStrikeText, rainNowText, stationTime, STALE_AFTER_MIN } from "./conditions.js";
-
-const el = (tag, className, text) => {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-};
-
-const num = (v, digits = 1) => (typeof v === "number" ? v.toFixed(digits) : "—");
-
-function tile(label, value, unit, subs = []) {
-  const box = el("div", "tile");
-  box.append(el("div", "tile-label", label));
-  const v = el("div", "tile-value", value);
-  if (unit) v.append(el("span", "tile-unit", ` ${unit}`));
-  box.append(v);
-  for (const s of subs) if (s) box.append(el("div", "tile-sub", s));
-  return box;
-}
 
 export function renderCurrent(doc, nowMs) {
   const age = ageMinutes(doc.updated_at, nowMs);

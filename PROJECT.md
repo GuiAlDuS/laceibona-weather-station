@@ -507,3 +507,74 @@ Owner decisions worth remembering:
   `WEATHER_DATA` KV namespace) — only the Pages frontend has a `test` branch. Backend changes in
   this phase were additive-only (new fields, nothing removed) and deployed straight to the one
   Worker; the frontend was still built and reviewed on `test` first as usual.
+
+**Phase 8 — Visual redesign and a Forecast section (Sept 2026)**
+
+- **Redesign, "instrument readout" direction**: moved away from the rounded, bordered, SaaS-style
+  cards toward a flatter, more scientific/minimal look, done in three reviewed steps (type/color,
+  layout, components):
+  - Self-hosted IBM Plex Sans (body/labels) and IBM Plex Mono (every number: hero value, stat
+    tiles, table cells, toggle labels) as `.woff2` files vendored under `frontend/vendor/fonts/`
+    (`vendor/LICENSE-ibm-plex`), matching the project's existing no-external-CDN pattern for
+    Plotly. `--text-primary` retuned from `#0b0b0b` to `#17171a` (a deliberate ink, not a
+    tinted-near-black default); `--border` retuned to match. Chart color tokens (`--series-*`,
+    `--seq-*`, `--grid`, `--baseline`) were left untouched.
+  - `.card` changed from a rounded/bordered/background box to a flat block: sections within a
+    group are separated by a hairline top rule (`.card + .card`) instead of a filled surface; the
+    first card in each group has no rule, relying on the group heading as the separator. The
+    current-conditions stat tiles (`.tile`) kept their bordered box treatment, since those are
+    genuinely discrete tiles, not full sections.
+  - Toggle buttons (`.toggle-btn`/`.toggle-group`) dropped the pill shape for a flat rectangular
+    segmented-control look (shared border, single hairline between options in a group); labels
+    moved to the mono font.
+  - Added a monospace "station ID" line under the location line in the header — coordinates,
+    elevation, station type, and (added later in this phase) a recording-since date pulled from
+    `/api/daily`'s `first_day` field and a link to the public Tempest station page
+    (`https://tempestwx.com/station/163576/`).
+  - **Section dividers**: top-level groups (Now, Forecast, This week, ...) now get a heavier top
+    rule in the site's one accent blue (`--series-1`, 2px) with more space above it, and
+    `h2.group-title` switched to the mono font — reusing the same "structural metadata" register
+    as the station-ID line and toggle labels, to visually separate "new section" from "next chart
+    in this section" (the thin neutral `.card + .card` rule).
+- **New Forecast group** (added right after Now, before This week — forward-looking, so it
+  belongs in neither the live "Now" panel nor the retrospective "This week" charts):
+  - Backend: `fetcher/src/forecast.js` (`buildForecast`) calls Tempest's `/better_forecast`
+    endpoint (same Bearer token as every other endpoint; confirmed empirically, since Tempest's
+    own docs show `?token=` query-param auth but the Bearer header this project already uses
+    works fine here too) and writes a `forecast` KV key: `days` (today + next 6, named JSON
+    fields — `day_start_local`, `conditions`, `icon`, `temp_high/low`, `precip_probability`,
+    `precip_type`) and `hours` (today's remaining hours only — Tempest's hourly array naturally
+    starts from "now", never backfills to local midnight — same field shape plus `hour` 0-23
+    local and `temp`). Refreshed twice an hour (`minute % 30 < 5`), served at `/api/forecast`
+    (600 s cache, `{"available":false}` before the first run, same convention as `current`).
+  - Frontend: `frontend/js/forecast.js` (pure) + `frontend/js/forecast-view.js` (DOM). Daily tiles
+    reuse the current-conditions `.tile`/`.cc-grid` components (shared via `common.js`, which
+    current-view.js's `el`/`num`/`tile` helpers moved into so both modules could use them).
+    Hourly is a bar chart (rain probability, colored by storm risk) with a temperature line on a
+    second y-axis and night shading, modeled directly on the existing weekly rain-intensity
+    chart's grammar (`rainfine-view.js`) rather than inventing a new chart type. A plain-language
+    outlook sentence ("Rain likely 13:00–16:00, thunderstorms possible 13:00–21:00.") is
+    generated from contiguous-hour ranges (`contiguousRanges` in `forecast.js`).
+  - Tempest's `conditions` text is English-only free text, never shown as-is on the Spanish page;
+    a small fixed lookup table in `forecast-view.js` translates the `icon` field instead, which is
+    a documented 19-value enum.
+  - **Gotcha, verified against real data**: the hourly forecast's `precip_type` is a **whole-day**
+    flag, not per-hour — it read `"storm"` on every hour of a thunderstorm-forecast day, including
+    a 10%-probability "Partly Cloudy" hour at 23:00. Only `icon` actually varies hour to hour, so
+    `isStormHour` keys off `icon` containing `"thunderstorm"` only, never `precip_type`. Don't
+    reintroduce the `precip_type` check.
+  - `day_start_local` and hourly `time` are true unix timestamps that land at 06:00 UTC for local
+    (UTC-6) midnight — verified against real production data, same "shift by `LOCAL_OFFSET_S`"
+    convention already used throughout this project, not a new one.
+  - **`wrangler dev --remote --test-scheduled` is not reliable for verifying new cron jobs**: it
+    did not reliably flush `ctx.waitUntil` KV writes before the `/__scheduled` HTTP response
+    returned, even after 20-30 s waits and a forced-`true` job condition, with no error logged
+    either. Verifying a new scheduled job against production KV is more reliable by deploying the
+    (additive, safe) change for real and polling the live KV/API after the next natural cron tick,
+    not through local dev against remote bindings.
+  - The "no data showing" symptom reported during review turned out to be a stale browser tab, not
+    a code bug — the full render path was re-run against the real API response in a small Node
+    DOM-shim harness with no errors, and the deployed bundle was diffed byte-for-byte against
+    local source, before concluding it was client-side caching. A hard refresh fixed it.
+- Deployed to production: `./deploy.sh main` (frontend) and `wrangler deploy` (fetcher, additive
+  only, no separate environment as noted above).

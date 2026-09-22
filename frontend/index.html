@@ -17,6 +17,7 @@
     <nav class="side-nav" aria-label="Dashboard sections">
       <ul>
         <li><a href="#now">Now</a></li>
+        <li><a href="#forecast">Forecast</a></li>
         <li><a href="#week">This week</a></li>
         <li><a href="#typical-day">A typical day</a></li>
         <li><a href="#monthly">Month by month</a></li>
@@ -28,7 +29,7 @@
     <header class="page-head">
       <h1>La Ceibona Weather Station</h1>
       <p class="muted">Mojón de Esparza, Puntarenas, Costa Rica</p>
-      <p class="muted">A Tempest Weather Station</p>
+      <p class="station-id">Recording since 21 Dec 2024 · 9.98° N, 84.70° W · 88 m elev. · <a href="https://tempestwx.com/station/163576/">Tempest</a></p>
     </header>
 
     <section class="group" id="now" aria-labelledby="now-heading">
@@ -65,6 +66,34 @@
         <details class="table-view">
           <summary>Table view</summary>
           <div class="table-scroll"><table id="wr-table"></table></div>
+        </details>
+      </section>
+    </section>
+
+    <section class="group" id="forecast" aria-labelledby="forecast-heading">
+      <h2 id="forecast-heading" class="group-title">Forecast</h2>
+
+      <section class="card" aria-labelledby="fc-title">
+        <h3 id="fc-title">Today and the next 6 days</h3>
+        <p class="muted">Tempest's forecast model, not a measurement — everything else on this page is observed.</p>
+        <div id="fc-body" class="cc-grid"><p class="muted">Loading…</p></div>
+      </section>
+
+      <section class="card" aria-labelledby="fh-title">
+        <h3 id="fh-title">Today, hour by hour</h3>
+        <p class="muted">Rain probability by hour, with thunderstorm hours marked and temperature alongside.</p>
+        <p id="fh-summary" class="summary" aria-live="polite"></p>
+
+        <div id="fh-frame" class="chart-frame">
+          <div id="fh-chart" role="img" aria-label="Bar chart of today's hourly rain probability, coloured by thunderstorm risk, with temperature as a line"></div>
+          <p id="fh-status" class="status">Loading…</p>
+        </div>
+        <ul id="fh-legend" class="legend" aria-label="Legend"></ul>
+        <p id="fh-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll"><table id="fh-table"></table></div>
         </details>
       </section>
     </section>
