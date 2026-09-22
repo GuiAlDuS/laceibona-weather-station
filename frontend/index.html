@@ -78,6 +78,26 @@
         </details>
       </section>
 
+      <section class="card" aria-labelledby="rf-title">
+        <div class="card-head">
+          <h3 id="rf-title">Rain intensity, last 7 days</h3>
+          <button id="rf-solar-toggle" type="button" class="toggle-btn" aria-pressed="false" disabled>Show solar radiation</button>
+        </div>
+        <p class="muted">Rain in 10-minute bursts, so short heavy downpours show at their true rate, with station pressure alongside.</p>
+        <p id="rf-summary" class="summary" aria-live="polite"></p>
+
+        <div id="rf-frame" class="chart-frame">
+          <div id="rf-chart" role="img" aria-label="Bar chart of 10-minute rain intensity for the last 7 days, with station pressure as a line and an optional solar radiation overlay"></div>
+          <p id="rf-status" class="status">Loading…</p>
+        </div>
+        <p id="rf-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll"><table id="rf-table"></table></div>
+        </details>
+      </section>
+
       <section class="card" aria-labelledby="rw-title">
         <h3 id="rw-title">Rain and ETo, last 7 days</h3>
         <p class="muted">Each day's rain and evapotranspiration (top), and how many hours it rained (bottom).</p>
@@ -110,26 +130,6 @@
         <details class="table-view">
           <summary>Table view</summary>
           <div class="table-scroll tall"><table id="ds-table"></table></div>
-        </details>
-      </section>
-
-      <section class="card" aria-labelledby="rf-title">
-        <div class="card-head">
-          <h3 id="rf-title">Rain intensity, last 7 days</h3>
-          <button id="rf-solar-toggle" type="button" class="toggle-btn" aria-pressed="false" disabled>Show solar radiation</button>
-        </div>
-        <p class="muted">Rain in 10-minute bursts, so short heavy downpours show at their true rate, with station pressure alongside.</p>
-        <p id="rf-summary" class="summary" aria-live="polite"></p>
-
-        <div id="rf-frame" class="chart-frame">
-          <div id="rf-chart" role="img" aria-label="Bar chart of 10-minute rain intensity for the last 7 days, with station pressure as a line and an optional solar radiation overlay"></div>
-          <p id="rf-status" class="status">Loading…</p>
-        </div>
-        <p id="rf-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll"><table id="rf-table"></table></div>
         </details>
       </section>
     </section>

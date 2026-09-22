@@ -127,7 +127,10 @@ obs:YYYY-MM       → hourly observations, columnar (see fetcher/src/hourly.js).
                     fetcher/scripts/backfill.mjs; NOT yet appended live
 lightning:YYYY    → one [ts, distance_km, count] per minute with strikes
 wind24h           → per-minute wind speed/direction, last 24 h, every 5 min
-                    (write budget is now ~577/day: current + wind24h + daily)
+fine7d            → rolling 7-day, 10-minute-resolution rain/pressure/solar
+                    (fetcher/src/fine.js), refreshed every 10 min. Hourly `obs:`
+                    was too coarse for this station's short convective bursts.
+                    (write budget is now ~745/day: current + wind24h + fine7d + daily)
 ```
 
 Write budget: ~288 (`current`) + 1 (`daily:all`) + 288 (`obs` append) ≈
@@ -414,7 +417,9 @@ Page order, with a sticky left menu (top bar on narrow screens) over five groups
 - **Now**: current conditions; wind rose (last 24 h, from `wind24h`, SVG).
 - **This week**: temperature last 7 days (one categorical colour per day, older days fade:
   each day back keeps 70% opacity of the next, floor 20%; the hour in progress comes from
-  `wind24h.hourly`); rain + ETo bars over a rain-duration line in hours (two aligned
+  `wind24h.hourly`); rain intensity last 7 days (10-minute bars from `fine7d`, shown as an
+  hourly rate, with a station pressure line, night shading, and a solar radiation overlay
+  behind a toggle); rain + ETo bars over a rain-duration line in hours (two aligned
   panels, no dual axis; today has no ETo because it is only computed for finished days);
   wind direction day by day (hourly dots at their actual hour, viridis by speed).
 - **A typical day**: month x hour heatmaps of temperature and wind speed (midnight at the
@@ -424,14 +429,20 @@ Page order, with a sticky left menu (top bar on narrow screens) over five groups
 - **Year over year**: temperature box plot per year over the same 1 Jan - latest-date window;
   cumulative rain; cumulative lightning; cumulative water balance.
 
+Wind speed is shown in km/h everywhere on the dashboard (heatmap, monthly box plot, daily
+scatter, wind rose bins and calm cut-off); it is still stored in m/s and converted only at
+display time (`MS_TO_KMH` in `frontend/js/windrose.js`).
+
 Owner decisions worth remembering:
-- **Dropped, do not rebuild**: rain-hours/intensity monthly, lightning distance by year,
+- **Dropped, do not rebuild**: rain-hours/intensity *monthly*, lightning distance by year,
   annual summary bars, solar irradiation bars, daily temperature range (line and box versions:
-  "doesn't show anything interesting").
+  "doesn't show anything interesting"). Not to be confused with the shipped **weekly, 10-minute**
+  rain intensity chart above, which the owner asked for separately.
 - Charts are reviewed one at a time on the `test` Pages branch (`./deploy.sh test`, alias
   https://test.laceibona-weather.pages.dev) before `./deploy.sh main`.
-- Worker cron (every 5 min): `current` + `wind24h` each run, `obs:YYYY-MM` append in the first
-  tick of each hour, `daily:all` at 07:00 UTC. About 577 KV writes/day of the 1,000 free.
+- Worker cron (every 5 min): `current` + `wind24h` each run, `fine7d` every second run (10 min),
+  `obs:YYYY-MM` append in the first tick of each hour, `daily:all` at 07:00 UTC. About 745 KV
+  writes/day of the 1,000 free.
 - `/api/lightning/YYYY` and its `lightning:*` data are kept although no chart uses them.
 - Plotly gotchas hit: the cartesian bundle has no `barpolar`; date-axis ticks are formatted in
   the viewer's timezone (count days on a numeric axis instead); ids must not clash (`wb-` is the
