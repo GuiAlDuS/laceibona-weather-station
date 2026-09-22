@@ -146,8 +146,8 @@ export function renderForecastHourlyText(hours) {
   }
 
   $("fh-note").textContent = t(
-    "Tempest's hourly forecast model for today, not a measurement. Night (18:00–06:00) is shaded.",
-    "Modelo de pronóstico horario de Tempest para hoy, no una medición. La noche (18:00–06:00) está sombreada.",
+    "Bar height is that hour's rain probability; red marks hours where any rain is expected to come as a thunderstorm, not a separate risk on top of the rain chance. Tempest's hourly forecast model for today, not a measurement. Night (18:00–06:00) is shaded.",
+    "La altura de la barra es la probabilidad de lluvia de esa hora; el rojo marca las horas en que, de llover, se espera que sea en forma de tormenta, no un riesgo aparte que se suma a la probabilidad de lluvia. Modelo de pronóstico horario de Tempest para hoy, no una medición. La noche (18:00–06:00) está sombreada.",
   );
 
   const table = $("fh-table");
