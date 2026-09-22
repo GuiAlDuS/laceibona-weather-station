@@ -148,7 +148,7 @@ th { color: var(--text-secondary); font-weight: 600; }
 .cc-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 8px; }
 .cc-head p { margin: 0; }
 .stale { margin: 0 0 12px; padding: 8px 12px; border: 1px solid var(--baseline); border-left: 4px solid #fab219; border-radius: 6px; font-size: 0.875rem; }
-.stale::before { content: "Stale data \2014  "; font-weight: 600; }
+.stale strong { font-weight: 600; }
 .cc-hero { margin-bottom: 16px; }
 .hero-value { font-size: 3.5rem; line-height: 1.1; font-weight: 600; }
 .hero-unit { font-size: 1.5rem; font-weight: 400; margin-left: 4px; color: var(--text-secondary); }
@@ -177,11 +177,21 @@ th { color: var(--text-secondary); font-weight: 600; }
 .side-nav a[aria-current="true"] { color: var(--text-primary); background: var(--surface); border-color: var(--border); font-weight: 600; }
 .side-nav a:focus-visible { outline: 2px solid var(--series-1); outline-offset: 2px; }
 
+.lang-switch { position: fixed; top: 12px; right: 16px; z-index: 30; display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; font-size: 0.8125rem; }
+.lang-switch a, .lang-switch span { color: var(--text-secondary); text-decoration: none; }
+.lang-switch a:hover { color: var(--text-primary); }
+.lang-switch [aria-current="true"] { color: var(--text-primary); font-weight: 600; }
+.lang-switch .sep { color: var(--baseline); }
+
 @media (max-width: 1099px) {
   .layout { grid-template-columns: minmax(0, 960px); padding: 0; }
   .layout main { padding: 16px 16px 48px; }
-  .side-nav { z-index: 10; padding: 0; background: var(--page); border-bottom: 1px solid var(--border); }
+  /* The language switch becomes its own full-width bar above the section bar, both sticky, so neither
+     ever floats over the other's links (a fixed pill here would permanently cover whatever section
+     link happened to scroll under it). */
+  .lang-switch { position: sticky; top: 0; z-index: 31; width: 100%; box-sizing: border-box; justify-content: flex-end; border-radius: 0; border: none; border-bottom: 1px solid var(--border); background: var(--page); padding: 8px 16px; }
+  .side-nav { position: sticky; top: 37px; z-index: 10; padding: 0; background: var(--page); border-bottom: 1px solid var(--border); }
   .side-nav ul { flex-direction: row; gap: 8px; padding: 8px 16px; overflow-x: auto; scrollbar-width: none; }
   .side-nav a { white-space: nowrap; }
-  .group { scroll-margin-top: 64px; }
+  .group { scroll-margin-top: 101px; }
 }

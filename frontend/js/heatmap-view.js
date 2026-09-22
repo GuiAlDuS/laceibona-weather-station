@@ -1,4 +1,5 @@
 import { $, token, MONTHS, chartFont, hoverLabel } from "./common.js";
+import { t } from "./i18n.js";
 import { extremes } from "./heatmap.js";
 
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
@@ -11,7 +12,7 @@ export const colorscale = (colorToken) => [0, 0.25, 0.5, 0.75, 1].map((f, i) => 
 export const VIRIDIS = [[0, "#440154"], [0.25, "#3b528b"], [0.5, "#21918c"], [0.75, "#5ec962"], [1, "#fde725"]];
 
 export const monthName = (key) => MONTHS[+key.slice(5, 7) - 1];
-export const longMonth = (m) => `${monthName(m.key)} ${m.key.slice(0, 4)}${m.partial ? " (incomplete)" : ""}`;
+export const longMonth = (m) => `${monthName(m.key)} ${m.key.slice(0, 4)}${m.partial ? t(" (incomplete)", " (incompleto)") : ""}`;
 export const tick = (m) => `${monthName(m.key)}${m.partial ? "†" : ""}<br>${m.key.slice(2, 4)}`;
 const hourLabel = (h) => `${String(h).padStart(2, "0")}:00`;
 
@@ -58,22 +59,22 @@ export function renderMonthHourChart(cfg, hm) {
 export function renderMonthHourText(cfg, hm) {
   const p = cfg.prefix;
   const { hi, lo } = extremes(hm);
-  const v = (e) => `${e.value.toFixed(cfg.decimals)} ${cfg.unit} at ${hourLabel(e.hour)} in ${monthName(e.month)} ${e.month.slice(0, 4)}`;
+  const v = (e) => t(`${e.value.toFixed(cfg.decimals)} ${cfg.unit} at ${hourLabel(e.hour)} in ${monthName(e.month)} ${e.month.slice(0, 4)}`, `${e.value.toFixed(cfg.decimals)} ${cfg.unit} a las ${hourLabel(e.hour)} en ${monthName(e.month)} ${e.month.slice(0, 4)}`);
   $(`${p}-summary`).textContent = `${cfg.high}: ${v(hi)} · ${cfg.low}: ${v(lo)}.`;
   const partial = hm.months.filter((m) => m.partial);
   $(`${p}-note`).textContent =
-    `${cfg.what} for each hour of the local day (UTC-6), averaged over the month. Gray cells have no data.` +
-    (partial.length ? " † marks a month with missing data (or the month in progress)." : "");
+    t(`${cfg.what} for each hour of the local day (UTC-6), averaged over the month. Gray cells have no data.`, `${cfg.what} para cada hora del día local (UTC-6), promediada durante el mes. Las celdas grises no tienen datos.`) +
+    (partial.length ? t(" † marks a month with missing data (or the month in progress).", " † indica un mes con datos faltantes (o el mes en curso).") : "");
 
-  const t = $(`${p}-table`);
-  t.replaceChildren();
-  const head = t.createTHead().insertRow();
-  for (const h of ["Hour", ...hm.months.map((m) => `${monthName(m.key)} ${m.key.slice(2, 4)}${m.partial ? "†" : ""}`)]) {
+  const table = $(`${p}-table`);
+  table.replaceChildren();
+  const head = table.createTHead().insertRow();
+  for (const h of [t("Hour", "Hora"), ...hm.months.map((m) => `${monthName(m.key)} ${m.key.slice(2, 4)}${m.partial ? "†" : ""}`)]) {
     const th = document.createElement("th");
     th.textContent = h;
     head.append(th);
   }
-  const body = t.createTBody();
+  const body = table.createTBody();
   hm.z.forEach((row, h) => {
     const r = body.insertRow();
     r.insertCell().textContent = hourLabel(h);

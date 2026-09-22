@@ -1,10 +1,11 @@
 import { $, token, MONTHS, chartFont, hoverLabel } from "./common.js";
+import { t } from "./i18n.js";
 import { monthName, longMonth, tick } from "./heatmap-view.js";
 
-const TEMP = { prefix: "bm", unit: "°C", decimals: 1, basis: "hourly temperatures", high: "Highest typical temperature", low: "Lowest" };
-export const WIND = { prefix: "wk", unit: "km/h", decimals: 1, basis: "hourly wind speeds", high: "Windiest", low: "Calmest" };
+const TEMP = { prefix: "bm", unit: "°C", decimals: 1, basis: t("hourly temperatures", "las temperaturas horarias"), high: t("Highest typical temperature", "Temperatura típica más alta"), low: t("Lowest", "Más baja") };
+export const WIND = { prefix: "wk", unit: "km/h", decimals: 1, basis: t("hourly wind speeds", "las velocidades del viento horarias"), high: t("Windiest", "Más ventoso"), low: t("Calmest", "Más calmado") };
 const f1 = (v) => v.toFixed(1);
-const COLS = ["Minimum", "Lower quartile", "Median", "Upper quartile", "Maximum", "Mean"];
+const COLS = () => [t("Minimum", "Mínimo"), t("Lower quartile", "Cuartil inferior"), t("Median", "Mediana"), t("Upper quartile", "Cuartil superior"), t("Maximum", "Máximo"), t("Mean", "Media")];
 const cells = (s, d = 1) => [s.min, s.q1, s.median, s.q3, s.max, s.mean].map((v) => v.toFixed(d));
 
 function boxChart(el, labels, longLabels, stats, unit = "°C") {
@@ -41,15 +42,15 @@ function boxChart(el, labels, longLabels, stats, unit = "°C") {
 }
 
 function fillTable(id, first, rows, unit = "°C", d = 1) {
-  const t = $(id);
-  t.replaceChildren();
-  const head = t.createTHead().insertRow();
-  for (const h of [first, ...COLS.map((c) => `${c} (${unit})`)]) {
+  const table = $(id);
+  table.replaceChildren();
+  const head = table.createTHead().insertRow();
+  for (const h of [first, ...COLS().map((c) => `${c} (${unit})`)]) {
     const th = document.createElement("th");
     th.textContent = h;
     head.append(th);
   }
-  const body = t.createTBody();
+  const body = table.createTBody();
   for (const [label, s] of rows) {
     const row = body.insertRow();
     row.insertCell().textContent = label;
@@ -67,22 +68,27 @@ export function renderTempBoxMonthlyText(boxes, cfg = TEMP) {
   const fmt = (v) => `${v.toFixed(cfg.decimals)} ${cfg.unit}`;
   const warm = boxes.reduce((a, b) => (b.stats.median > a.stats.median ? b : a));
   const cool = boxes.reduce((a, b) => (b.stats.median < a.stats.median ? b : a));
-  $(`${p}-summary`).textContent = `${cfg.high}: ${monthName(warm.key)} ${warm.key.slice(0, 4)} (median ${fmt(warm.stats.median)}). ${cfg.low}: ${monthName(cool.key)} ${cool.key.slice(0, 4)} (${fmt(cool.stats.median)}).`;
+  $(`${p}-summary`).textContent = `${cfg.high}: ${monthName(warm.key)} ${warm.key.slice(0, 4)} (${t("median", "mediana")} ${fmt(warm.stats.median)}). ${cfg.low}: ${monthName(cool.key)} ${cool.key.slice(0, 4)} (${fmt(cool.stats.median)}).`;
   $(`${p}-note`).textContent =
-    `Each box spans the middle half of the month's ${cfg.basis}, with the line at the median; the whiskers reach the lowest and highest value. ` +
-    (boxes.some((m) => m.partial) ? "† marks a month with missing data (or the month in progress)." : "");
-  fillTable(`${p}-table`, "Month", boxes.map((m) => [`${monthName(m.key)} ${m.key.slice(0, 4)}${m.partial ? "†" : ""}`, m.stats]), cfg.unit, cfg.decimals);
+    t(
+      `Each box spans the middle half of the month's ${cfg.basis}, with the line at the median; the whiskers reach the lowest and highest value. `,
+      `Cada caja abarca la mitad central de ${cfg.basis} del mes, con la línea en la mediana; los bigotes llegan al valor más bajo y más alto. `,
+    ) + (boxes.some((m) => m.partial) ? t("† marks a month with missing data (or the month in progress).", "† indica un mes con datos faltantes (o el mes en curso).") : "");
+  fillTable(`${p}-table`, t("Month", "Mes"), boxes.map((m) => [`${monthName(m.key)} ${m.key.slice(0, 4)}${m.partial ? "†" : ""}`, m.stats]), cfg.unit, cfg.decimals);
 }
 
 const md = (through) => `${+through.slice(3)} ${MONTHS[+through.slice(0, 2) - 1]}`;
 
 export function renderTempBoxYearly(years) {
-  return boxChart($("by-chart"), years.map((y) => y.year), years.map((y) => `${y.year}, 1 Jan to ${md(y.through)}`), years.map((y) => y.stats));
+  return boxChart($("by-chart"), years.map((y) => y.year), years.map((y) => t(`${y.year}, 1 Jan to ${md(y.through)}`, `${y.year}, 1 ene al ${md(y.through)}`)), years.map((y) => y.stats));
 }
 
 export function renderTempBoxYearlyText(years) {
   const through = md(years[0].through);
-  $("by-summary").textContent = years.map((y) => `${y.year}: median ${f1(y.stats.median)} °C`).join(" · ") + ` (1 Jan to ${through}).`;
-  $("by-note").textContent = `Every year covers the same window, 1 January to ${through}, so a partial year is compared fairly. Years with under 30 days in that window are left out. Box and whiskers as in the monthly chart.`;
-  fillTable("by-table", "Year", years.map((y) => [`${y.year} (${y.days} days)`, y.stats]));
+  $("by-summary").textContent = years.map((y) => t(`${y.year}: median ${f1(y.stats.median)} °C`, `${y.year}: mediana ${f1(y.stats.median)} °C`)).join(" · ") + t(` (1 Jan to ${through}).`, ` (1 ene al ${through}).`);
+  $("by-note").textContent = t(
+    `Every year covers the same window, 1 January to ${through}, so a partial year is compared fairly. Years with under 30 days in that window are left out. Box and whiskers as in the monthly chart.`,
+    `Cada año cubre la misma ventana, del 1 de enero al ${through}, para que un año parcial se compare de forma justa. Los años con menos de 30 días en esa ventana se excluyen. Caja y bigotes como en el gráfico mensual.`,
+  );
+  fillTable("by-table", t("Year", "Año"), years.map((y) => [t(`${y.year} (${y.days} days)`, `${y.year} (${y.days} días)`), y.stats]));
 }

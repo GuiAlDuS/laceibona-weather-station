@@ -1,12 +1,13 @@
 // Hourly wind direction and speed for the most recent days, for the daily scatter. Pure functions; no DOM.
-import { SECTORS, CALM_BELOW, MS_TO_KMH } from "./windrose.js";
+import { CALM_BELOW, MS_TO_KMH } from "./windrose.js";
+import { sectorLabel } from "./i18n.js";
 
 const LOCAL_OFFSET_S = -6 * 3600;
 
 // Vertical position on the wrapped axis used by the direction heatmap: 0 = S at the bottom, 8 = N in the
 // middle, 16 = S again at the top (units of one 22.5 degree sector).
 export const windY = (deg) => ((deg - 180 + 360) % 360) / 22.5;
-export const sectorName = (deg) => SECTORS[Math.round(deg / 22.5) % 16];
+export const sectorName = (deg) => sectorLabel(Math.round(deg / 22.5) % 16);
 
 // docs: obs:YYYY-MM documents. Returns hours from the last `n` calendar days ending at the latest day with
 // data, oldest first: { date, hour, dir, ws (km/h), y }. Calm hours (direction is noise) are left out.
@@ -42,7 +43,7 @@ export function daySummaries(hours) {
     return {
       date,
       hours: hs.length,
-      direction: SECTORS[counts.indexOf(Math.max(...counts))],
+      direction: sectorLabel(counts.indexOf(Math.max(...counts))),
       mean: hs.reduce((a, h) => a + h.ws, 0) / hs.length,
       peak: Math.max(...hs.map((h) => h.ws)),
     };

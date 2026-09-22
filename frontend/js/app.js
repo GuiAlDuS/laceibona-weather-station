@@ -1,6 +1,7 @@
 import { API_BASE } from "./config.js";
 import { initNav } from "./nav.js";
 import { $, narrowScreen, setStatus, longDate } from "./common.js";
+import { t, TIME_LOCALE } from "./i18n.js";
 import { cumulativeByYear } from "./balance.js";
 import { monthlyTotals } from "./monthly.js";
 import { cumulativeRainByYear, cumulativeLightningByYear } from "./cumulative.js";
@@ -26,6 +27,9 @@ import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
 import { windRose, MS_TO_KMH } from "./windrose.js";
 import { renderWindRose } from "./windrose-view.js";
 
+const NO_USABLE_DATA = () => new Error(t("no usable data yet", "todavía no hay datos utilizables"));
+const couldNotLoad = (msg) => t(`Could not load data (${msg}). `, `No se pudieron cargar los datos (${msg}). `);
+
 let currentDoc = null;
 
 async function loadCurrent() {
@@ -35,14 +39,14 @@ async function loadCurrent() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const doc = await res.json();
     if (doc.available === false) {
-      renderCurrentUnavailable("Live conditions will appear once the station data feed is running.");
+      renderCurrentUnavailable(t("Live conditions will appear once the station data feed is running.", "Las condiciones en vivo aparecerán en cuanto el flujo de datos de la estación esté funcionando."));
     } else {
       currentDoc = doc;
       renderCurrent(doc, Date.now());
     }
   } catch (err) {
     console.error(err);
-    if (!currentDoc) renderCurrentUnavailable(`Could not load current conditions (${err.message}).`);
+    if (!currentDoc) renderCurrentUnavailable(t(`Could not load current conditions (${err.message}).`, `No se pudieron cargar las condiciones actuales (${err.message}).`));
   } finally {
     $("cc-body").classList.remove("reloading");
   }
@@ -63,7 +67,7 @@ const STATUSES = ["wb-status", "mo-status", "rn-status", "lt-status", "rw-status
 
 async function load() {
   for (const id of FRAMES) $(id).classList.add("reloading");
-  if (!balance) for (const id of STATUSES) setStatus(id, "Loading…");
+  if (!balance) for (const id of STATUSES) setStatus(id, t("Loading…", "Cargando…"));
   try {
     const res = await fetch(`${API_BASE}/api/daily`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -73,7 +77,7 @@ async function load() {
     rain = cumulativeRainByYear(doc.days);
     lightning = cumulativeLightningByYear(doc.days);
     rainWeek = lastRainDays(doc.days);
-    if (balance.length === 0 || months.length === 0 || rain.length === 0 || lightning.length === 0 || rainWeek.length === 0) throw new Error("no usable data yet");
+    if (balance.length === 0 || months.length === 0 || rain.length === 0 || lightning.length === 0 || rainWeek.length === 0) throw NO_USABLE_DATA();
     renderWaterBalanceText(balance);
     renderMonthlyText(months);
     renderCumulativeText(RAIN, rain);
@@ -89,7 +93,7 @@ async function load() {
     for (const id of STATUSES) setStatus(id, "");
   } catch (err) {
     console.error(err);
-    if (!balance) for (const id of STATUSES) setStatus(id, `Could not load data (${err.message}). `, load);
+    if (!balance) for (const id of STATUSES) setStatus(id, couldNotLoad(err.message), load);
   } finally {
     for (const id of FRAMES) $(id).classList.remove("reloading");
   }
@@ -100,19 +104,19 @@ let roseDoc = null;
 
 async function loadWind() {
   $("wr-frame").classList.add("reloading");
-  if (!rose) setStatus("wr-status", "Loading…");
+  if (!rose) setStatus("wr-status", t("Loading…", "Cargando…"));
   try {
     const res = await fetch(`${API_BASE}/api/wind24h`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     roseDoc = await res.json();
-    if (roseDoc.available === false) throw new Error("no wind data yet");
+    if (roseDoc.available === false) throw new Error(t("no wind data yet", "todavía no hay datos de viento"));
     rose = windRose([roseDoc]);
-    if (rose.hours === 0) throw new Error("no usable data yet");
+    if (rose.hours === 0) throw NO_USABLE_DATA();
     drawWind();
     setStatus("wr-status", "");
   } catch (err) {
     console.error(err);
-    if (!rose) setStatus("wr-status", `Could not load data (${err.message}). `, loadWind);
+    if (!rose) setStatus("wr-status", couldNotLoad(err.message), loadWind);
   } finally {
     $("wr-frame").classList.remove("reloading");
   }
@@ -121,27 +125,29 @@ async function loadWind() {
 function drawWind() {
   if (!rose) return;
   const to = new Date(roseDoc.to);
-  renderWindRose(rose, `the 24 hours to ${to.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "America/Costa_Rica" })} on ${longDate(new Date(to - 6 * 3600_000).toISOString().slice(0, 10))}`);
+  const time = to.toLocaleTimeString(TIME_LOCALE, { hour: "2-digit", minute: "2-digit", timeZone: "America/Costa_Rica" });
+  const date = longDate(new Date(to - 6 * 3600_000).toISOString().slice(0, 10));
+  renderWindRose(rose, t(`the 24 hours to ${time} on ${date}`, `las 24 horas hasta las ${time} del ${date}`));
 }
 
 let fineBucketsData = null;
 
 async function loadRainFine() {
   $("rf-frame").classList.add("reloading");
-  if (!fineBucketsData) setStatus("rf-status", "Loading…");
+  if (!fineBucketsData) setStatus("rf-status", t("Loading…", "Cargando…"));
   try {
     const res = await fetch(`${API_BASE}/api/fine7d`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const doc = await res.json();
-    if (doc.available === false) throw new Error("no data yet");
+    if (doc.available === false) throw new Error(t("no data yet", "todavía no hay datos"));
     fineBucketsData = fineBuckets(doc);
-    if (fineBucketsData.every((b) => b.rate === null && b.p === null && b.solar === null)) throw new Error("no usable data yet");
+    if (fineBucketsData.every((b) => b.rate === null && b.p === null && b.solar === null)) throw NO_USABLE_DATA();
     drawRainFine();
     setStatus("rf-status", "");
     $("rf-solar-toggle").disabled = false;
   } catch (err) {
     console.error(err);
-    if (!fineBucketsData) setStatus("rf-status", `Could not load data (${err.message}). `, loadRainFine);
+    if (!fineBucketsData) setStatus("rf-status", couldNotLoad(err.message), loadRainFine);
   } finally {
     $("rf-frame").classList.remove("reloading");
   }
@@ -154,14 +160,14 @@ function drawRainFine() {
 }
 
 // Charts built from the monthly `obs:` documents. Each is [id prefix, draw(docs)]; one failure does not stop the others.
-const TEMP_HEAT = { prefix: "th", unit: "°C", decimals: 1, colorToken: "--hot", high: "Warmest", low: "Coolest", what: "Average temperature" };
-const WIND_HEAT = { prefix: "wh", unit: "km/h", decimals: 1, ramp: VIRIDIS, high: "Windiest", low: "Calmest", what: "Average wind speed" };
+const TEMP_HEAT = { prefix: "th", unit: "°C", decimals: 1, colorToken: "--hot", high: t("Warmest", "Más cálido"), low: t("Coolest", "Más fresco"), what: t("Average temperature", "Temperatura media") };
+const WIND_HEAT = { prefix: "wh", unit: "km/h", decimals: 1, ramp: VIRIDIS, high: t("Windiest", "Más ventoso"), low: t("Calmest", "Más calmado"), what: t("Average wind speed", "Velocidad media del viento") };
 const obsState = {};
 const last13 = (docs) => docs.filter((d) => d.month >= monthKeys(13)[0]);
 const OBS_CHARTS = [
   ["td", (docs, live) => {
     const days = lastDays(docs, 7, live?.hourly);
-    if (days.length === 0) throw new Error("no usable data yet");
+    if (days.length === 0) throw NO_USABLE_DATA();
     obsState.td = days;
   }, () => {
     renderTempDailyText(obsState.td);
@@ -169,49 +175,49 @@ const OBS_CHARTS = [
   }],
   ["th", (docs) => {
     obsState.th = monthHourMeans(last13(docs), "t");
-    if (obsState.th.months.length === 0) throw new Error("no usable data yet");
+    if (obsState.th.months.length === 0) throw NO_USABLE_DATA();
   }, () => {
     renderMonthHourText(TEMP_HEAT, obsState.th);
     return renderMonthHourChart(TEMP_HEAT, obsState.th);
   }],
   ["wh", (docs) => {
     obsState.wh = monthHourMeans(last13(docs), "ws", MS_TO_KMH);
-    if (obsState.wh.months.length === 0) throw new Error("no usable data yet");
+    if (obsState.wh.months.length === 0) throw NO_USABLE_DATA();
   }, () => {
     renderMonthHourText(WIND_HEAT, obsState.wh);
     return renderMonthHourChart(WIND_HEAT, obsState.wh);
   }],
   ["wd", (docs) => {
     obsState.wd = monthDirectionFrequency(last13(docs));
-    if (obsState.wd.months.length === 0) throw new Error("no usable data yet");
+    if (obsState.wd.months.length === 0) throw NO_USABLE_DATA();
   }, () => {
     renderWindDirText(obsState.wd);
     return renderWindDirChart(obsState.wd);
   }],
   ["ds", (docs) => {
     obsState.ds = recentHours(docs, 7);
-    if (obsState.ds.length === 0) throw new Error("no usable data yet");
+    if (obsState.ds.length === 0) throw NO_USABLE_DATA();
   }, () => {
     renderWindDailyText(obsState.ds);
     return renderWindDailyChart(obsState.ds);
   }],
   ["bm", (docs) => {
     obsState.bm = monthlyBoxes(last13(docs));
-    if (obsState.bm.length === 0) throw new Error("no usable data yet");
+    if (obsState.bm.length === 0) throw NO_USABLE_DATA();
   }, () => {
     renderTempBoxMonthlyText(obsState.bm);
     return renderTempBoxMonthly(obsState.bm);
   }],
   ["wk", (docs) => {
     obsState.wk = monthlyBoxes(last13(docs), "ws", MS_TO_KMH);
-    if (obsState.wk.length === 0) throw new Error("no usable data yet");
+    if (obsState.wk.length === 0) throw NO_USABLE_DATA();
   }, () => {
     renderTempBoxMonthlyText(obsState.wk, WIND_BOX);
     return renderTempBoxMonthly(obsState.wk, WIND_BOX);
   }],
   ["by", (docs) => {
     obsState.by = yearlyBoxes(docs);
-    if (obsState.by.length === 0) throw new Error("no usable data yet");
+    if (obsState.by.length === 0) throw NO_USABLE_DATA();
   }, () => {
     renderTempBoxYearlyText(obsState.by);
     return renderTempBoxYearly(obsState.by);
@@ -227,7 +233,7 @@ async function loadObsCharts() {
     [docs, live] = await Promise.all([getMonths(24), fetch(`${API_BASE}/api/wind24h`).then((r) => (r.ok ? r.json() : null)).catch(() => null)]);
   } catch (err) {
     console.error(err);
-    for (const p of ids) if (!obsState[p]) setStatus(`${p}-status`, `Could not load data (${err.message}). `, loadObsCharts);
+    for (const p of ids) if (!obsState[p]) setStatus(`${p}-status`, couldNotLoad(err.message), loadObsCharts);
     for (const p of ids) $(`${p}-frame`).classList.remove("reloading");
     return;
   }
@@ -238,7 +244,7 @@ async function loadObsCharts() {
       setStatus(`${p}-status`, "");
     } catch (err) {
       console.error(err);
-      if (!obsState[p]) setStatus(`${p}-status`, `Could not load data (${err.message}). `, loadObsCharts);
+      if (!obsState[p]) setStatus(`${p}-status`, couldNotLoad(err.message), loadObsCharts);
     } finally {
       $(`${p}-frame`).classList.remove("reloading");
     }

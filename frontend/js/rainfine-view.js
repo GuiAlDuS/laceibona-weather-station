@@ -1,4 +1,5 @@
 import { $, token, narrowScreen, chartFont, hoverLabel } from "./common.js";
+import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { fineDaySummaries, finePeak } from "./rainfine.js";
 
@@ -21,7 +22,7 @@ export function renderRainFineChart(buckets) {
 
   const rain = {
     type: "bar",
-    name: "Rain intensity",
+    name: t("Rain intensity", "Intensidad de lluvia"),
     x,
     y: buckets.map((b) => b.rate),
     width: (1 / 144) * 0.9, // just under one 10-minute slot, so bars don't touch
@@ -31,7 +32,7 @@ export function renderRainFineChart(buckets) {
   const pressure = {
     type: "scatter",
     mode: "lines",
-    name: "Station pressure",
+    name: t("Station pressure", "Presión de la estación"),
     x,
     y: buckets.map((b) => b.p),
     yaxis: "y2",
@@ -42,7 +43,7 @@ export function renderRainFineChart(buckets) {
   const solar = {
     type: "scatter",
     mode: "lines",
-    name: "Solar radiation",
+    name: t("Solar radiation", "Radiación solar"),
     x,
     y: buckets.map((b) => b.solar),
     yaxis: "y3",
@@ -123,21 +124,22 @@ export function renderRainFineText(buckets) {
   const days = fineDaySummaries(buckets);
   const total = days.reduce((s, d) => s + d.rain, 0);
   $("rf-summary").textContent = peak
-    ? `${total.toFixed(0)} mm total. Heaviest 10 minutes: ${peak.rate.toFixed(1)} mm/h on ${dayLabel(peak.date)} at ${hourLabel(peak.hour, peak.minute)}.`
-    : `${total.toFixed(0)} mm total. No rain in this window.`;
-  $("rf-note").textContent =
-    "Each bar is one 10-minute window, shown as its hourly rate, so a short burst reads at its true intensity instead of being smeared across the hour. " +
-    "The line is station pressure. Night (18:00–06:00) is shaded.";
+    ? t(`${total.toFixed(0)} mm total. Heaviest 10 minutes: ${peak.rate.toFixed(1)} mm/h on ${dayLabel(peak.date)} at ${hourLabel(peak.hour, peak.minute)}.`, `${total.toFixed(0)} mm en total. Los 10 minutos más intensos: ${peak.rate.toFixed(1)} mm/h el ${dayLabel(peak.date)} a las ${hourLabel(peak.hour, peak.minute)}.`)
+    : t(`${total.toFixed(0)} mm total. No rain in this window.`, `${total.toFixed(0)} mm en total. Sin lluvia en este período.`);
+  $("rf-note").textContent = t(
+    "Each bar is one 10-minute window, shown as its hourly rate, so a short burst reads at its true intensity instead of being smeared across the hour. The line is station pressure. Night (18:00–06:00) is shaded.",
+    "Cada barra es una ventana de 10 minutos, mostrada como su tasa horaria, así que una ráfaga corta se lee con su verdadera intensidad en lugar de diluirse en la hora. La línea es la presión de la estación. La noche (18:00–06:00) está sombreada.",
+  );
 
-  const t = $("rf-table");
-  t.replaceChildren();
-  const head = t.createTHead().insertRow();
-  for (const h of ["Day", "Rain (mm)", "Peak rate (mm/h)", "Peak at", "Pressure range (hPa)"]) {
+  const table = $("rf-table");
+  table.replaceChildren();
+  const head = table.createTHead().insertRow();
+  for (const h of [t("Day", "Día"), t("Rain (mm)", "Lluvia (mm)"), t("Peak rate (mm/h)", "Tasa máxima (mm/h)"), t("Peak at", "Máximo a las"), t("Pressure range (hPa)", "Rango de presión (hPa)")]) {
     const th = document.createElement("th");
     th.textContent = h;
     head.append(th);
   }
-  const body = t.createTBody();
+  const body = table.createTBody();
   for (const d of days) {
     const row = body.insertRow();
     row.insertCell().textContent = dayLabel(d.date);
@@ -157,7 +159,7 @@ export function initRainFineToggle() {
   btn.addEventListener("click", () => {
     showSolar = !showSolar;
     btn.setAttribute("aria-pressed", String(showSolar));
-    btn.textContent = showSolar ? "Hide solar radiation" : "Show solar radiation";
+    btn.textContent = showSolar ? t("Hide solar radiation", "Ocultar radiación solar") : t("Show solar radiation", "Mostrar radiación solar");
     const el = $("rf-chart");
     if (el.data) Plotly.restyle(el, { visible: showSolar }, [2]);
   });

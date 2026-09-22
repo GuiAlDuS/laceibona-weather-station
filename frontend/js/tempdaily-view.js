@@ -1,6 +1,6 @@
 import { $, token, MONTHS, chartFont, hoverLabel, fillLegend } from "./common.js";
+import { t, WEEKDAYS } from "./i18n.js";
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export const dayLabel = (iso) => {
   const d = new Date(Date.parse(iso));
   return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
@@ -92,19 +92,24 @@ export function renderTempDailyText(days) {
   const latest = days.at(-1);
   const lo = Math.min(...latest.points.map((p) => p.tmin ?? p.t));
   const hi = Math.max(...latest.points.map((p) => p.tmax ?? p.t));
-  $("td-summary").textContent = `${dayLabel(latest.date)}: ${lo.toFixed(1)} to ${hi.toFixed(1)} °C${latest.points.length < 24 ? " so far" : ""}.`;
-  $("td-note").textContent =
-    "Hourly mean temperature by local hour (UTC-6), for the last 7 days with data. Each day has its own colour, starting with blue for the most recent day, and older days fade so the recent ones stand out; the legend lists them in that order. The hour in progress is shown as its average so far.";
+  $("td-summary").textContent = t(
+    `${dayLabel(latest.date)}: ${lo.toFixed(1)} to ${hi.toFixed(1)} °C${latest.points.length < 24 ? " so far" : ""}.`,
+    `${dayLabel(latest.date)}: ${lo.toFixed(1)} a ${hi.toFixed(1)} °C${latest.points.length < 24 ? " hasta ahora" : ""}.`,
+  );
+  $("td-note").textContent = t(
+    "Hourly mean temperature by local hour (UTC-6), for the last 7 days with data. Each day has its own colour, starting with blue for the most recent day, and older days fade so the recent ones stand out; the legend lists them in that order. The hour in progress is shown as its average so far.",
+    "Temperatura media por hora local (UTC-6), para los últimos 7 días con datos. Cada día tiene su propio color, empezando en azul para el más reciente, y los días anteriores se desvanecen para que los recientes resalten; la leyenda los enumera en ese orden. La hora en curso se muestra con su promedio hasta el momento.",
+  );
 
-  const t = $("td-table");
-  t.replaceChildren();
-  const head = t.createTHead().insertRow();
-  for (const h of ["Hour", ...days.map((d) => dayLabel(d.date))]) {
+  const table = $("td-table");
+  table.replaceChildren();
+  const head = table.createTHead().insertRow();
+  for (const h of [t("Hour", "Hora"), ...days.map((d) => dayLabel(d.date))]) {
     const th = document.createElement("th");
     th.textContent = h;
     head.append(th);
   }
-  const body = t.createTBody();
+  const body = table.createTBody();
   for (let h = 0; h < 24; h++) {
     const row = body.insertRow();
     row.insertCell().textContent = hourLabel(h);

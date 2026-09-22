@@ -1,4 +1,8 @@
 // Wind rose from wind columns (hourly in `obs:*`, per-minute in `wind24h`) (`ws` m/s, `wd` degrees). Pure functions; no DOM.
+import { t, sectorLabel } from "./i18n.js";
+
+// English compass points, fixed order for indexing; use `sectorLabel(i)` for the localized text shown
+// to the reader (English in tests, since they run with no `location`).
 export const SECTORS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
 export const MS_TO_KMH = 3.6;
 export const CALM_BELOW = 0.5; // m/s; slower hours have no meaningful direction
@@ -7,12 +11,12 @@ export const SPEED_BINS = [ // `max` in m/s (the data unit); labels in km/h (wha
   { label: "1.8–3.6 km/h", max: 1 },
   { label: "3.6–7.2 km/h", max: 2 },
   { label: "7.2–10.8 km/h", max: 3 },
-  { label: "10.8 km/h or more", max: Infinity },
+  { label: t("10.8 km/h or more", "10.8 km/h o más"), max: Infinity },
 ];
 
 // docs: any documents with `cols.ws` and `cols.wd`. Samples missing either value are not counted.
 export function windRose(docs) {
-  const sectors = SECTORS.map((name) => ({ name, total: 0, bins: SPEED_BINS.map(() => 0) }));
+  const sectors = SECTORS.map((_, i) => ({ name: sectorLabel(i), total: 0, bins: SPEED_BINS.map(() => 0) }));
   let calm = 0;
   let hours = 0;
   for (const doc of docs) {

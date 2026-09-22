@@ -1,8 +1,9 @@
 import { $, token, nf, chartFont, hoverLabel } from "./common.js";
+import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { weekTotals } from "./rainweek.js";
 
-const label = (r) => `${dayLabel(r.date)}${r.inProgress ? "<br>so far" : ""}`;
+const label = (r) => `${dayLabel(r.date)}${r.inProgress ? t("<br>so far", "<br>hasta ahora") : ""}`;
 const hrs = (h) => `${h.toFixed(1)} h`;
 
 // Two panels sharing one day axis: rain and ETo bars (mm) above, rain duration (hours) below.
@@ -23,11 +24,11 @@ export function renderRainWeekChart(rows) {
     hovertemplate: "%{y:,.1f} mm",
   });
   const peak = rows.reduce((b, r, i) => ((r.rain ?? -1) > (rows[b].rain ?? -1) ? i : b), 0);
-  const rain = { ...bar("Rain", "rain", token("--series-1")), text: rows.map((r, i) => (i === peak && r.rain ? nf.format(Math.round(r.rain)) : "")), textposition: "outside", textfont: { color: font.color, size: 12 }, cliponaxis: false };
+  const rain = { ...bar(t("Rain", "Lluvia"), "rain", token("--series-1")), text: rows.map((r, i) => (i === peak && r.rain ? nf.format(Math.round(r.rain)) : "")), textposition: "outside", textfont: { color: font.color, size: 12 }, cliponaxis: false };
   const duration = {
     type: "scatter",
     mode: "lines+markers",
-    name: "Rain duration",
+    name: t("Rain duration", "Duración de la lluvia"),
     x,
     y: rows.map((r) => r.hours),
     xaxis: "x",
@@ -61,7 +62,7 @@ export function renderRainWeekChart(rows) {
     hoverlabel: hoverLabel(),
     xaxis: { type: "category", anchor: "y2", tickangle: 0, showgrid: false, showline: true, linecolor: token("--baseline"), showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: token("--baseline"), spikethickness: 1, spikedash: "solid", tickfont: { color: muted, size: 12 }, fixedrange: true },
     yaxis: axis("mm", [0.4, 1], { tickformat: ",d" }),
-    yaxis2: axis("hours", [0, 0.28], { dtick: 6, rangemode: "tozero" }),
+    yaxis2: axis(t("hours", "horas"), [0, 0.28], { dtick: 6, rangemode: "tozero" }),
   };
   return Plotly.react($("rw-chart"), [rain, bar("ETo", "eto", token("--series-2")), duration], layout, { displayModeBar: false, responsive: true });
 }
@@ -69,7 +70,11 @@ export function renderRainWeekChart(rows) {
 export function renderRainWeekText(rows) {
   const legend = $("rw-legend");
   legend.replaceChildren();
-  for (const [name, color, cls] of [["Rain", token("--series-1"), "rect"], ["ETo (evapotranspiration)", token("--series-2"), "rect"], ["Rain duration (hours, lower panel)", token("--series-3"), "line"]]) {
+  for (const [name, color, cls] of [
+    [t("Rain", "Lluvia"), token("--series-1"), "rect"],
+    [t("ETo (evapotranspiration)", "ETo (evapotranspiración)"), token("--series-2"), "rect"],
+    [t("Rain duration (hours, lower panel)", "Duración de la lluvia (horas, panel inferior)"), token("--series-3"), "line"],
+  ]) {
     const li = document.createElement("li");
     const key = document.createElement("span");
     key.className = `key ${cls}`;
@@ -80,28 +85,35 @@ export function renderRainWeekText(rows) {
     legend.append(li);
   }
 
-  const t = weekTotals(rows);
-  $("rw-summary").textContent =
-    `${nf.format(Math.round(t.rain))} mm of rain on ${t.rainDays} of the last ${rows.length} days, ${hrs(t.hours)} in total. ` +
-    `On the ${t.etoDays} finished days, rain was ${nf.format(Math.round(t.rainOnEtoDays))} mm against ${nf.format(Math.round(t.eto))} mm of ETo.`;
+  const totals = weekTotals(rows);
+  $("rw-summary").textContent = t(
+    `${nf.format(Math.round(totals.rain))} mm of rain on ${totals.rainDays} of the last ${rows.length} days, ${hrs(totals.hours)} in total. ` +
+      `On the ${totals.etoDays} finished days, rain was ${nf.format(Math.round(totals.rainOnEtoDays))} mm against ${nf.format(Math.round(totals.eto))} mm of ETo.`,
+    `${nf.format(Math.round(totals.rain))} mm de lluvia en ${totals.rainDays} de los últimos ${rows.length} días, ${hrs(totals.hours)} en total. ` +
+      `En los ${totals.etoDays} días terminados, la lluvia fue de ${nf.format(Math.round(totals.rainOnEtoDays))} mm frente a ${nf.format(Math.round(totals.eto))} mm de ETo.`,
+  );
   $("rw-note").textContent =
-    (rows.at(-1).inProgress ? "Today's ETo is not shown: ETo is worked out once a day for the finished day, so it cannot be calculated for today. Today's rain and rain duration are totals so far. " : "") +
-    "Rain duration is the number of minutes with rain in the day, shown in hours.";
+    (rows.at(-1).inProgress
+      ? t(
+          "Today's ETo is not shown: ETo is worked out once a day for the finished day, so it cannot be calculated for today. Today's rain and rain duration are totals so far. ",
+          "La ETo de hoy no se muestra: se calcula una vez al día para el día terminado, así que no puede calcularse para hoy. La lluvia y la duración de hoy son totales hasta ahora. ",
+        )
+      : "") + t("Rain duration is the number of minutes with rain in the day, shown in hours.", "La duración de la lluvia es la cantidad de minutos con lluvia en el día, mostrada en horas.");
 
-  const tbl = $("rw-table");
-  tbl.replaceChildren();
-  const head = tbl.createTHead().insertRow();
-  for (const h of ["Day", "Rain (mm)", "ETo (mm)", "Rain duration (h)"]) {
+  const table = $("rw-table");
+  table.replaceChildren();
+  const head = table.createTHead().insertRow();
+  for (const h of [t("Day", "Día"), t("Rain (mm)", "Lluvia (mm)"), "ETo (mm)", t("Rain duration (h)", "Duración de la lluvia (h)")]) {
     const th = document.createElement("th");
     th.textContent = h;
     head.append(th);
   }
-  const body = tbl.createTBody();
+  const body = table.createTBody();
   for (const r of rows) {
     const row = body.insertRow();
-    row.insertCell().textContent = dayLabel(r.date) + (r.inProgress ? " (so far)" : "");
+    row.insertCell().textContent = dayLabel(r.date) + (r.inProgress ? t(" (so far)", " (hasta ahora)") : "");
     row.insertCell().textContent = r.rain === null ? "" : r.rain.toFixed(1);
-    row.insertCell().textContent = r.eto === null ? (r.inProgress ? "not yet" : "") : r.eto.toFixed(1);
+    row.insertCell().textContent = r.eto === null ? (r.inProgress ? t("not yet", "aún no") : "") : r.eto.toFixed(1);
     row.insertCell().textContent = r.hours === null ? "" : r.hours.toFixed(1);
   }
 }

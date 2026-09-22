@@ -1,5 +1,6 @@
 // Wind direction frequency by month. Pure functions; no DOM.
 import { SECTORS, CALM_BELOW } from "./windrose.js";
+import { sectorLabel } from "./i18n.js";
 
 const PARTIAL_BELOW = 0.9;
 
@@ -36,5 +37,5 @@ export function prevailing({ z }) {
   const totals = SECTORS.map((_, s) => z[ROW_SECTORS.indexOf(s)].reduce((a, v) => a + (v ?? 0), 0));
   const best = totals.indexOf(Math.max(...totals));
   const months = z[0].length;
-  return { name: SECTORS[best], percent: months ? totals[best] / months : 0 };
+  return { name: sectorLabel(best), percent: months ? totals[best] / months : 0 };
 }

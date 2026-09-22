@@ -433,6 +433,22 @@ Wind speed is shown in km/h everywhere on the dashboard (heatmap, monthly box pl
 scatter, wind rose bins and calm cut-off); it is still stored in m/s and converted only at
 display time (`MS_TO_KMH` in `frontend/js/windrose.js`).
 
+**Spanish translation (Sept 2026):** the whole dashboard is also served in Spanish at
+`/es/`, sharing one JS bundle with the English site at `/`. `frontend/js/i18n.js` picks the
+language once per page load from the URL path (`LANG`), and every module that produces text
+calls its `t(english, spanish)` helper inline at the call site — both strings live next to
+the logic that builds them, rather than in a separate keyed dictionary, since this dashboard's
+text changes almost every session. `i18n.js` also holds the locale-aware month/weekday
+abbreviations, number formatting, and the 16-point compass (`sectorLabel`; Spanish uses O for
+Oeste in place of W: SO, ONO, NO, NNO, ...). `LANG` falls back to English when there is no
+`location` global, so every existing Node test (which asserts English strings) keeps passing
+unchanged. `frontend/es/index.html` is a hand-translated copy of the static markup, sharing
+`style.css`/`js/`/`vendor/` via absolute paths; `deploy.sh` copies the `es/` folder alongside
+the rest. A language switch (`.lang-switch`, "EN / ES") sits fixed top-right on wide screens;
+on narrow screens it becomes its own full-width sticky bar stacked above the section nav bar,
+not a fixed pill, because a fixed pill there permanently covers whatever section link happens
+to scroll underneath it.
+
 Owner decisions worth remembering:
 - **Dropped, do not rebuild**: rain-hours/intensity *monthly*, lightning distance by year,
   annual summary bars, solar irradiation bars, daily temperature range (line and box versions:

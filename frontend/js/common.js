@@ -1,13 +1,14 @@
+import { t, nf, MONTHS } from "./i18n.js";
+
 export const $ = (id) => document.getElementById(id);
 export const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 export const narrowScreen = window.matchMedia("(max-width: 600px)");
 
-export const nf = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+export { nf, MONTHS };
 export const mm = (v) => {
   const r = Math.round(v);
   return `${r < 0 ? "−" : r > 0 ? "+" : ""}${nf.format(Math.abs(r))} mm`;
 };
-export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 export const longDate = (iso) => `${+iso.slice(8)} ${MONTHS[+iso.slice(5, 7) - 1]} ${iso.slice(0, 4)}`;
 
 export const chartFont = () => ({
@@ -43,11 +44,13 @@ export function setStatus(id, message, onRetry) {
   if (message) el.append(message);
   if (onRetry) {
     const b = document.createElement("button");
-    b.textContent = "Retry";
+    b.textContent = t("Retry", "Reintentar");
     b.addEventListener("click", onRetry);
     el.append(b);
   }
 }
 
-export const SOLAR_NOTE =
-  "Data caveat: since April 2026 the station's daily solar averages appear to read about 4% high, which may overstate 2026 solar irradiation and ETo slightly (under review).";
+export const SOLAR_NOTE = t(
+  "Data caveat: since April 2026 the station's daily solar averages appear to read about 4% high, which may overstate 2026 solar irradiation and ETo slightly (under review).",
+  "Advertencia sobre los datos: desde abril de 2026, los promedios diarios de radiación solar de la estación parecen ser un 4% más altos de lo real, lo que podría sobreestimar ligeramente la radiación solar y la ETo de 2026 (en revisión).",
+);

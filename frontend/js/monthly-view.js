@@ -1,9 +1,9 @@
 import { $, token, nf, narrowScreen, MONTHS, chartFont, hoverLabel, fillLegend } from "./common.js";
+import { t } from "./i18n.js";
 import { summarizeMonths, peak } from "./monthly.js";
 
 export const monthName = (key) => MONTHS[+key.slice(5, 7) - 1];
-export const longLabel = (m) =>
-  `${monthName(m.month)} ${m.month.slice(0, 4)}${m.partial ? ` — ${m.days} of ${m.daysInMonth} days` : ""}`;
+export const longLabel = (m) => `${monthName(m.month)} ${m.month.slice(0, 4)}${m.partial ? ` — ${m.days} ${t("of", "de")} ${m.daysInMonth} ${t("days", "días")}` : ""}`;
 export const tickLabel = (m) => `${monthName(m.month)}${m.partial ? "†" : ""}<br>${m.month.slice(2, 4)}`;
 
 export function renderMonthlyChart(months) {
@@ -25,7 +25,7 @@ export function renderMonthlyChart(months) {
     textfont: { color: font.color, size: 12 },
     constraintext: "none",
     cliponaxis: false,
-    customdata: months.map((m) => (m.partial ? ` (${m.days} of ${m.daysInMonth} days)` : "")),
+    customdata: months.map((m) => (m.partial ? t(` (${m.days} of ${m.daysInMonth} days)`, ` (${m.days} de ${m.daysInMonth} días)`) : "")),
     hovertemplate: "%{y:,.0f} mm%{customdata}",
   });
 
@@ -59,7 +59,7 @@ export function renderMonthlyChart(months) {
       fixedrange: true,
     },
     yaxis: {
-      title: { text: "mm per month", font: { color: muted, size: 12 }, standoff: 8 },
+      title: { text: t("mm per month", "mm por mes"), font: { color: muted, size: 12 }, standoff: 8 },
       tickformat: ",d",
       rangemode: "tozero",
       gridcolor: token("--grid"),
@@ -74,7 +74,7 @@ export function renderMonthlyChart(months) {
 
   return Plotly.react(
     $("mo-chart"),
-    [bar("Rain", "rain", token("--series-1")), bar("ETo", "eto", token("--series-2"))],
+    [bar(t("Rain", "Lluvia"), "rain", token("--series-1")), bar("ETo", "eto", token("--series-2"))],
     layout,
     { displayModeBar: false, responsive: true },
   );
@@ -84,34 +84,34 @@ export function renderMonthlyText(months) {
   fillLegend(
     $("mo-legend"),
     [
-      { label: "Rain", color: token("--series-1") },
-      { label: "ETo (evapotranspiration)", color: token("--series-2") },
+      { label: t("Rain", "Lluvia"), color: token("--series-1") },
+      { label: t("ETo (evapotranspiration)", "ETo (evapotranspiración)"), color: token("--series-2") },
     ],
     "rect",
   );
 
   const s = summarizeMonths(months);
-  $("mo-summary").textContent = `Rain exceeded ETo in ${s.rainAboveEto} of the last ${s.total} months.`;
+  $("mo-summary").textContent = t(`Rain exceeded ETo in ${s.rainAboveEto} of the last ${s.total} months.`, `La lluvia superó a la ETo en ${s.rainAboveEto} de los últimos ${s.total} meses.`);
 
   const partial = months.filter((m) => m.partial);
   $("mo-note").textContent =
-    "Monthly totals add up only days with complete sensor data. " +
-    (partial.length ? "† marks a month with missing days (or the month in progress), so its totals read low." : "");
+    t("Monthly totals add up only days with complete sensor data. ", "Los totales mensuales suman solo los días con datos completos del sensor. ") +
+    (partial.length ? t("† marks a month with missing days (or the month in progress), so its totals read low.", "† indica un mes con días faltantes (o el mes en curso), por lo que sus totales se leen bajos.") : "");
 
-  const t = $("mo-table");
-  t.replaceChildren();
-  const head = t.createTHead().insertRow();
-  for (const h of ["Month", "Rain (mm)", "ETo (mm)", "Days with data"]) {
+  const table = $("mo-table");
+  table.replaceChildren();
+  const head = table.createTHead().insertRow();
+  for (const h of [t("Month", "Mes"), t("Rain (mm)", "Lluvia (mm)"), "ETo (mm)", t("Days with data", "Días con datos")]) {
     const th = document.createElement("th");
     th.textContent = h;
     head.append(th);
   }
-  const body = t.createTBody();
+  const body = table.createTBody();
   for (const m of months) {
     const row = body.insertRow();
     row.insertCell().textContent = `${monthName(m.month)} ${m.month.slice(0, 4)}`;
     row.insertCell().textContent = m.rain === null ? "" : nf.format(Math.round(m.rain));
     row.insertCell().textContent = m.eto === null ? "" : nf.format(Math.round(m.eto));
-    row.insertCell().textContent = `${m.days} of ${m.daysInMonth}`;
+    row.insertCell().textContent = `${m.days} ${t("of", "de")} ${m.daysInMonth}`;
   }
 }
