@@ -578,3 +578,37 @@ Owner decisions worth remembering:
     local source, before concluding it was client-side caching. A hard refresh fixed it.
 - Deployed to production: `./deploy.sh main` (frontend) and `wrangler deploy` (fetcher, additive
   only, no separate environment as noted above).
+
+**Phase 9 — Forecast polish and a solar-irradiation-by-year chart (Sept 2026)**
+
+- **Hourly forecast note clarified**: a reader asked whether the "Thunderstorm risk" bar color
+  implied a separate risk on top of the rain-probability height. Reworded `fh-note` to say
+  explicitly that bar height is always that hour's rain probability and red just marks *what kind*
+  of rain is expected (a thunderstorm is itself a precipitation event, not an added-on risk).
+- **Forecast section reordered and tightened**: "Today, hour by hour" now comes before the daily
+  tiles (today's own forecast is fully covered by the hourly chart, so showing it twice added
+  nothing), and the daily card was renamed "The next 5 days" and now excludes today entirely
+  (`renderForecast(forecast.slice(1))` in `app.js`; `dayLabel`'s index 0 is now always "Tomorrow").
+  Daily tile temperatures switched from 0 to 1 decimal place.
+- **Reversed a prior "do not rebuild" decision, deliberately**: added "Total solar irradiation by
+  year" to the end of Year over year — a bar chart of total kWh/m² per calendar year (same 1
+  Jan-to-latest-common-date windowing as the temperature-by-year box plot, so a partial current
+  year is compared fairly). Monthly solar bars and a temp/ETo/solar "annual summary" chart were
+  explicitly dropped earlier (Phase 6/§5) and are still not to be rebuilt — this is a different
+  shape (a single annual total, not monthly, not bundled with other metrics) requested for a
+  different, now-explicit purpose: judging whether the site's solar resource is good enough to be
+  worth installing panels, not general dashboard content. If a monthly breakdown is ever requested
+  for the same purpose (it would show the seasonal low point that actually drives system sizing,
+  which the annual total hides), that is a deliberate, purpose-driven exception to the Phase 6
+  decision too, not a silent reversal — ask first, same as this one was raised before building.
+  - **Computed from raw hourly `obs:` observations, not `daily:all`'s `solar_avg`**, specifically
+    to sidestep the stats-endpoint solar bias documented in §2 (that bias is a `stats/station`
+    sample-averaging artifact; the raw `observations/device` endpoint feeding the hourly documents
+    never had it). `frontend/js/solar.js`'s `annualSolarTotals(docs)` sums each hour's mean W/m²
+    reading as a hour's worth of Wh/m² (`/1000` for kWh/m²) — as of this writing: 2025 1,298 kWh/m²
+    (5.0 kWh/m²/day), 2026 1,406 kWh/m² (5.4 kWh/m²/day) through 22 Sep, both comfortably above
+    the ~2.5-3 kWh/m²/day that already supports widespread rooftop solar in much lower-resource
+    markets like Germany.
+  - Added `["sy", ...]` to `app.js`'s `OBS_CHARTS` array (the same generic prepare/draw/error-per-
+    chart loop already driving the monthly and yearly temperature/wind charts), so it gets its
+    reload, theme-redraw and error handling for free — no bespoke load function needed.

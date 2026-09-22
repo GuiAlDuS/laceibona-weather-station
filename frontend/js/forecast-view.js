@@ -28,9 +28,9 @@ const CONDITION_LABEL = {
 
 export const conditionLabel = (icon) => CONDITION_LABEL[icon] ?? null;
 
+// `days` here never includes today (the hourly chart covers today); index 0 is always tomorrow.
 export function dayLabel(date, index) {
-  if (index === 0) return t("Today", "Hoy");
-  if (index === 1) return t("Tomorrow", "Mañana");
+  if (index === 0) return t("Tomorrow", "Mañana");
   const d = new Date(Date.parse(date));
   return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()}`;
 }
@@ -42,8 +42,8 @@ export function renderForecast(days) {
     const precip = typeof d.precip_probability === "number" ? t(`${d.precip_probability}% rain`, `${d.precip_probability}% de lluvia`) : null;
     const cond = conditionLabel(d.icon);
     grid.append(
-      tile(dayLabel(d.date, i), typeof d.temp_high === "number" ? `${num(d.temp_high, 0)}°` : "—", null, [
-        typeof d.temp_low === "number" ? t(`Low ${num(d.temp_low, 0)}°`, `Mínima ${num(d.temp_low, 0)}°`) : null,
+      tile(dayLabel(d.date, i), typeof d.temp_high === "number" ? `${num(d.temp_high, 1)}°` : "—", null, [
+        typeof d.temp_low === "number" ? t(`Low ${num(d.temp_low, 1)}°`, `Mínima ${num(d.temp_low, 1)}°`) : null,
         [cond, precip].filter(Boolean).join(" — ") || null,
       ]),
     );

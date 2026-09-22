@@ -73,12 +73,6 @@
     <section class="group" id="forecast" aria-labelledby="forecast-heading">
       <h2 id="forecast-heading" class="group-title">Pronóstico</h2>
 
-      <section class="card" aria-labelledby="fc-title">
-        <h3 id="fc-title">Hoy y los próximos 6 días</h3>
-        <p class="muted">Modelo de pronóstico de Tempest, no una medición — todo lo demás en esta página es observado.</p>
-        <div id="fc-body" class="cc-grid"><p class="muted">Cargando…</p></div>
-      </section>
-
       <section class="card" aria-labelledby="fh-title">
         <h3 id="fh-title">Hoy, hora por hora</h3>
         <p class="muted">Probabilidad de lluvia por hora, con las horas de riesgo de tormenta marcadas y la temperatura junto a ellas.</p>
@@ -95,6 +89,12 @@
           <summary>Ver tabla</summary>
           <div class="table-scroll"><table id="fh-table"></table></div>
         </details>
+      </section>
+
+      <section class="card" aria-labelledby="fc-title">
+        <h3 id="fc-title">Los próximos 5 días</h3>
+        <p class="muted">Modelo de pronóstico de Tempest, no una medición — todo lo demás en esta página es observado.</p>
+        <div id="fc-body" class="cc-grid"><p class="muted">Cargando…</p></div>
       </section>
     </section>
 
@@ -357,6 +357,23 @@
         <details class="table-view">
           <summary>Ver tabla</summary>
           <div class="table-scroll"><table id="wb-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="sy-title">
+        <h3 id="sy-title">Irradiación solar total por año</h3>
+        <p class="muted">Energía solar total recibida por metro cuadrado, año contra año, a partir de observaciones horarias sin procesar.</p>
+        <p id="sy-summary" class="summary" aria-live="polite"></p>
+
+        <div id="sy-frame" class="chart-frame">
+          <div id="sy-chart" role="img" aria-label="Gráfico de barras de la irradiación solar total en kWh por metro cuadrado para cada año"></div>
+          <p id="sy-status" class="status">Cargando…</p>
+        </div>
+        <p id="sy-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Ver tabla</summary>
+          <div class="table-scroll"><table id="sy-table"></table></div>
         </details>
       </section>
     </section>

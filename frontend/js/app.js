@@ -28,6 +28,8 @@ import { VIRIDIS, renderMonthHourChart, renderMonthHourText } from "./heatmap-vi
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
 import { windRose, sliceWindow, MS_TO_KMH } from "./windrose.js";
 import { renderWindRose } from "./windrose-view.js";
+import { annualSolarTotals } from "./solar.js";
+import { renderSolarYearChart, renderSolarYearText } from "./solar-view.js";
 
 const NO_USABLE_DATA = () => new Error(t("no usable data yet", "todavía no hay datos utilizables"));
 const couldNotLoad = (msg) => t(`Could not load data (${msg}). `, `No se pudieron cargar los datos (${msg}). `);
@@ -85,7 +87,7 @@ async function loadForecast() {
     } else {
       forecast = forecastDays(doc);
       if (forecast.length === 0) throw NO_USABLE_DATA();
-      renderForecast(forecast);
+      renderForecast(forecast.slice(1)); // today is covered by the hourly chart, not these tiles
 
       forecastHourly = forecastHours(doc);
       if (forecastHourly.length === 0) throw NO_USABLE_DATA();
@@ -299,6 +301,13 @@ const OBS_CHARTS = [
   }, () => {
     renderTempBoxYearlyText(obsState.by);
     return renderTempBoxYearly(obsState.by);
+  }],
+  ["sy", (docs) => {
+    obsState.sy = annualSolarTotals(docs);
+    if (obsState.sy.length === 0) throw NO_USABLE_DATA();
+  }, () => {
+    renderSolarYearText(obsState.sy);
+    return renderSolarYearChart(obsState.sy);
   }],
 ];
 

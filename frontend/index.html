@@ -73,12 +73,6 @@
     <section class="group" id="forecast" aria-labelledby="forecast-heading">
       <h2 id="forecast-heading" class="group-title">Forecast</h2>
 
-      <section class="card" aria-labelledby="fc-title">
-        <h3 id="fc-title">Today and the next 6 days</h3>
-        <p class="muted">Tempest's forecast model, not a measurement — everything else on this page is observed.</p>
-        <div id="fc-body" class="cc-grid"><p class="muted">Loading…</p></div>
-      </section>
-
       <section class="card" aria-labelledby="fh-title">
         <h3 id="fh-title">Today, hour by hour</h3>
         <p class="muted">Rain probability by hour, with thunderstorm hours marked and temperature alongside.</p>
@@ -95,6 +89,12 @@
           <summary>Table view</summary>
           <div class="table-scroll"><table id="fh-table"></table></div>
         </details>
+      </section>
+
+      <section class="card" aria-labelledby="fc-title">
+        <h3 id="fc-title">The next 5 days</h3>
+        <p class="muted">Tempest's forecast model, not a measurement — everything else on this page is observed.</p>
+        <div id="fc-body" class="cc-grid"><p class="muted">Loading…</p></div>
       </section>
     </section>
 
@@ -357,6 +357,23 @@
         <details class="table-view">
           <summary>Table view</summary>
           <div class="table-scroll"><table id="wb-table"></table></div>
+        </details>
+      </section>
+
+      <section class="card" aria-labelledby="sy-title">
+        <h3 id="sy-title">Total solar irradiation by year</h3>
+        <p class="muted">Total solar energy received per square metre, year over year, from raw hourly observations.</p>
+        <p id="sy-summary" class="summary" aria-live="polite"></p>
+
+        <div id="sy-frame" class="chart-frame">
+          <div id="sy-chart" role="img" aria-label="Bar chart of total solar irradiation in kWh per square metre for each year"></div>
+          <p id="sy-status" class="status">Loading…</p>
+        </div>
+        <p id="sy-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll"><table id="sy-table"></table></div>
         </details>
       </section>
     </section>
