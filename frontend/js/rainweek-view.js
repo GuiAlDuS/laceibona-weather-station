@@ -60,7 +60,7 @@ export function renderRainWeekChart(rows) {
     bargroupgap: 0.06,
     hovermode: "x unified",
     hoverlabel: hoverLabel(),
-    xaxis: { type: "category", anchor: "y2", tickangle: 0, showgrid: false, showline: true, linecolor: token("--baseline"), showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: token("--baseline"), spikethickness: 1, spikedash: "solid", tickfont: { color: muted, size: 12 }, fixedrange: true },
+    xaxis: { type: "category", anchor: "y2", tickangle: 0, automargin: true, showgrid: false, showline: true, linecolor: token("--baseline"), showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: token("--baseline"), spikethickness: 1, spikedash: "solid", tickfont: { color: muted, size: 12 }, fixedrange: true },
     yaxis: axis("mm", [0.4, 1], { tickformat: ",d" }),
     yaxis2: axis(t("hours", "horas"), [0, 0.28], { dtick: 6, rangemode: "tozero" }),
   };

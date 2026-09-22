@@ -35,7 +35,7 @@ function boxChart(el, labels, longLabels, stats, unit = "°C") {
     plot_bgcolor: "rgba(0,0,0,0)",
     margin: { l: 56, r: 12, t: 16, b: 48 },
     hoverlabel: hoverLabel(),
-    xaxis: { type: "category", tickangle: 0, showgrid: false, showline: true, linecolor: token("--baseline"), tickfont: { color: muted, size: 12 }, fixedrange: true },
+    xaxis: { type: "category", tickangle: 0, automargin: true, showgrid: false, showline: true, linecolor: token("--baseline"), tickfont: { color: muted, size: 12 }, fixedrange: true },
     yaxis: { title: { text: unit, font: { color: muted, size: 12 }, standoff: 8 }, gridcolor: token("--grid"), gridwidth: 1, zeroline: false, tickfont: { color: muted, size: 12 }, fixedrange: true },
   };
   return Plotly.react(el, [trace], layout, { displayModeBar: false, responsive: true });

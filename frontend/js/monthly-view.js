@@ -46,6 +46,7 @@ export function renderMonthlyChart(months) {
       tickvals: x.filter((_, i) => !narrowScreen.matches || i % 2 === (months.length - 1) % 2),
       ticktext: months.map(tickLabel).filter((_, i) => !narrowScreen.matches || i % 2 === (months.length - 1) % 2),
       tickangle: 0,
+      automargin: true,
       showgrid: false,
       showspikes: true,
       spikemode: "across",

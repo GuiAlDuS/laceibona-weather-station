@@ -45,6 +45,11 @@ test("today's extremes, rain total and lightning", () => {
   assert.deepEqual(c.last_lightning, { at: new Date((T0 - 300) * 1000).toISOString(), distance_km: 12 });
 });
 
+test("today's rain duration counts 1-minute rows with measurable rain", () => {
+  const rows = [row(T0 - 300, { rain: 0.5 }), row(T0 - 240, { rain: 0 }), row(T0 - 120, { rain: 1.5 }), row(T0, { rain: 0 })];
+  assert.equal(buildCurrent(rows, now).today.rain_min, 2);
+});
+
 test("rain rate extrapolates the last 10 minutes to mm/h", () => {
   const rows = [row(T0 - 1200, { rain: 5 }), row(T0 - 300, { rain: 0.2 }), row(T0, { rain: 0.1 })];
   assert.equal(buildCurrent(rows, now).rain_rate, 1.8);

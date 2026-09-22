@@ -465,3 +465,45 @@ Owner decisions worth remembering:
   water balance).
 - Still open from earlier phases: the ETo comparison against the old HA values, and the
   solar-bias caveat (stats averages ~4% high since April 2026).
+
+**Phase 7 — Live-data and polish fixes (Sept 2026)**
+- **Rain-week "today" bar goes live**: `daily:all` (and so the rain + ETo weekly chart, the
+  monthly rain vs ETo chart, and both cumulative/water-balance charts) is only rebuilt once a
+  day at 01:00 local, so an open tab could show a "today" rain figure hours out of date. Fixed
+  two ways: (1) `current`'s `today` object gained `rain_min` (count of this-minute-has-rain
+  1-minute samples since local midnight, mirroring `daily.js`'s `rain_min` for finished days) —
+  `fetcher/src/current.js`; (2) `frontend/js/rainweek.js`'s `withLiveToday(rows, current)`
+  overlays `current.today.rain_mm`/`rain_min` onto just the last (in-progress) row, leaving the
+  other six finished days and `eto` (never available for today) untouched; `app.js` re-runs this
+  overlay and re-renders the chart on every 60 s Current Conditions poll, no extra fetch. (3)
+  `load()` (the `daily:all` fetch driving all four of those charts) is now also polled every
+  5 min (`setInterval(load, 300_000)`, matching the `/api/daily` server cache TTL) instead of
+  only once per page load, so the 01:00 daily rebuild itself shows up without a reload.
+- **Wind rose time window**: added a 24 h / 12 h / 6 h toggle next to the wind rose. `wind24h`
+  already carries a full 24 h of per-minute data, so no new endpoint was needed — the Worker
+  just gained a `cols.ts` (unix seconds, same order as `ws`/`wd`) in `fetcher/src/wind.js`, and
+  `frontend/js/windrose.js`'s `sliceWindow(doc, hours)` cuts the requested window client-side,
+  relative to the doc's own last sample rather than wall-clock time. Switching windows re-slices
+  already-fetched data and re-renders; it never refetches.
+- **Spanish month names on the year-over-year charts**: `frontend/js/line-chart.js` (shared by
+  cumulative rain, cumulative lightning, and cumulative water balance) used Plotly's `tickformat:
+  "%b"` / `hoverformat: "%b %d"`, which Plotly always renders in English — there is no Spanish
+  Plotly locale bundle vendored, deliberately, since this project hand-rolls i18n everywhere
+  else. Fixed by building the axis tick labels from the app's own localized `MONTHS` array
+  (`tickmode: "array"` + `tickvals`/`ticktext`, matching how every other chart already does month
+  labels) and switching the Spanish hover date to numeric `%d/%m` so no D3-formatted month name
+  can leak through; the English page's hover format is unchanged.
+- **X-axis label crowding**: intermittently, a chart's two-line category-axis tick label (month
+  name + `†` + 2-digit year, or a day label + optional second "so far" line) rendered tall enough
+  to crowd the `.muted.small` note text sitting right below the chart, because those layouts used
+  a **fixed pixel `margin.b`** with no `automargin` — Plotly never measured the actual label and
+  grew the margin to fit; it just trusted a guessed constant. Added `automargin: true` to the
+  x-axis of all six affected charts: both month×hour heatmaps, wind direction by month, monthly
+  rain vs ETo, both monthly box plots, and the rain + ETo weekly chart.
+- **GitHub link**: a footer at the bottom of the page (inside `<main>`, so it shares the content
+  column's width) links to the repo, with an inline SVG GitHub mark (`fill="currentColor"`, no
+  external asset) — `.site-footer`/`.github-link` in `style.css`.
+- The fetcher Worker has no separate test environment (single `wrangler.toml` target, single
+  `WEATHER_DATA` KV namespace) — only the Pages frontend has a `test` branch. Backend changes in
+  this phase were additive-only (new fields, nothing removed) and deployed straight to the one
+  Worker; the frontend was still built and reviewed on `test` first as usual.

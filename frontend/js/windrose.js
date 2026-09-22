@@ -14,6 +14,17 @@ export const SPEED_BINS = [ // `max` in m/s (the data unit); labels in km/h (wha
   { label: t("10.8 km/h or more", "10.8 km/h o más"), max: Infinity },
 ];
 
+// Cuts the most recent `hours` out of a `wind24h`-shaped doc (`cols.ts` in unix seconds, ascending), relative
+// to its own last sample rather than wall-clock time, so it still works a few minutes after the doc was fetched.
+export function sliceWindow(doc, hours) {
+  const { ts, ws, wd } = doc.cols;
+  if (ts.length === 0) return { cols: { ws: [], wd: [] } };
+  const cutoff = ts[ts.length - 1] - hours * 3600;
+  const idx = [];
+  for (let i = 0; i < ts.length; i++) if (ts[i] >= cutoff) idx.push(i);
+  return { cols: { ws: idx.map((i) => ws[i]), wd: idx.map((i) => wd[i]) } };
+}
+
 // docs: any documents with `cols.ws` and `cols.wd`. Samples missing either value are not counted.
 export function windRose(docs) {
   const sectors = SECTORS.map((_, i) => ({ name: sectorLabel(i), total: 0, bins: SPEED_BINS.map(() => 0) }));

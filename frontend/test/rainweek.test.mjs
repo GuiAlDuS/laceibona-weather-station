@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { lastRainDays, weekTotals } from "../js/rainweek.js";
+import { lastRainDays, weekTotals, withLiveToday } from "../js/rainweek.js";
 
 const d = (date, o = {}) => ({ date, rain_mm: 0, rain_min: 0, eto: 5, complete: true, ...o });
 
@@ -15,6 +15,23 @@ test("takes the last n days; duration is minutes in hours; an unfinished day has
 test("missing values stay null rather than becoming zero", () => {
   const [r] = lastRainDays([d("2026-09-18", { rain_mm: null, rain_min: undefined, eto: null })]);
   assert.deepEqual([r.rain, r.hours, r.eto], [null, null, null]);
+});
+
+test("withLiveToday overlays current's rain and duration onto the in-progress day only", () => {
+  const rows = lastRainDays([d("2026-09-18", { rain_mm: 5, rain_min: 30 }), d("2026-09-19", { rain_mm: 11, rain_min: 90, eto: null, complete: false })]);
+  const patched = withLiveToday(rows, { today: { rain_mm: 14.8, rain_min: 200 } });
+  assert.equal(patched[0].rain, 5); // finished day untouched
+  assert.equal(patched[1].rain, 14.8);
+  assert.equal(patched[1].hours, 200 / 60);
+  assert.equal(patched[1].eto, null); // current has no ETo, so it stays as-is
+});
+
+test("withLiveToday leaves rows unchanged when the last day is finished or current is missing", () => {
+  const finished = lastRainDays([d("2026-09-18")]);
+  assert.deepEqual(withLiveToday(finished, { today: { rain_mm: 99, rain_min: 60 } }), finished);
+  const inProgress = lastRainDays([d("2026-09-19", { eto: null, complete: false })]);
+  assert.deepEqual(withLiveToday(inProgress, null), inProgress);
+  assert.deepEqual(withLiveToday(inProgress, {}), inProgress);
 });
 
 test("weekTotals compares rain with ETo only over finished days that have both", () => {

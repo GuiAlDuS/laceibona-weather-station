@@ -14,7 +14,9 @@ export function buildWind24h(rows, nowMs) {
     from: new Date(from * 1000).toISOString(),
     to: sorted.length ? new Date(sorted.at(-1)[F.ts] * 1000).toISOString() : null,
     fetched_at: new Date(nowMs).toISOString(),
-    cols: { ws: col(F.avg), wd: col(F.dir) },
+    // ts (unix seconds) lets the frontend cut shorter windows (12h, 6h) out of this same 24h document
+    // without a separate fetch; it is always present and in the same order as ws/wd.
+    cols: { ts: sorted.map((r) => r[F.ts]), ws: col(F.avg), wd: col(F.dir) },
     hourly: [...aggregateHours(sorted)].filter(([, r]) => r.t !== null).map(([h, r]) => [h, r.t, r.tmin, r.tmax, r.n]),
   };
 }

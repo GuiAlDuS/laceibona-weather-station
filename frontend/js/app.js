@@ -8,7 +8,7 @@ import { cumulativeRainByYear, cumulativeLightningByYear } from "./cumulative.js
 import { renderWaterBalanceChart, renderWaterBalanceText } from "./waterbalance-view.js";
 import { renderMonthlyChart, renderMonthlyText } from "./monthly-view.js";
 import { RAIN, LIGHTNING, renderCumulativeChart, renderCumulativeText } from "./cumulative-view.js";
-import { lastRainDays } from "./rainweek.js";
+import { lastRainDays, withLiveToday } from "./rainweek.js";
 import { renderRainWeekChart, renderRainWeekText } from "./rainweek-view.js";
 import { fineBuckets } from "./rainfine.js";
 import { renderRainFineChart, renderRainFineText, initRainFineToggle } from "./rainfine-view.js";
@@ -24,13 +24,21 @@ import { monthlyBoxes, yearlyBoxes } from "./tempbox.js";
 import { WIND as WIND_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
 import { VIRIDIS, renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
-import { windRose, MS_TO_KMH } from "./windrose.js";
+import { windRose, sliceWindow, MS_TO_KMH } from "./windrose.js";
 import { renderWindRose } from "./windrose-view.js";
 
 const NO_USABLE_DATA = () => new Error(t("no usable data yet", "todavía no hay datos utilizables"));
 const couldNotLoad = (msg) => t(`Could not load data (${msg}). `, `No se pudieron cargar los datos (${msg}). `);
 
 let currentDoc = null;
+
+// Re-renders the rain-week chart with today's row overlaid from `currentDoc`, once both are loaded.
+function refreshRainWeekLive() {
+  if (!rainWeek) return;
+  const rows = withLiveToday(rainWeek, currentDoc);
+  renderRainWeekText(rows);
+  renderRainWeekChart(rows);
+}
 
 async function loadCurrent() {
   $("cc-body").classList.add("reloading");
@@ -43,6 +51,7 @@ async function loadCurrent() {
     } else {
       currentDoc = doc;
       renderCurrent(doc, Date.now());
+      refreshRainWeekLive();
     }
   } catch (err) {
     console.error(err);
@@ -78,17 +87,18 @@ async function load() {
     lightning = cumulativeLightningByYear(doc.days);
     rainWeek = lastRainDays(doc.days);
     if (balance.length === 0 || months.length === 0 || rain.length === 0 || lightning.length === 0 || rainWeek.length === 0) throw NO_USABLE_DATA();
+    const rainWeekRows = withLiveToday(rainWeek, currentDoc);
     renderWaterBalanceText(balance);
     renderMonthlyText(months);
     renderCumulativeText(RAIN, rain);
     renderCumulativeText(LIGHTNING, lightning);
-    renderRainWeekText(rainWeek);
+    renderRainWeekText(rainWeekRows);
     await Promise.all([
       renderWaterBalanceChart(balance),
       renderMonthlyChart(months),
       renderCumulativeChart(RAIN, rain),
       renderCumulativeChart(LIGHTNING, lightning),
-      renderRainWeekChart(rainWeek),
+      renderRainWeekChart(rainWeekRows),
     ]);
     for (const id of STATUSES) setStatus(id, "");
   } catch (err) {
@@ -101,6 +111,7 @@ async function load() {
 
 let rose = null;
 let roseDoc = null;
+let windowHours = 24;
 
 async function loadWind() {
   $("wr-frame").classList.add("reloading");
@@ -110,7 +121,7 @@ async function loadWind() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     roseDoc = await res.json();
     if (roseDoc.available === false) throw new Error(t("no wind data yet", "todavía no hay datos de viento"));
-    rose = windRose([roseDoc]);
+    updateRose();
     if (rose.hours === 0) throw NO_USABLE_DATA();
     drawWind();
     setStatus("wr-status", "");
@@ -122,12 +133,40 @@ async function loadWind() {
   }
 }
 
+// Recomputes `rose` from the already-fetched 24h document for the selected window; no re-fetch needed.
+function updateRose() {
+  rose = windRose([sliceWindow(roseDoc, windowHours)]);
+}
+
+function windPeriodText(time, date) {
+  return t(`the ${windowHours} hours to ${time} on ${date}`, `las ${windowHours} horas hasta las ${time} del ${date}`);
+}
+
 function drawWind() {
   if (!rose) return;
   const to = new Date(roseDoc.to);
   const time = to.toLocaleTimeString(TIME_LOCALE, { hour: "2-digit", minute: "2-digit", timeZone: "America/Costa_Rica" });
   const date = longDate(new Date(to - 6 * 3600_000).toISOString().slice(0, 10));
-  renderWindRose(rose, t(`the 24 hours to ${time} on ${date}`, `las 24 horas hasta las ${time} del ${date}`));
+  renderWindRose(rose, windPeriodText(time, date));
+}
+
+// Wires the window-length buttons once; cheap to call again.
+function initWindRoseToggle() {
+  const group = $("wr-window");
+  if (!group || group.dataset.wired) return;
+  group.dataset.wired = "true";
+  for (const btn of group.querySelectorAll("button")) {
+    btn.addEventListener("click", () => {
+      const hours = Number(btn.dataset.hours);
+      if (hours === windowHours) return;
+      windowHours = hours;
+      for (const b of group.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b === btn));
+      if (roseDoc) {
+        updateRose();
+        drawWind();
+      }
+    });
+  }
 }
 
 let fineBucketsData = null;
@@ -255,6 +294,7 @@ function drawObsCharts() {
   for (const [p, , draw] of OBS_CHARTS) if (obsState[p]) draw();
 }
 
+setInterval(load, 300_000);
 setInterval(loadWind, 300_000);
 setInterval(loadObsCharts, 300_000);
 setInterval(loadRainFine, 300_000);
@@ -280,6 +320,7 @@ narrowScreen.addEventListener("change", redraw);
 
 initNav();
 initRainFineToggle();
+initWindRoseToggle();
 loadCurrent();
 load();
 loadWind();

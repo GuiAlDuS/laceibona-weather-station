@@ -59,6 +59,7 @@ export function buildCurrent(rows, nowMs) {
       gust_max: gusts.length ? Math.max(...gusts) : null,
       uv_max: uvs.length ? Math.max(...uvs) : null,
       rain_mm: round(sum(nums(sorted, F.rain)), 2),
+      rain_min: nums(sorted, F.rain).filter((v) => v > 0).length,
       lightning: sum(nums(sorted, F.lightCount)),
     },
     last_lightning: lastStrike

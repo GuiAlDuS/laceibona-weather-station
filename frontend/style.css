@@ -99,6 +99,9 @@ p { margin: 0 0 12px; }
 .muted { color: var(--text-secondary); }
 .small { font-size: 0.8125rem; }
 .page-head { margin-bottom: 20px; }
+.site-footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); }
+.site-footer p { margin: 0; }
+.github-link { display: inline-flex; align-items: center; gap: 6px; }
 
 .card + .card { margin-top: 20px; }
 
@@ -125,6 +128,7 @@ p { margin: 0 0 12px; }
 .toggle-btn:hover:not(:disabled) { color: var(--text-primary); border-color: var(--baseline); }
 .toggle-btn[aria-pressed="true"] { color: var(--text-primary); background: var(--surface); border-color: var(--baseline); font-weight: 600; }
 .toggle-btn:disabled { opacity: 0.5; cursor: default; }
+.toggle-group { display: flex; gap: 6px; }
 
 .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; list-style: none; margin: 8px 0 0; padding: 0; color: var(--text-secondary); font-size: 0.875rem; }
 .legend li { display: flex; align-items: center; gap: 8px; }

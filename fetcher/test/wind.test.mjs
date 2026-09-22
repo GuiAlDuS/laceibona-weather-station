@@ -7,7 +7,7 @@ test("keeps the last 24 hours in time order as ws/wd columns, with non-numbers a
   const t = now / 1000;
   const rows = [[t - 60, 0, 2, 3, 90], [t - 90000, 0, 9, 9, 9], [t - 120, 0, null, 3, 180], "junk"];
   const d = buildWind24h(rows, now);
-  assert.deepEqual(d.cols, { ws: [null, 2], wd: [180, 90] });
+  assert.deepEqual(d.cols, { ts: [t - 120, t - 60], ws: [null, 2], wd: [180, 90] });
   assert.equal(d.hourly.length, 0); // these rows carry no temperature
   assert.equal(d.to, new Date((t - 60) * 1000).toISOString());
 });

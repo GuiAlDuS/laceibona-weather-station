@@ -1,4 +1,5 @@
-import { token, narrowScreen, chartFont, hoverLabel } from "./common.js";
+import { token, narrowScreen, chartFont, hoverLabel, MONTHS } from "./common.js";
+import { LANG } from "./i18n.js";
 
 // Latest year in the accent color, earlier years in the context gray.
 export const colorFor = (year, latest) => (year === latest ? token("--series-1") : token("--series-context"));
@@ -60,10 +61,8 @@ export function renderYearLines({ el, series, key, format, unit = "mm" }) {
     xaxis: {
       type: "date",
       range: ["2000-01-01", "2000-12-31"],
-      dtick: narrowScreen.matches ? "M3" : "M1",
       tickangle: 0,
-      tickformat: "%b",
-      hoverformat: "%b %d",
+      hoverformat: LANG === "es" ? "%d/%m" : "%b %d",
       showgrid: false,
       showspikes: true,
       spikemode: "across",
@@ -89,6 +88,14 @@ export function renderYearLines({ el, series, key, format, unit = "mm" }) {
     },
     annotations: labels,
   };
+
+  // Plotly's own %b date formatting is always English; the axis ticks are built by hand
+  // instead (hoverformat above is already numeric on the Spanish page).
+  const monthStep = narrowScreen.matches ? 3 : 1;
+  const monthIdx = MONTHS.map((_, i) => i).filter((i) => i % monthStep === 0);
+  layout.xaxis.tickmode = "array";
+  layout.xaxis.tickvals = monthIdx.map((i) => `2000-${String(i + 1).padStart(2, "0")}-01`);
+  layout.xaxis.ticktext = monthIdx.map((i) => MONTHS[i]);
 
   return Plotly.react(el, [...lines, ...ends], layout, { displayModeBar: false, responsive: true });
 }
