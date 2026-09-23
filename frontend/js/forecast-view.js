@@ -175,8 +175,8 @@ export function renderForecastHourlyText(hours) {
   }
 
   $("fh-note").textContent = t(
-    "Bar height is that hour's rain probability; red marks hours where any rain is expected to come as a thunderstorm, not a separate risk on top of the rain chance. Tempest's hourly forecast model for the next 24 hours, starting with the current hour; not a measurement. Night (18:00–06:00) is shaded and the dotted line marks midnight.",
-    "La altura de la barra es la probabilidad de lluvia de esa hora; el rojo marca las horas en que, de llover, se espera que sea en forma de tormenta, no un riesgo aparte que se suma a la probabilidad de lluvia. Modelo de pronóstico horario de Tempest para las próximas 24 horas, a partir de la hora actual; no una medición. La noche (18:00–06:00) está sombreada y la línea punteada marca la medianoche.",
+    "Bar height is that hour's rain probability; red marks hours where any rain is expected to come as a thunderstorm, not a separate risk on top of the rain chance. Tempest's hourly forecast model for the next 24 hours, starting with the next full hour; not a measurement. Night (18:00–06:00) is shaded and the dotted line marks midnight.",
+    "La altura de la barra es la probabilidad de lluvia de esa hora; el rojo marca las horas en que, de llover, se espera que sea en forma de tormenta, no un riesgo aparte que se suma a la probabilidad de lluvia. Modelo de pronóstico horario de Tempest para las próximas 24 horas, a partir de la próxima hora en punto; no una medición. La noche (18:00–06:00) está sombreada y la línea punteada marca la medianoche.",
   );
 
   const table = $("fh-table");

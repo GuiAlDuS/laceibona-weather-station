@@ -617,7 +617,8 @@ Owner decisions worth remembering:
 
 - **"Today, hour by hour" became "Next 24 hours"**: late in the day the today-only chart was mostly
   empty (Tempest's hourly forecast starts at the current hour, and the fetcher kept only today's
-  date). The fetcher now also writes `next_hours` — the hourly forecast from the current hour on,
+  date). The fetcher now also writes `next_hours` — the hourly forecast from the current hour on
+  (in practice Tempest's list starts at the *next* full hour, verified in production),
   24 + 2 entries so the page can drop hours that ended while the document sat in KV (30-minute
   refresh plus the 10-minute API cache) and still show a full 24. `hours` (today only) is kept
   unchanged for backward compatibility; `forecastHours()` falls back to it. The chart's x axis is
