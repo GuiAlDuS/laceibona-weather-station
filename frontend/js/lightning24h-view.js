@@ -7,6 +7,7 @@ const hhmm = (ts) => localStamp(ts).slice(11);
 const strikes = (n) => (n === 1 ? t("1 strike", "1 rayo") : t(`${nf.format(n)} strikes`, `${nf.format(n)} rayos`));
 // Dot area grows with the strikes in that minute: 1 strike is a plain dot, a busy minute is visibly bigger.
 const dotSize = (count) => Math.min(24, 7 + 4 * Math.sqrt(count - 1));
+const rgba = (hex, a) => `rgba(${[1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16)).join(",")},${a})`;
 // Unix seconds of local midnight on an ISO date (local is UTC-6, as everywhere in this project).
 const localMidnight = (iso) => Date.parse(`${iso}T00:00:00Z`) / 1000 + 6 * 3600;
 
@@ -23,7 +24,8 @@ export function renderLightningChart(s) {
     y: placed.map((e) => e.dist),
     customdata: placed.map((e) => `${hhmm(e.ts)} · ${strikes(e.count)}`),
     hovertemplate: t("%{customdata}<br>about %{y} km<extra></extra>", "%{customdata}<br>a unos %{y} km<extra></extra>"),
-    marker: { size: placed.map((e) => dotSize(e.count)), color: token("--hot"), opacity: 0.75, line: { color: token("--surface"), width: 1 } },
+    // See-through fill with a solid outline in the same colour: overlapping dots darken and each stays visible.
+    marker: { size: placed.map((e) => dotSize(e.count)), color: rgba(token("--hot"), 0.3), line: { color: token("--hot"), width: 1 } },
   };
 
   // Night bands (18:00-06:00) and a dotted rule at midnight, labelled with the day it starts, as on the forecast chart.

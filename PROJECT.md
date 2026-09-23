@@ -384,8 +384,15 @@ development. Already reflected in the ETo formula in 4.2.
     Do not judge a cron change until ~30 min have passed, and avoid changing the
     schedule while waiting: I kept editing it, and finally deleted it at 17:00,
     which most likely kept it from ever activating.
-  - Re-deploying the Worker with an *unchanged* schedule does **not** interrupt an
-    active cron (redeployed at 17:37; the 17:40 tick still ran).
+  - Re-deploying the Worker with an *unchanged* schedule **can** stop the cron.
+    On 2026-09-21 it didn't (redeployed at 17:37; the 17:40 tick still ran). On
+    2026-09-23 a deploy at 19:57 UTC reset the schedule's `modified_on` to 19:57:44;
+    the 20:00 tick ran, then no ticks at all (no failures either) for 1 h 48 min,
+    and the dashboard showed the stale-data banner. An unchanged redeploy at 21:48
+    fixed it: ticks resumed at 21:55 and continued (22:00, ...). Check the timestamp with
+    `GET /accounts/<id>/workers/scripts/laceibona-fetcher/schedules`. Deploy the
+    fetcher only when a gap of up to ~1.5 h in fresh data is acceptable. Afterwards,
+    confirm that `current.fetched_at` keeps advancing past the first tick.
   - It is not caused by having a `fetch` handler (a scheduled-only probe and a
     scheduled+fetch probe both fired at 17:40:11).
   - Analytics lag several minutes behind reality; the `current.fetched_at` field and
