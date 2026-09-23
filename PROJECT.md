@@ -127,7 +127,7 @@ obs:YYYY-MM       → hourly observations, columnar (see fetcher/src/hourly.js).
                     fetcher/scripts/backfill.mjs; NOT yet appended live
 lightning:YYYY    → one [ts, distance_km, count] per minute with strikes
 wind24h           → per-minute wind speed/direction, last 24 h, every 5 min
-fine7d            → rolling 7-day, 10-minute-resolution rain/pressure/solar
+fine7d            → rolling 7-day, 10-minute-resolution rain/pressure/solar/humidity
                     (fetcher/src/fine.js), refreshed every 10 min. Hourly `obs:`
                     was too coarse for this station's short convective bursts.
                     (write budget is now ~745/day: current + wind24h + fine7d + daily)
@@ -650,3 +650,31 @@ Owner decisions worth remembering:
   "No lightning detected in the last 24 hours" over the axes. This is a different chart from the
   dropped "lightning distance by year" (Phase 6), requested explicitly.
 - Both backend changes were additive and deployed straight to the single Worker, as in Phase 7.
+
+**Phase 11 — Air humidity on the rain intensity chart, and a solar sensor anomaly (Sept 2026)**
+
+- **"Show air humidity" toggle** on "Rain intensity, last 7 days", next to the solar one: a green
+  line (`--series-6`) on a hidden, fixed 0–100% axis (0–102 so a saturated 100% isn't clipped;
+  the note says the chart's full height is 100%), plus a "Humidity range (%)" column in the table.
+  There was no humidity chart before. It uses a new `rh` column in `fine7d` (10-minute mean of
+  1-minute RH), so the line matches the bars' resolution. `mergeFine` treats a column the stored
+  document predates as empty, and the frontend reads a missing `rh` as null. Deployed to the
+  Worker (additive), then the last 7 days were refilled with `scripts/fill-fine.mjs`. The KV
+  binding has a preview id too, so `kv key put` needs `--preview false`; the script's usage
+  line now says so.
+- **Pressure units re-checked**: `fine7d.p` is the 10-minute mean of the 1-minute station
+  pressure (obs_st index 6, mb = hPa), matching raw data exactly over a full day. It is station
+  pressure, not sea-level: about 9–10 hPa below forecast/app values at this elevation. Tempest
+  reports the station at 77.3 m; §6.4 uses 88 m — unresolved, negligible for ETo.
+- **Solar/UV sensor anomaly from about 25 Aug 2026**: bright light-sensor readings are inflated.
+  1-minute solar used to top out around 1,000–1,100 W/m² (as in the same weeks of 2025); since
+  then it spreads up to a ceiling near 1,500, and UV follows in lockstep (solar = lux/120 and
+  UV/solar ≈ 0.012 both before and after, so it's one sensor). Readings under ~800 W/m² and
+  early/late hours are unchanged; 10:00–13:00 read ~1.4× on sunny days, symmetric around noon, so
+  tilt is ruled out. Raw API data shows the same values, so it isn't our aggregation. Suspects: the
+  light-sensor window (damage or a film on it), a new reflective surface nearby, a failing sensor,
+  or firmware (ST fw 179). Solar-by-year, ETo and the rain chart's solar layer are affected from
+  that date on.
+- **UV index by month** (daily peak UV per day, one box per month, over shaded UV risk bands) was
+  built and reviewed on the test site, but is held on the `uv-by-month` branch until the sensor
+  anomaly is explained.

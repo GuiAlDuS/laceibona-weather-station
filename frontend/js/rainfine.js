@@ -1,10 +1,10 @@
-// 10-minute rain, station pressure and solar radiation for the last 7 days, from the `fine7d` document
+// 10-minute rain, station pressure, solar radiation and humidity for the last 7 days, from the `fine7d` document
 // (fetcher/src/fine.js). Pure functions; no DOM.
 const LOCAL_OFFSET_S = -6 * 3600;
 export const RATE_PER_BUCKET = 6; // a 10-minute bucket's mm of rain -> its mean rate in mm/h
 
 // doc: the `fine7d` KV document. Returns buckets oldest first, each { t (unix s), date, hour, minute, rain (mm in
-// the bucket), rate (mm/h, null with no reading), solar (W/m2 mean), p (hPa mean) }.
+// the bucket), rate (mm/h, null with no reading), solar (W/m2 mean), p (hPa mean), rh (% mean; null in documents from before it was stored) }.
 export function fineBuckets(doc) {
   const out = [];
   for (let i = 0; i < doc.slots; i++) {
@@ -20,13 +20,14 @@ export function fineBuckets(doc) {
       rate: rain === null ? null : rain * RATE_PER_BUCKET,
       solar: doc.cols.solar[i],
       p: doc.cols.p[i],
+      rh: doc.cols.rh?.[i] ?? null,
     });
   }
   return out;
 }
 
 // One row per day covered, oldest first: total rain, the day's peak 10-minute rate (and when), and the
-// pressure range. Days with no readings at all are left out.
+// pressure and humidity ranges. Days with no readings at all are left out.
 export function fineDaySummaries(buckets) {
   const byDate = new Map();
   for (const b of buckets) {
@@ -37,6 +38,7 @@ export function fineDaySummaries(buckets) {
     .map(([date, bs]) => {
       const withRain = bs.filter((b) => b.rate !== null);
       const withP = bs.filter((b) => b.p !== null).map((b) => b.p);
+      const withRh = bs.filter((b) => b.rh !== null).map((b) => b.rh);
       if (withRain.length === 0 && withP.length === 0) return null;
       const peak = withRain.reduce((m, b) => (m === null || b.rate > m.rate ? b : m), null);
       return {
@@ -47,6 +49,8 @@ export function fineDaySummaries(buckets) {
         peakMinute: peak?.minute ?? null,
         pMin: withP.length ? Math.min(...withP) : null,
         pMax: withP.length ? Math.max(...withP) : null,
+        rhMin: withRh.length ? Math.min(...withRh) : null,
+        rhMax: withRh.length ? Math.max(...withRh) : null,
       };
     })
     .filter(Boolean);

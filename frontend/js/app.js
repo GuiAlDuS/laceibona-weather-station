@@ -243,6 +243,7 @@ async function loadRainFine() {
     drawRainFine();
     setStatus("rf-status", "");
     $("rf-solar-toggle").disabled = false;
+    $("rf-rh-toggle").disabled = false;
   } catch (err) {
     console.error(err);
     if (!fineBucketsData) setStatus("rf-status", couldNotLoad(err.message), loadRainFine);

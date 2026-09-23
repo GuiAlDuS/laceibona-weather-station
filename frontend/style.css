@@ -168,6 +168,7 @@ p { margin: 0 0 12px; }
 .toggle-btn[aria-pressed="true"] { color: var(--text-primary); background: var(--surface); border-color: var(--baseline); font-weight: 600; }
 .toggle-btn:disabled { opacity: 0.5; cursor: default; }
 .toggle-group { display: inline-flex; }
+.toggle-set { display: flex; flex-wrap: wrap; gap: 6px; }
 .toggle-group .toggle-btn { border-right-width: 0; }
 .toggle-group .toggle-btn:last-child { border-right-width: 1px; }
 

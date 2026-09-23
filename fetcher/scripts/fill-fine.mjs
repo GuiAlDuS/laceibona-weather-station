@@ -4,7 +4,7 @@
 //   TEMPEST_TOKEN=... node scripts/fill-fine.mjs
 //
 // Writes .backfill/fine7d.json; publish it with:
-//   npx wrangler kv key put --binding WEATHER_DATA --remote fine7d --path .backfill/fine7d.json
+//   npx wrangler kv key put --binding WEATHER_DATA --remote --preview false fine7d --path .backfill/fine7d.json
 import fs from "node:fs";
 import { aggregateFine, mergeFine, windowEnd, SLOTS, STEP } from "../src/fine.js";
 

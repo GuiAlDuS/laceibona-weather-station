@@ -10,8 +10,9 @@ const dayIndex = (iso, first) => Math.round((Date.parse(iso) - Date.parse(first)
 const hourLabel = (h, m) => `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 const rgba = (hex, a) => `rgba(${[1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16)).join(",")},${a})`;
 
-// Whether the solar trace is shown; a module-level toggle so it survives a theme or narrow-screen redraw.
+// Which optional layers are shown; module-level so they survive a theme or narrow-screen redraw.
 let showSolar = false;
+let showRh = false;
 
 export function renderRainFineChart(buckets) {
   const font = chartFont();
@@ -52,6 +53,17 @@ export function renderRainFineChart(buckets) {
     fillcolor: rgba(token("--sun"), 0.25),
     visible: showSolar,
     hovertemplate: "%{y:.0f} W/m²<extra></extra>",
+  };
+  const rh = {
+    type: "scatter",
+    mode: "lines",
+    name: t("Air humidity", "Humedad del aire"),
+    x,
+    y: buckets.map((b) => b.rh),
+    yaxis: "y4",
+    line: { color: token("--series-6"), width: 1.5 },
+    visible: showRh,
+    hovertemplate: "%{y:.0f}%<extra></extra>",
   };
 
   // A faint band from 18:00 to 06:00 each day, so night and day are easy to tell apart at a glance.
@@ -112,8 +124,15 @@ export function renderRainFineChart(buckets) {
       range: [0, maxSolar * 1.15],
       fixedrange: true,
     },
+    // Humidity on a fixed, unlabelled 0-100% scale (a sliver of headroom so a saturated 100% line isn't clipped).
+    yaxis4: {
+      overlaying: "y",
+      visible: false,
+      range: [0, 102],
+      fixedrange: true,
+    },
   };
-  return Plotly.react($("rf-chart"), [rain, pressure, solar], layout, { displayModeBar: false, responsive: true });
+  return Plotly.react($("rf-chart"), [rain, pressure, solar, rh], layout, { displayModeBar: false, responsive: true });
 }
 
 export function renderRainFineText(buckets) {
@@ -124,14 +143,14 @@ export function renderRainFineText(buckets) {
     ? t(`${total.toFixed(0)} mm total. Heaviest 10 minutes: ${peak.rate.toFixed(1)} mm/h on ${dayLabel(peak.date)} at ${hourLabel(peak.hour, peak.minute)}.`, `${total.toFixed(0)} mm en total. Los 10 minutos más intensos: ${peak.rate.toFixed(1)} mm/h el ${dayLabel(peak.date)} a las ${hourLabel(peak.hour, peak.minute)}.`)
     : t(`${total.toFixed(0)} mm total. No rain in this window.`, `${total.toFixed(0)} mm en total. Sin lluvia en este período.`);
   $("rf-note").textContent = t(
-    "Each bar is one 10-minute window, shown as its hourly rate, so a short burst reads at its true intensity instead of being smeared across the hour. The line is station pressure. Night (18:00–06:00) is shaded.",
-    "Cada barra es una ventana de 10 minutos, mostrada como su tasa horaria, así que una ráfaga corta se lee con su verdadera intensidad en lugar de diluirse en la hora. La línea es la presión de la estación. La noche (18:00–06:00) está sombreada.",
+    "Each bar is one 10-minute window, shown as its hourly rate, so a short burst reads at its true intensity instead of being smeared across the hour. The line is station pressure; the optional green line is air humidity, where the chart's full height is 100%. Night (18:00–06:00) is shaded.",
+    "Cada barra es una ventana de 10 minutos, mostrada como su tasa horaria, así que una ráfaga corta se lee con su verdadera intensidad en lugar de diluirse en la hora. La línea es la presión de la estación; la línea verde opcional es la humedad del aire, donde la altura total del gráfico es 100%. La noche (18:00–06:00) está sombreada.",
   );
 
   const table = $("rf-table");
   table.replaceChildren();
   const head = table.createTHead().insertRow();
-  for (const h of [t("Day", "Día"), t("Rain (mm)", "Lluvia (mm)"), t("Peak rate (mm/h)", "Tasa máxima (mm/h)"), t("Peak at", "Máximo a las"), t("Pressure range (hPa)", "Rango de presión (hPa)")]) {
+  for (const h of [t("Day", "Día"), t("Rain (mm)", "Lluvia (mm)"), t("Peak rate (mm/h)", "Tasa máxima (mm/h)"), t("Peak at", "Máximo a las"), t("Pressure range (hPa)", "Rango de presión (hPa)"), t("Humidity range (%)", "Rango de humedad (%)")]) {
     const th = document.createElement("th");
     th.textContent = h;
     head.append(th);
@@ -144,20 +163,27 @@ export function renderRainFineText(buckets) {
     row.insertCell().textContent = d.peak === null ? "" : d.peak.toFixed(1);
     row.insertCell().textContent = d.peak === null ? "" : hourLabel(d.peakHour, d.peakMinute);
     row.insertCell().textContent = d.pMin === null ? "" : `${d.pMin.toFixed(1)}–${d.pMax.toFixed(1)}`;
+    row.insertCell().textContent = d.rhMin === null ? "" : `${d.rhMin}–${d.rhMax}`;
   }
 }
 
-// Wires the solar toggle once. Cheap to call again (it just re-attaches to the same button), but the button
-// itself is only ever created once in the page markup.
+// Wires the solar and humidity toggles once. Cheap to call again (it just re-attaches to the same buttons), but
+// the buttons themselves are only ever created once in the page markup.
 export function initRainFineToggle() {
-  const btn = $("rf-solar-toggle");
+  wireToggle("rf-solar-toggle", 2, () => (showSolar = !showSolar), ["Show solar radiation", "Mostrar radiación solar"], ["Hide solar radiation", "Ocultar radiación solar"]);
+  wireToggle("rf-rh-toggle", 3, () => (showRh = !showRh), ["Show air humidity", "Mostrar humedad del aire"], ["Hide air humidity", "Ocultar humedad del aire"]);
+}
+
+// flip() toggles the module-level flag and returns its new value; trace is that layer's index in the chart.
+function wireToggle(id, trace, flip, showText, hideText) {
+  const btn = $(id);
   if (!btn || btn.dataset.wired) return;
   btn.dataset.wired = "true";
   btn.addEventListener("click", () => {
-    showSolar = !showSolar;
-    btn.setAttribute("aria-pressed", String(showSolar));
-    btn.textContent = showSolar ? t("Hide solar radiation", "Ocultar radiación solar") : t("Show solar radiation", "Mostrar radiación solar");
+    const on = flip();
+    btn.setAttribute("aria-pressed", String(on));
+    btn.textContent = on ? t(...hideText) : t(...showText);
     const el = $("rf-chart");
-    if (el.data) Plotly.restyle(el, { visible: showSolar }, [2]);
+    if (el.data) Plotly.restyle(el, { visible: on }, [trace]);
   });
 }
