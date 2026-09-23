@@ -1,6 +1,6 @@
 import { $, el, num, tile, token, chartFont, hoverLabel } from "./common.js";
 import { t, WEEKDAYS } from "./i18n.js";
-import { isRainLikely, isStormHour, contiguousRanges } from "./forecast.js";
+import { isRainLikely, isStormHour, contiguousRanges, localStamp } from "./forecast.js";
 
 // Tempest's `icon` field is a fixed 19-value enum (verified against the API's published schema);
 // its `conditions` text is English-only free text, so it is never shown as-is on the Spanish page.
@@ -55,23 +55,34 @@ export function renderForecastUnavailable(message) {
 }
 
 const hourLabel = (h) => `${String(h).padStart(2, "0")}:00`;
-const rangesText = (ranges) => ranges.map((r) => `${hourLabel(r.start)}–${hourLabel((r.end + 1) % 24)}`).join(", ");
+// A range that starts on a later date than the window's first hour is tomorrow's; one that only runs past midnight is tonight's.
+const rangesText = (ranges, today) =>
+  ranges
+    .map((r) => {
+      const span = `${hourLabel(r.start)}–${hourLabel((r.end + 1) % 24)}`;
+      return r.date > today ? t(`${span} tomorrow`, `${span} mañana`) : span;
+    })
+    .join(", ");
 
 export function outlookText(hours) {
+  const today = hours[0]?.date;
   const rain = contiguousRanges(hours, isRainLikely);
   const storm = contiguousRanges(hours, isStormHour);
-  if (rain.length === 0 && storm.length === 0) return t("No significant rain expected today.", "No se espera lluvia significativa hoy.");
+  if (rain.length === 0 && storm.length === 0) return t("No significant rain expected in the next 24 hours.", "No se espera lluvia significativa en las próximas 24 horas.");
   const parts = [];
-  if (rain.length) parts.push(t(`Rain likely ${rangesText(rain)}`, `Lluvia probable ${rangesText(rain)}`));
-  if (storm.length) parts.push(t(`thunderstorms possible ${rangesText(storm)}`, `posibles tormentas ${rangesText(storm)}`));
+  if (rain.length) parts.push(t(`Rain likely ${rangesText(rain, today)}`, `Lluvia probable ${rangesText(rain, today)}`));
+  if (storm.length) parts.push(t(`thunderstorms possible ${rangesText(storm, today)}`, `posibles tormentas ${rangesText(storm, today)}`));
+  parts[0] = parts[0][0].toUpperCase() + parts[0].slice(1);
   return `${parts.join(", ")}.`;
 }
 
-// Rain probability by hour (bars, coloured by storm risk) with temperature overlaid, for today only.
+// Rain probability by hour (bars, coloured by storm risk) with temperature overlaid, for the next 24 hours.
+// x is each hour's local start time, so the bar for 14:00-15:00 sits on the 14:00 tick, as on the other hourly charts.
 export function renderForecastHourlyChart(hours) {
   const font = chartFont();
   const muted = token("--text-muted");
-  const x = hours.map((h) => h.hour);
+  const at = (h, offsetH = 0) => localStamp(h.time + offsetH * 3600);
+  const x = hours.map((h) => at(h));
   const rainColor = token("--series-1");
   const stormColor = token("--hot");
   const precip = {
@@ -79,6 +90,7 @@ export function renderForecastHourlyChart(hours) {
     name: t("Rain probability", "Probabilidad de lluvia"),
     x,
     y: hours.map((h) => h.precip_probability),
+    width: 0.8 * 3_600_000,
     marker: { color: hours.map((h) => (isStormHour(h) ? stormColor : rainColor)) },
     hovertemplate: "%{y}%<extra></extra>",
   };
@@ -92,11 +104,25 @@ export function renderForecastHourlyChart(hours) {
     line: { color: token("--series-3"), width: 1.5 },
     hovertemplate: "%{y:.1f} °C<extra></extra>",
   };
-  // A faint band for night (18:00-06:00), same convention as the weekly rain-intensity chart.
-  const nightShapes = [
-    { x0: -0.5, x1: 5.5 },
-    { x0: 17.5, x1: 23.5 },
-  ].map(({ x0, x1 }) => ({ type: "rect", xref: "x", yref: "paper", x0, x1, y0: 0, y1: 1, fillcolor: token("--grid"), opacity: 0.5, line: { width: 0 }, layer: "below" }));
+  // A faint band for night (18:00-06:00), same convention as the weekly rain-intensity chart; one rect per run of night hours.
+  const shapes = [];
+  for (let i = 0, run = null; i <= hours.length; i++) {
+    const isNight = i < hours.length && (hours[i].hour >= 18 || hours[i].hour < 6);
+    if (isNight && run === null) run = i;
+    if (!isNight && run !== null) {
+      shapes.push({ type: "rect", xref: "x", yref: "paper", x0: at(hours[run], -0.5), x1: at(hours[i - 1], 0.5), y0: 0, y1: 1, fillcolor: token("--grid"), opacity: 0.5, line: { width: 0 }, layer: "below" });
+      run = null;
+    }
+  }
+  // Midnight: a thin rule between 23:00 and 00:00, labelled with the day it starts.
+  const annotations = [];
+  const midnight = hours.findIndex((h, i) => i > 0 && h.hour === 0);
+  if (midnight > 0) {
+    const xm = at(hours[midnight], -0.5);
+    shapes.push({ type: "line", xref: "x", yref: "paper", x0: xm, x1: xm, y0: 0, y1: 1, line: { color: token("--baseline"), width: 1, dash: "dot" } });
+    annotations.push({ x: xm, xref: "x", y: 1, yref: "paper", yanchor: "bottom", xanchor: "left", xshift: 4, showarrow: false, text: t("Tomorrow", "Mañana"), font: { color: muted, size: 12 } });
+  }
+  const ticks = hours.filter((h) => h.hour % 3 === 0);
 
   const layout = {
     font,
@@ -104,14 +130,17 @@ export function renderForecastHourlyChart(hours) {
     plot_bgcolor: "rgba(0,0,0,0)",
     margin: { l: 48, r: 48, t: 24, b: 36 },
     showlegend: false,
-    shapes: nightShapes,
+    shapes,
+    annotations,
     hovermode: "x unified",
     hoverlabel: hoverLabel(),
     xaxis: {
-      range: [-0.5, 23.5],
+      type: "date",
+      range: hours.length ? [at(hours[0], -0.5), at(hours.at(-1), 0.5)] : undefined,
       tickmode: "array",
-      tickvals: [0, 3, 6, 9, 12, 15, 18, 21],
-      ticktext: [0, 3, 6, 9, 12, 15, 18, 21].map(hourLabel),
+      tickvals: ticks.map((h) => at(h)),
+      ticktext: ticks.map((h) => hourLabel(h.hour)),
+      hoverformat: "%H:%M",
       tickangle: 0,
       showgrid: false,
       showline: true,
@@ -146,21 +175,23 @@ export function renderForecastHourlyText(hours) {
   }
 
   $("fh-note").textContent = t(
-    "Bar height is that hour's rain probability; red marks hours where any rain is expected to come as a thunderstorm, not a separate risk on top of the rain chance. Tempest's hourly forecast model for today, not a measurement. Night (18:00–06:00) is shaded.",
-    "La altura de la barra es la probabilidad de lluvia de esa hora; el rojo marca las horas en que, de llover, se espera que sea en forma de tormenta, no un riesgo aparte que se suma a la probabilidad de lluvia. Modelo de pronóstico horario de Tempest para hoy, no una medición. La noche (18:00–06:00) está sombreada.",
+    "Bar height is that hour's rain probability; red marks hours where any rain is expected to come as a thunderstorm, not a separate risk on top of the rain chance. Tempest's hourly forecast model for the next 24 hours, starting with the current hour; not a measurement. Night (18:00–06:00) is shaded and the dotted line marks midnight.",
+    "La altura de la barra es la probabilidad de lluvia de esa hora; el rojo marca las horas en que, de llover, se espera que sea en forma de tormenta, no un riesgo aparte que se suma a la probabilidad de lluvia. Modelo de pronóstico horario de Tempest para las próximas 24 horas, a partir de la hora actual; no una medición. La noche (18:00–06:00) está sombreada y la línea punteada marca la medianoche.",
   );
 
   const table = $("fh-table");
   table.replaceChildren();
   const head = table.createTHead().insertRow();
-  for (const h of [t("Hour", "Hora"), t("Temp (°C)", "Temp (°C)"), t("Rain chance", "Prob. de lluvia"), t("Conditions", "Condiciones")]) {
+  for (const h of [t("Day", "Día"), t("Hour", "Hora"), t("Temp (°C)", "Temp (°C)"), t("Rain chance", "Prob. de lluvia"), t("Conditions", "Condiciones")]) {
     const th = document.createElement("th");
     th.textContent = h;
     head.append(th);
   }
   const body = table.createTBody();
+  const today = hours[0]?.date;
   for (const h of hours) {
     const row = body.insertRow();
+    row.insertCell().textContent = h.date > today ? t("Tomorrow", "Mañana") : t("Today", "Hoy");
     row.insertCell().textContent = hourLabel(h.hour);
     row.insertCell().textContent = typeof h.temp === "number" ? h.temp.toFixed(1) : "";
     row.insertCell().textContent = typeof h.precip_probability === "number" ? `${h.precip_probability}%` : "";

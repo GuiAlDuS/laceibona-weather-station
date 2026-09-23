@@ -1,4 +1,4 @@
-import { $, token, narrowScreen, chartFont, hoverLabel } from "./common.js";
+import { $, token, chartFont, hoverLabel, dayAxisTicks } from "./common.js";
 import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { fineDaySummaries, finePeak } from "./rainfine.js";
@@ -82,11 +82,8 @@ export function renderRainFineChart(buckets) {
     hoverlabel: hoverLabel(),
     xaxis: {
       range: [0, span],
-      tickmode: "array",
-      tickvals: dayTicks.filter((i) => !narrowScreen.matches || i % 2 === 0),
-      ticktext: dayTicks.map((i) => dayLabel(new Date(Date.parse(first) + i * DAY_MS).toISOString().slice(0, 10))).filter((_, i) => !narrowScreen.matches || i % 2 === 0),
+      ...dayAxisTicks(dayTicks.map((i) => dayLabel(new Date(Date.parse(first) + i * DAY_MS).toISOString().slice(0, 10)))),
       tickangle: 0,
-      showgrid: false,
       showline: true,
       linecolor: token("--baseline"),
       tickfont: { color: muted, size: 12 },

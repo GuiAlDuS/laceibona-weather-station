@@ -72,3 +72,17 @@ test("no daily entry (so no 'today' to filter by) or no hourly array yields an e
   assert.deepEqual(buildForecast({ forecast: { daily: [], hourly: [hour(0)] } }, { now }).hours, []);
   assert.deepEqual(buildForecast({ forecast: { daily: [{ day_start_local: TODAY_START }] } }, { now }).hours, []);
 });
+
+test("next_hours is a rolling window from the current hour on, across midnight, oldest first", () => {
+  // now = 12:00 UTC = 06:00 local; build 40 hours starting 3 hours earlier, shuffled.
+  const hourly = Array.from({ length: 40 }, (_, i) => hour(3 + i)).reverse();
+  const doc = buildForecast({ forecast: { daily: [{ day_start_local: TODAY_START }], hourly } }, { now: new Date("2026-09-22T12:20:00Z") });
+  assert.equal(doc.next_hours.length, 26);
+  assert.deepEqual(doc.next_hours.slice(0, 3).map((h) => h.hour), [6, 7, 8]);
+  assert.deepEqual(doc.next_hours.slice(17, 20).map((h) => h.hour), [23, 0, 1]);
+});
+
+test("next_hours is empty when there is no hourly array, and does not need a daily entry", () => {
+  assert.deepEqual(buildForecast({ forecast: {} }, { now }).next_hours, []);
+  assert.equal(buildForecast({ forecast: { hourly: [hour(8)] } }, { now: new Date("2026-09-22T12:00:00Z") }).next_hours.length, 1);
+});

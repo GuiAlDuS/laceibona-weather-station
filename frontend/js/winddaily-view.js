@@ -1,4 +1,4 @@
-import { $, token, narrowScreen, chartFont, hoverLabel } from "./common.js";
+import { $, token, chartFont, hoverLabel, dayAxisTicks } from "./common.js";
 import { t, sectorLabel } from "./i18n.js";
 import { VIRIDIS } from "./heatmap-view.js";
 import { dayLabel } from "./tempdaily-view.js";
@@ -49,12 +49,8 @@ export function renderWindDailyChart(hours) {
     hoverlabel: hoverLabel(),
     xaxis: {
       range: [0, span],
-      tickmode: "array",
-      tickvals: Array.from({ length: span }, (_, i) => i).filter((i) => !narrowScreen.matches || i % 2 === 0),
-      ticktext: Array.from({ length: span }, (_, i) => dayLabel(new Date(Date.parse(first) + i * DAY_MS).toISOString().slice(0, 10))).filter((_, i) => !narrowScreen.matches || i % 2 === 0),
+      ...dayAxisTicks(Array.from({ length: span }, (_, i) => dayLabel(new Date(Date.parse(first) + i * DAY_MS).toISOString().slice(0, 10))), { grid: true }),
       tickangle: 0,
-      showgrid: true,
-      gridcolor: token("--grid"),
       showline: true,
       linecolor: token("--baseline"),
       tickfont: { color: muted, size: 12 },

@@ -68,18 +68,34 @@
           <div class="table-scroll"><table id="wr-table"></table></div>
         </details>
       </section>
+      <section class="card" aria-labelledby="lg-title">
+        <h3 id="lg-title">Rayos, últimas 24 horas</h3>
+        <p class="muted">A qué distancia detectó rayos la estación, minuto a minuto.</p>
+        <p id="lg-summary" class="summary" aria-live="polite"></p>
+
+        <div id="lg-frame" class="chart-frame">
+          <div id="lg-chart" role="img" aria-label="Gráfico de dispersión de la distancia de los rayos en las últimas 24 horas, un punto por minuto con rayos, de tamaño según la cantidad de rayos"></div>
+          <p id="lg-status" class="status">Cargando…</p>
+        </div>
+        <p id="lg-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Ver tabla</summary>
+          <div class="table-scroll tall"><table id="lg-table"></table></div>
+        </details>
+      </section>
     </section>
 
     <section class="group" id="forecast" aria-labelledby="forecast-heading">
       <h2 id="forecast-heading" class="group-title">Pronóstico</h2>
 
       <section class="card" aria-labelledby="fh-title">
-        <h3 id="fh-title">Hoy, hora por hora</h3>
-        <p class="muted">Probabilidad de lluvia por hora, con las horas de riesgo de tormenta marcadas y la temperatura junto a ellas.</p>
+        <h3 id="fh-title">Próximas 24 horas</h3>
+        <p class="muted">Probabilidad de lluvia por hora desde ahora hasta esta misma hora mañana, con las horas de riesgo de tormenta marcadas y la temperatura junto a ellas.</p>
         <p id="fh-summary" class="summary" aria-live="polite"></p>
 
         <div id="fh-frame" class="chart-frame">
-          <div id="fh-chart" role="img" aria-label="Gráfico de barras de la probabilidad de lluvia por hora de hoy, coloreado según el riesgo de tormenta, con la temperatura como línea"></div>
+          <div id="fh-chart" role="img" aria-label="Gráfico de barras de la probabilidad de lluvia por hora de las próximas 24 horas, coloreado según el riesgo de tormenta, con la temperatura como línea"></div>
           <p id="fh-status" class="status">Cargando…</p>
         </div>
         <ul id="fh-legend" class="legend" aria-label="Leyenda"></ul>

@@ -612,3 +612,40 @@ Owner decisions worth remembering:
   - Added `["sy", ...]` to `app.js`'s `OBS_CHARTS` array (the same generic prepare/draw/error-per-
     chart loop already driving the monthly and yearly temperature/wind charts), so it gets its
     reload, theme-redraw and error handling for free — no bespoke load function needed.
+
+**Phase 10 — Rolling forecast, a chart-height fix, shared day ticks and lightning in the last 24 hours (Sept 2026)**
+
+- **"Today, hour by hour" became "Next 24 hours"**: late in the day the today-only chart was mostly
+  empty (Tempest's hourly forecast starts at the current hour, and the fetcher kept only today's
+  date). The fetcher now also writes `next_hours` — the hourly forecast from the current hour on,
+  24 + 2 entries so the page can drop hours that ended while the document sat in KV (30-minute
+  refresh plus the 10-minute API cache) and still show a full 24. `hours` (today only) is kept
+  unchanged for backward compatibility; `forecastHours()` falls back to it. The chart's x axis is
+  now a date axis of zone-less local stamps (`localStamp()` in `forecast.js`), with a dotted
+  midnight rule labelled "Tomorrow"; the outlook text and the table say "tomorrow" for runs that
+  start after midnight. Options considered and not taken: a 12-hour window (all night after 18:00,
+  so it would miss the next afternoon's storms), switching to tomorrow after a cutoff, and filling
+  past hours with observations.
+- **Tick labels spilling onto the note below (the real cause)**: the Phase 7 `automargin` fix did
+  not hold because margins were never the problem. Eleven Plotly charts had no CSS height on
+  desktop; with `responsive: true`, the 5-minute `Plotly.react` refresh collapsed their div to 0px
+  while the absolutely positioned SVG stayed 450px, so the following note slid under the axis.
+  Reproduced headless by letting virtual time run past two refreshes and measuring each div
+  against its SVG. Fixed by giving every Plotly chart an explicit height in `style.css`
+  (450px, the Plotly default they were already drawn at). **Any new Plotly chart must get an
+  explicit CSS height on desktop and in the mobile rule.**
+- **Shared day axis for the week charts**: "Rain intensity", "Rain and ETo" and "Wind direction,
+  day by day" now mark every midnight with a tick and centre each day's name under its noon, every
+  other name on narrow screens. `dayAxisTicks()` in `common.js` does it with Plotly minor ticks for
+  the numeric day axes (the wind chart keeps its gridlines, now on the midnights); "Rain and ETo"
+  is a category axis, where minor ticks don't apply, so `categoryDayTicks()` draws the same marks
+  as pixel-length shapes. This also fixed that chart's day names overlapping on phones.
+- **Lightning, last 24 hours** (Now section, after the wind rose): one dot per strike minute at
+  the sensor's estimated distance, sized by strike count, with night shading and a midnight rule.
+  The fetcher's 5-minute `wind24h` job already downloaded the last 24h of per-minute observations,
+  so it now also writes `lightning` ([ts, distance km, count], the same rows as `lightning:YYYY`)
+  at no extra API cost. Note `lightning:YYYY` is **back-fill only** — no cron job updates it.
+  The chart note explains the sensor's fixed distance steps and ~40 km range; an empty day shows
+  "No lightning detected in the last 24 hours" over the axes. This is a different chart from the
+  dropped "lightning distance by year" (Phase 6), requested explicitly.
+- Both backend changes were additive and deployed straight to the single Worker, as in Phase 7.

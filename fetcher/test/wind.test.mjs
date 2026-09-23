@@ -19,3 +19,11 @@ test("hourly carries the mean, min, max and minute count of temperature per hour
   const d = buildWind24h([row(h - 60, 26), row(h, 30), row(h + 60, 32)], now);
   assert.deepEqual(d.hourly, [[h - 3600, 26, 26, 26, 1], [h, 31, 30, 32, 2]]);
 });
+
+test("lightning lists only the strike minutes inside the 24h window, oldest first", () => {
+  const now = Date.parse("2026-09-21T12:00:00Z");
+  const t = now / 1000;
+  const row = (ts, dist, count) => { const r = Array(18).fill(0); r[0] = ts; r[14] = dist; r[15] = count; return r; };
+  const d = buildWind24h([row(t - 60, 12, 2), row(t - 90000, 5, 1), row(t - 120, 0, 0), row(t - 300, 17, 1)], now);
+  assert.deepEqual(d.lightning, [[t - 300, 17, 1], [t - 60, 12, 2]]);
+});

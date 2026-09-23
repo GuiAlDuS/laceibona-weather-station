@@ -1,4 +1,4 @@
-import { $, token, nf, chartFont, hoverLabel } from "./common.js";
+import { $, token, nf, chartFont, hoverLabel, categoryDayTicks, keepDayLabel } from "./common.js";
 import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { weekTotals } from "./rainweek.js";
@@ -60,7 +60,8 @@ export function renderRainWeekChart(rows) {
     bargroupgap: 0.06,
     hovermode: "x unified",
     hoverlabel: hoverLabel(),
-    xaxis: { type: "category", anchor: "y2", tickangle: 0, automargin: true, showgrid: false, showline: true, linecolor: token("--baseline"), showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: token("--baseline"), spikethickness: 1, spikedash: "solid", tickfont: { color: muted, size: 12 }, fixedrange: true },
+    shapes: categoryDayTicks(rows.length),
+    xaxis: { type: "category", anchor: "y2", tickmode: "array", tickvals: x.filter(keepDayLabel), ticktext: x.filter(keepDayLabel), tickangle: 0, automargin: true, showgrid: false, showline: true, linecolor: token("--baseline"), showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: token("--baseline"), spikethickness: 1, spikedash: "solid", tickfont: { color: muted, size: 12 }, fixedrange: true },
     yaxis: axis("mm", [0.4, 1], { tickformat: ",d" }),
     yaxis2: axis(t("hours", "horas"), [0, 0.28], { dtick: 6, rangemode: "tozero" }),
   };

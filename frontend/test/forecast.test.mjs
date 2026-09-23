@@ -21,11 +21,25 @@ test("a missing or malformed document yields an empty list", () => {
   assert.deepEqual(forecastDays({ days: "nope" }), []);
 });
 
-const h = (hour, o = {}) => ({ hour, precip_probability: o.precip ?? 0, precip_type: o.ptype ?? null, icon: o.icon ?? "clear-day" });
+const h = (hour, o = {}) => ({ hour, date: o.date, precip_probability: o.precip ?? 0, precip_type: o.ptype ?? null, icon: o.icon ?? "clear-day" });
 
-test("forecastHours sorts by hour and drops rows with no hour", () => {
-  const doc = { hours: [h(5), h(0), { precip_probability: 10 }, h(12)] };
-  assert.deepEqual(forecastHours(doc).map((r) => r.hour), [0, 5, 12]);
+// 1790056800 = local midnight 2026-09-22; hour n of that day starts at TODAY + n * 3600.
+const TODAY = 1790056800;
+const fh = (n) => ({ time: TODAY + n * 3600, hour: n % 24, precip_probability: 0 });
+
+test("forecastHours keeps 24 hours from the current one, in time order across midnight, and tags each date", () => {
+  const doc = { next_hours: Array.from({ length: 30 }, (_, i) => fh(18 + i)).reverse() };
+  const hours = forecastHours(doc, (TODAY + 20.5 * 3600) * 1000); // 20:30 local, so the 18:00 and 19:00 hours are over
+  assert.equal(hours.length, 24);
+  assert.equal(hours[0].hour, 20);
+  assert.equal(hours[0].date, "2026-09-22");
+  assert.deepEqual(hours.slice(3, 5).map((r) => [r.hour, r.date]), [[23, "2026-09-22"], [0, "2026-09-23"]]);
+  assert.equal(hours.at(-1).hour, 19);
+});
+
+test("forecastHours falls back to the today-only list and drops rows with no time or hour", () => {
+  const doc = { hours: [fh(5), fh(3), { precip_probability: 10 }, { ...fh(12), hour: undefined }] };
+  assert.deepEqual(forecastHours(doc, TODAY * 1000).map((r) => r.hour), [3, 5]);
 });
 
 test("forecastHours on a missing or malformed document yields an empty list", () => {
@@ -49,7 +63,13 @@ test("isStormHour matches only on a thunderstorm icon, not precip_type (which is
 test("contiguousRanges groups matching hours and keeps separate runs apart", () => {
   const hours = [h(0), h(1), h(2), h(3), h(4)];
   const ranges = contiguousRanges(hours, (r) => r.hour === 1 || r.hour === 2 || r.hour === 4);
-  assert.deepEqual(ranges, [{ start: 1, end: 2 }, { start: 4, end: 4 }]);
+  assert.deepEqual(ranges, [{ start: 1, end: 2, date: undefined }, { start: 4, end: 4, date: undefined }]);
+});
+
+test("contiguousRanges keeps a run going across midnight and dates it by its first hour", () => {
+  const hours = [h(22, { date: "d1" }), h(23, { date: "d1" }), h(0, { date: "d2" }), h(1, { date: "d2" }), h(2, { date: "d2" })];
+  assert.deepEqual(contiguousRanges(hours, (r) => r.hour !== 22 && r.hour !== 2), [{ start: 23, end: 1, date: "d1" }]);
+  assert.deepEqual(contiguousRanges(hours, (r) => r.hour >= 1 && r.hour < 22), [{ start: 1, end: 2, date: "d2" }]);
 });
 
 test("contiguousRanges returns nothing when no hour matches", () => {

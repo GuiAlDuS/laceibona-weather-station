@@ -16,7 +16,8 @@ Cloudflare Pages  (frontend/)  plain HTML + Plotly.js, no build step
 
 A section menu on the left jumps between the groups below.
 
-- **Now**: current conditions (temperature, humidity, wind, pressure trend, rain, UV, solar, lightning; flags stale data) and a wind rose for the last 24 hours.
+- **Now**: current conditions (temperature, humidity, wind, pressure trend, rain, UV, solar, lightning; flags stale data), a wind rose for the last 24 hours, and the distance of each lightning strike over the last 24 hours.
+- **Forecast**: rain probability, thunderstorm hours and temperature for the next 24 hours, then daily tiles for the following 5 days.
 - **This week**: hourly temperature for the last 7 days, daily rain and ETo bars with hours of rain, and wind direction hour by hour.
 - **A typical day**: month-by-hour heatmaps of temperature and wind speed, and a month-by-direction heatmap of wind direction.
 - **Month by month**: rain vs ETo for the last 13 months, and box plots of monthly temperature and wind speed.

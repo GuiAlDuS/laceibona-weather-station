@@ -68,18 +68,34 @@
           <div class="table-scroll"><table id="wr-table"></table></div>
         </details>
       </section>
+      <section class="card" aria-labelledby="lg-title">
+        <h3 id="lg-title">Lightning, last 24 hours</h3>
+        <p class="muted">How far away the station detected lightning, minute by minute.</p>
+        <p id="lg-summary" class="summary" aria-live="polite"></p>
+
+        <div id="lg-frame" class="chart-frame">
+          <div id="lg-chart" role="img" aria-label="Scatter chart of lightning strike distance over the last 24 hours, one dot per minute with strikes, sized by strike count"></div>
+          <p id="lg-status" class="status">Loading…</p>
+        </div>
+        <p id="lg-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll tall"><table id="lg-table"></table></div>
+        </details>
+      </section>
     </section>
 
     <section class="group" id="forecast" aria-labelledby="forecast-heading">
       <h2 id="forecast-heading" class="group-title">Forecast</h2>
 
       <section class="card" aria-labelledby="fh-title">
-        <h3 id="fh-title">Today, hour by hour</h3>
-        <p class="muted">Rain probability by hour, with thunderstorm hours marked and temperature alongside.</p>
+        <h3 id="fh-title">Next 24 hours</h3>
+        <p class="muted">Rain probability by hour from now through this time tomorrow, with thunderstorm hours marked and temperature alongside.</p>
         <p id="fh-summary" class="summary" aria-live="polite"></p>
 
         <div id="fh-frame" class="chart-frame">
-          <div id="fh-chart" role="img" aria-label="Bar chart of today's hourly rain probability, coloured by thunderstorm risk, with temperature as a line"></div>
+          <div id="fh-chart" role="img" aria-label="Bar chart of hourly rain probability for the next 24 hours, coloured by thunderstorm risk, with temperature as a line"></div>
           <p id="fh-status" class="status">Loading…</p>
         </div>
         <ul id="fh-legend" class="legend" aria-label="Legend"></ul>

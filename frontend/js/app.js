@@ -28,6 +28,8 @@ import { VIRIDIS, renderMonthHourChart, renderMonthHourText } from "./heatmap-vi
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
 import { windRose, sliceWindow, MS_TO_KMH } from "./windrose.js";
 import { renderWindRose } from "./windrose-view.js";
+import { recentStrikes } from "./lightning24h.js";
+import { renderLightningChart, renderLightningText } from "./lightning24h-view.js";
 import { annualSolarTotals } from "./solar.js";
 import { renderSolarYearChart, renderSolarYearText } from "./solar-view.js";
 
@@ -87,7 +89,7 @@ async function loadForecast() {
     } else {
       forecast = forecastDays(doc);
       if (forecast.length === 0) throw NO_USABLE_DATA();
-      renderForecast(forecast.slice(1)); // today is covered by the hourly chart, not these tiles
+      renderForecast(forecast.slice(1)); // today is covered by the 24-hour chart, not these tiles
 
       forecastHourly = forecastHours(doc);
       if (forecastHourly.length === 0) throw NO_USABLE_DATA();
@@ -154,14 +156,22 @@ let rose = null;
 let roseDoc = null;
 let windowHours = 24;
 
+let strikes24h = null;
+
 async function loadWind() {
   $("wr-frame").classList.add("reloading");
+  $("lg-frame").classList.add("reloading");
   if (!rose) setStatus("wr-status", t("Loading…", "Cargando…"));
+  if (!strikes24h) setStatus("lg-status", t("Loading…", "Cargando…"));
   try {
     const res = await fetch(`${API_BASE}/api/wind24h`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     roseDoc = await res.json();
     if (roseDoc.available === false) throw new Error(t("no wind data yet", "todavía no hay datos de viento"));
+    // Lightning rides on the same 24h document; a document from before the fetcher added it just reads as none.
+    strikes24h = recentStrikes(roseDoc);
+    drawLightning();
+    setStatus("lg-status", "");
     updateRose();
     if (rose.hours === 0) throw NO_USABLE_DATA();
     drawWind();
@@ -169,9 +179,17 @@ async function loadWind() {
   } catch (err) {
     console.error(err);
     if (!rose) setStatus("wr-status", couldNotLoad(err.message), loadWind);
+    if (!strikes24h) setStatus("lg-status", couldNotLoad(err.message), loadWind);
   } finally {
     $("wr-frame").classList.remove("reloading");
+    $("lg-frame").classList.remove("reloading");
   }
+}
+
+function drawLightning() {
+  if (!strikes24h) return;
+  renderLightningText(strikes24h);
+  renderLightningChart(strikes24h);
 }
 
 // Recomputes `rose` from the already-fetched 24h document for the selected window; no re-fetch needed.
@@ -349,6 +367,7 @@ setInterval(loadRainFine, 300_000);
 
 function redraw() {
   drawWind();
+  drawLightning();
   drawObsCharts();
   drawRainFine();
   if (forecastHourly) renderForecastHourlyChart(forecastHourly);

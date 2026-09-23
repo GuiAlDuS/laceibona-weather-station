@@ -1,9 +1,11 @@
-import { aggregateHours } from "./hourly.js";
+import { aggregateHours, lightningEvents } from "./hourly.js";
 
 // Builds the `wind24h` KV document: per-minute wind speed and direction for the last 24 hours, in the same
 // column layout as `obs:YYYY-MM` so the frontend's wind rose code can read either. `hourly` carries the same
 // window as hourly temperature [hour start (unix s), mean, min, max, minutes], including the hour still in
-// progress, so charts can show the present before the hourly `obs:` append has caught up.
+// progress, so charts can show the present before the hourly `obs:` append has caught up. `lightning` lists the
+// minutes with strikes in the same window, [unix seconds, mean distance km or null, strike count], the same rows
+// as `lightning:YYYY`.
 const F = { ts: 0, avg: 2, dir: 4 };
 
 export function buildWind24h(rows, nowMs) {
@@ -18,5 +20,6 @@ export function buildWind24h(rows, nowMs) {
     // without a separate fetch; it is always present and in the same order as ws/wd.
     cols: { ts: sorted.map((r) => r[F.ts]), ws: col(F.avg), wd: col(F.dir) },
     hourly: [...aggregateHours(sorted)].filter(([, r]) => r.t !== null).map(([h, r]) => [h, r.t, r.tmin, r.tmax, r.n]),
+    lightning: lightningEvents(sorted),
   };
 }
