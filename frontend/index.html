@@ -288,6 +288,24 @@
         </details>
       </section>
 
+      <section class="card" aria-labelledby="uv-title">
+        <h3 id="uv-title">UV index by month</h3>
+        <p class="muted">How strong the sun gets each month, from each day's peak UV index.</p>
+        <p id="uv-summary" class="summary" aria-live="polite"></p>
+
+        <div id="uv-frame" class="chart-frame">
+          <div id="uv-chart" role="img" aria-label="Box plot of the daily peak UV index for each month, over shaded UV risk levels"></div>
+          <p id="uv-status" class="status">Loading…</p>
+        </div>
+        <ul id="uv-legend" class="legend" aria-label="Legend"></ul>
+        <p id="uv-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Table view</summary>
+          <div class="table-scroll tall"><table id="uv-table"></table></div>
+        </details>
+      </section>
+
       <section class="card" aria-labelledby="wk-title">
         <h3 id="wk-title">Wind speed range by month</h3>
         <p class="muted">How windy each month gets, based on every hour of the month.</p>

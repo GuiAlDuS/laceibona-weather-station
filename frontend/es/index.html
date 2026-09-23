@@ -288,6 +288,24 @@
         </details>
       </section>
 
+      <section class="card" aria-labelledby="uv-title">
+        <h3 id="uv-title">Índice UV por mes</h3>
+        <p class="muted">Qué tan fuerte es el sol cada mes, según el índice UV máximo de cada día.</p>
+        <p id="uv-summary" class="summary" aria-live="polite"></p>
+
+        <div id="uv-frame" class="chart-frame">
+          <div id="uv-chart" role="img" aria-label="Diagrama de caja del índice UV máximo diario de cada mes, sobre niveles de riesgo UV sombreados"></div>
+          <p id="uv-status" class="status">Cargando…</p>
+        </div>
+        <ul id="uv-legend" class="legend" aria-label="Leyenda"></ul>
+        <p id="uv-note" class="muted small"></p>
+
+        <details class="table-view">
+          <summary>Ver tabla</summary>
+          <div class="table-scroll tall"><table id="uv-table"></table></div>
+        </details>
+      </section>
+
       <section class="card" aria-labelledby="wk-title">
         <h3 id="wk-title">Rango de velocidad del viento por mes</h3>
         <p class="muted">Qué tan ventoso se pone cada mes, según cada hora del mes.</p>

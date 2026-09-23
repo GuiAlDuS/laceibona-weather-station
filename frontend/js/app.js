@@ -22,8 +22,8 @@ import { monthDirectionFrequency } from "./winddir.js";
 import { renderWindDirChart, renderWindDirText } from "./winddir-view.js";
 import { recentHours } from "./winddaily.js";
 import { renderWindDailyChart, renderWindDailyText } from "./winddaily-view.js";
-import { monthlyBoxes, yearlyBoxes } from "./tempbox.js";
-import { WIND as WIND_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
+import { monthlyBoxes, yearlyBoxes, monthlyDailyMaxBoxes } from "./tempbox.js";
+import { WIND as WIND_BOX, UV as UV_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
 import { VIRIDIS, renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
 import { windRose, sliceWindow, MS_TO_KMH } from "./windrose.js";
@@ -306,6 +306,13 @@ const OBS_CHARTS = [
   }, () => {
     renderTempBoxMonthlyText(obsState.bm);
     return renderTempBoxMonthly(obsState.bm);
+  }],
+  ["uv", (docs) => {
+    obsState.uv = monthlyDailyMaxBoxes(last13(docs), "uv");
+    if (obsState.uv.length === 0) throw NO_USABLE_DATA();
+  }, () => {
+    renderTempBoxMonthlyText(obsState.uv, UV_BOX);
+    return renderTempBoxMonthly(obsState.uv, UV_BOX);
   }],
   ["wk", (docs) => {
     obsState.wk = monthlyBoxes(last13(docs), "ws", MS_TO_KMH);

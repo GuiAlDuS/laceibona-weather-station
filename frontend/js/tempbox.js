@@ -56,3 +56,23 @@ export function yearlyBoxes(docs) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([year, v]) => ({ year, days: v.days.size, through, stats: boxStats(v.values) }));
 }
+
+// One box per month of each local day's highest hourly value (e.g. `uv`, stored as each hour's maximum), oldest
+// first. A day counts once, so a month's box shows its days rather than the shape of the daily cycle. Days with
+// no reading, or a peak of exactly 0 (a sensor outage: daylight always gives some UV), are skipped; months with
+// none are left out.
+export function monthlyDailyMaxBoxes(docs, col) {
+  return [...docs]
+    .sort((a, b) => a.month.localeCompare(b.month))
+    .map((doc) => {
+      const days = new Map();
+      doc.cols[col].forEach((v, i) => {
+        if (typeof v !== "number") return;
+        const date = new Date((doc.start + i * 3600 + LOCAL_OFFSET_S) * 1000).toISOString().slice(0, 10);
+        days.set(date, Math.max(days.get(date) ?? -Infinity, v));
+      });
+      const v = [...days.values()].filter((x) => x > 0);
+      return { key: doc.month, partial: v.length < (doc.cols[col].length / 24) * PARTIAL_BELOW, stats: boxStats(v) };
+    })
+    .filter((m) => m.stats);
+}

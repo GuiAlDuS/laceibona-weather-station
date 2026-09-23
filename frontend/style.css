@@ -155,7 +155,7 @@ p { margin: 0 0 12px; }
 /* Every Plotly chart needs an explicit height: with `responsive: true` and no height, a Plotly.react re-render
    (the 5-minute refresh) collapses the div to 0px while the absolutely positioned SVG stays 450px, so the
    x-axis labels spill onto the note below. 450px is the Plotly default these were already drawn at. */
-#fh-chart, #td-chart, #rf-chart, #ds-chart, #th-chart, #wh-chart, #wd-chart, #bm-chart, #wk-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
+#fh-chart, #td-chart, #rf-chart, #ds-chart, #th-chart, #wh-chart, #wd-chart, #bm-chart, #uv-chart, #wk-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
 #lg-chart { width: 100%; height: 420px; }
 .status { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; color: var(--text-secondary); text-align: center; padding: 0 16px; }
 .status:empty { display: none; }
@@ -191,7 +191,7 @@ td:first-child { font-family: var(--font-sans); }
   .card { padding-top: 4px; }
   .card + .card { margin-top: 24px; padding-top: 24px; }
   .chart-frame { min-height: 340px; }
-  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #wh-chart, #wd-chart, #ds-chart, #bm-chart, #by-chart, #wk-chart, #rf-chart, #fh-chart, #sy-chart, #lg-chart { height: 340px; }
+  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #wh-chart, #wd-chart, #ds-chart, #bm-chart, #uv-chart, #by-chart, #wk-chart, #rf-chart, #fh-chart, #sy-chart, #lg-chart { height: 340px; }
 }
 
 .cc-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 8px; }
