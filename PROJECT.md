@@ -685,3 +685,13 @@ Owner decisions worth remembering:
 - **UV index by month** (daily peak UV per day, one box per month, over shaded UV risk bands) was
   built and reviewed on the test site, but is held on the `uv-by-month` branch until the sensor
   anomaly is explained.
+- **Rain on "Lightning and rain, last 24 hours"** (renamed from "Lightning, last 24 hours"): blue
+  bars of 10-minute rain intensity (mm/h) behind the strike dots, on a right-hand axis whose ticks
+  share the km gridlines (4 round steps up to 40 km, never under 10 mm/h so drizzle stays small).
+  The bars come from the same `fine7d` document as the 7-day rain chart, so no backend change and
+  the two always agree; the summary adds the 24h rain total and peak rate, and the table interleaves
+  rainy 10-minute windows with the strike minutes.
+- **"Wind direction, day by day" colour scale fitted to the data**: the top was the fastest hour
+  rounded up to 2 km/h with a floor of 8, so in a calm week (peak 4.9 km/h) no dot got past green.
+  The top is now exactly the fastest hour (always the yellowest dot), ticks every 1/2/5/10 km/h,
+  and dots are drawn slowest first so the faster ones sit on top where they overlap.

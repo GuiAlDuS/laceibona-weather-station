@@ -188,8 +188,8 @@ async function loadWind() {
 
 function drawLightning() {
   if (!strikes24h) return;
-  renderLightningText(strikes24h);
-  renderLightningChart(strikes24h);
+  renderLightningText(strikes24h, fineBucketsData);
+  renderLightningChart(strikes24h, fineBucketsData);
 }
 
 // Recomputes `rose` from the already-fetched 24h document for the selected window; no re-fetch needed.
@@ -241,6 +241,7 @@ async function loadRainFine() {
     fineBucketsData = fineBuckets(doc);
     if (fineBucketsData.every((b) => b.rate === null && b.p === null && b.solar === null)) throw NO_USABLE_DATA();
     drawRainFine();
+    drawLightning(); // its rain bars come from this same document
     setStatus("rf-status", "");
     $("rf-solar-toggle").disabled = false;
     $("rf-rh-toggle").disabled = false;
