@@ -4,10 +4,10 @@ import { $, narrowScreen, wideLayout, setStatus, longDate, weekStart, WEEK_DAYS 
 import { t, TIME_LOCALE } from "./i18n.js";
 import { cumulativeByYear } from "./balance.js";
 import { monthlyTotals } from "./monthly.js";
-import { cumulativeRainByYear, cumulativeLightningByYear } from "./cumulative.js";
+import { cumulativeRainByYear } from "./cumulative.js";
 import { renderWaterBalanceChart, renderWaterBalanceText } from "./waterbalance-view.js";
 import { renderMonthlyChart, renderMonthlyText } from "./monthly-view.js";
-import { RAIN, LIGHTNING, renderCumulativeChart, renderCumulativeText } from "./cumulative-view.js";
+import { RAIN, renderCumulativeChart, renderCumulativeText } from "./cumulative-view.js";
 import { lastRainDays, withLiveToday } from "./rainweek.js";
 import { renderRainWeekChart, renderRainWeekText } from "./rainweek-view.js";
 import { fineBuckets } from "./rainfine.js";
@@ -22,8 +22,8 @@ import { monthDirectionFrequency } from "./winddir.js";
 import { renderWindDirChart, renderWindDirText } from "./winddir-view.js";
 import { recentHours } from "./winddaily.js";
 import { renderWindDailyChart, renderWindDailyText } from "./winddaily-view.js";
-import { monthlyBoxes, yearlyBoxes } from "./tempbox.js";
-import { WIND as WIND_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
+import { monthlyBoxes, yearlyBoxes, monthlyDailyMaxBoxes } from "./tempbox.js";
+import { WIND as WIND_BOX, UV as UV_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
 import { VIRIDIS, renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
 import { windRose, sliceWindow, MS_TO_KMH } from "./windrose.js";
@@ -111,11 +111,11 @@ setInterval(loadForecast, 600_000);
 let balance = null;
 let months = null;
 let rain = null;
-let lightning = null;
 let rainWeek = null;
 
-const FRAMES = ["wb-frame", "mo-frame", "rn-frame", "lt-frame", "rw-frame"];
-const STATUSES = ["wb-status", "mo-status", "rn-status", "lt-status", "rw-status"];
+// The cumulative lightning chart ("lt", cumulative-view.js LIGHTNING) is off the page for now; its code is kept.
+const FRAMES = ["wb-frame", "mo-frame", "rn-frame", "rw-frame"];
+const STATUSES = ["wb-status", "mo-status", "rn-status", "rw-status"];
 
 async function load() {
   for (const id of FRAMES) $(id).classList.add("reloading");
@@ -127,20 +127,17 @@ async function load() {
     balance = cumulativeByYear(doc.days);
     months = monthlyTotals(doc.days);
     rain = cumulativeRainByYear(doc.days);
-    lightning = cumulativeLightningByYear(doc.days);
     rainWeek = lastRainDays(doc.days);
-    if (balance.length === 0 || months.length === 0 || rain.length === 0 || lightning.length === 0 || rainWeek.length === 0) throw NO_USABLE_DATA();
+    if (balance.length === 0 || months.length === 0 || rain.length === 0 || rainWeek.length === 0) throw NO_USABLE_DATA();
     const rainWeekRows = withLiveToday(rainWeek, currentDoc);
     renderWaterBalanceText(balance);
     renderMonthlyText(months);
     renderCumulativeText(RAIN, rain);
-    renderCumulativeText(LIGHTNING, lightning);
     renderRainWeekText(rainWeekRows);
     await Promise.all([
       renderWaterBalanceChart(balance),
       renderMonthlyChart(months),
       renderCumulativeChart(RAIN, rain),
-      renderCumulativeChart(LIGHTNING, lightning),
       renderRainWeekChart(rainWeekRows),
     ]);
     for (const id of STATUSES) setStatus(id, "");
@@ -313,6 +310,13 @@ const OBS_CHARTS = [
     renderTempBoxMonthlyText(obsState.bm);
     return renderTempBoxMonthly(obsState.bm);
   }],
+  ["uv", (docs) => {
+    obsState.uv = monthlyDailyMaxBoxes(last13(docs), "uv");
+    if (obsState.uv.length === 0) throw NO_USABLE_DATA();
+  }, () => {
+    renderTempBoxMonthlyText(obsState.uv, UV_BOX);
+    return renderTempBoxMonthly(obsState.uv, UV_BOX);
+  }],
   ["wk", (docs) => {
     obsState.wk = monthlyBoxes(last13(docs), "ws", MS_TO_KMH);
     if (obsState.wk.length === 0) throw NO_USABLE_DATA();
@@ -382,12 +386,10 @@ function redraw() {
   renderWaterBalanceText(balance);
   renderMonthlyText(months);
   renderCumulativeText(RAIN, rain);
-  renderCumulativeText(LIGHTNING, lightning);
   renderRainWeekText(rainWeek);
   renderWaterBalanceChart(balance);
   renderMonthlyChart(months);
   renderCumulativeChart(RAIN, rain);
-  renderCumulativeChart(LIGHTNING, lightning);
   renderRainWeekChart(rainWeek);
 }
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);

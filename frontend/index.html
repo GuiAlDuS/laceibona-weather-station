@@ -344,6 +344,28 @@
       </div>
 
       <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="uv-title">
+          <h3 id="uv-title">UV index by month</h3>
+          <p class="muted">How strong the sun gets each month, from each day's peak UV index.</p>
+          <p id="uv-summary" class="summary" aria-live="polite"></p>
+
+          <div id="uv-frame" class="chart-frame">
+            <div id="uv-chart" role="img" aria-label="Box plot of the daily peak UV index for each month, over shaded UV risk levels"></div>
+            <p id="uv-status" class="status">Loading…</p>
+          </div>
+          <ul id="uv-legend" class="legend" aria-label="Legend"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="uv-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll tall"><table id="uv-table"></table></div>
+            </details>
+          </div>
+        </section>
+
         <section class="card" aria-labelledby="wk-title">
           <h3 id="wk-title">Wind speed range by month</h3>
           <p class="muted">How windy each month gets, based on every hour of the month.</p>
@@ -370,113 +392,95 @@
     <section class="group" id="yearly" aria-labelledby="yearly-heading">
       <h2 id="yearly-heading" class="group-title">Year over year</h2>
 
-      <section class="card" aria-labelledby="by-title">
-        <h3 id="by-title">Temperature range by year</h3>
-        <p class="muted">The same, for each year over the same stretch of the calendar.</p>
-        <p id="by-summary" class="summary" aria-live="polite"></p>
+      <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="rn-title">
+          <h3 id="rn-title">Cumulative rain</h3>
+          <p class="muted">Rain added up from 1 January, year over year, in mm.</p>
+          <p id="rn-summary" class="summary" aria-live="polite"></p>
 
-        <div id="by-frame" class="chart-frame">
-          <div id="by-chart" role="img" aria-label="Box plot of hourly temperature for each year"></div>
-          <p id="by-status" class="status">Loading…</p>
-        </div>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>How to read this chart</summary>
-            <p id="by-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Table view</summary>
-            <div class="table-scroll tall"><table id="by-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="rn-frame" class="chart-frame">
+            <div id="rn-chart" role="img" aria-label="Line chart of cumulative rain by day of year, one line per year"></div>
+            <p id="rn-status" class="status">Loading…</p>
+          </div>
+          <ul id="rn-legend" class="legend" aria-label="Legend"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="rn-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll"><table id="rn-table"></table></div>
+            </details>
+          </div>
+        </section>
 
-      <section class="card" aria-labelledby="rn-title">
-        <h3 id="rn-title">Cumulative rain</h3>
-        <p class="muted">Rain added up from 1 January, year over year, in mm.</p>
-        <p id="rn-summary" class="summary" aria-live="polite"></p>
+        <section class="card" aria-labelledby="wb-title">
+          <h3 id="wb-title">Cumulative water balance</h3>
+          <p class="muted">Rain minus evapotranspiration (ETo) since 1 January, in mm. Below zero, the atmosphere has taken more water than the rain has supplied.</p>
+          <p id="wb-summary" class="summary" aria-live="polite"></p>
 
-        <div id="rn-frame" class="chart-frame">
-          <div id="rn-chart" role="img" aria-label="Line chart of cumulative rain by day of year, one line per year"></div>
-          <p id="rn-status" class="status">Loading…</p>
-        </div>
-        <ul id="rn-legend" class="legend" aria-label="Legend"></ul>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>How to read this chart</summary>
-            <p id="rn-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Table view</summary>
-            <div class="table-scroll"><table id="rn-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="wb-frame" class="chart-frame">
+            <div id="wb-chart" role="img" aria-label="Line chart of cumulative water balance by day of year, one line per year"></div>
+            <p id="wb-status" class="status">Loading…</p>
+          </div>
+          <ul id="wb-legend" class="legend" aria-label="Legend"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="wb-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll"><table id="wb-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
 
-      <section class="card" aria-labelledby="lt-title">
-        <h3 id="lt-title">Cumulative lightning</h3>
-        <p class="muted">Lightning strikes added up from 1 January, year over year.</p>
-        <p id="lt-summary" class="summary" aria-live="polite"></p>
+      <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="by-title">
+          <h3 id="by-title">Temperature range by year</h3>
+          <p class="muted">The same, for each year over the same stretch of the calendar.</p>
+          <p id="by-summary" class="summary" aria-live="polite"></p>
 
-        <div id="lt-frame" class="chart-frame">
-          <div id="lt-chart" role="img" aria-label="Line chart of cumulative lightning strikes by day of year, one line per year"></div>
-          <p id="lt-status" class="status">Loading…</p>
-        </div>
-        <ul id="lt-legend" class="legend" aria-label="Legend"></ul>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>How to read this chart</summary>
-            <p id="lt-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Table view</summary>
-            <div class="table-scroll"><table id="lt-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="by-frame" class="chart-frame">
+            <div id="by-chart" role="img" aria-label="Box plot of hourly temperature for each year"></div>
+            <p id="by-status" class="status">Loading…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="by-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll tall"><table id="by-table"></table></div>
+            </details>
+          </div>
+        </section>
 
-      <section class="card" aria-labelledby="wb-title">
-        <h3 id="wb-title">Cumulative water balance</h3>
-        <p class="muted">Rain minus evapotranspiration (ETo) since 1 January, in mm. Below zero, the atmosphere has taken more water than the rain has supplied.</p>
-        <p id="wb-summary" class="summary" aria-live="polite"></p>
+        <section class="card" aria-labelledby="sy-title">
+          <h3 id="sy-title">Total solar irradiation by year</h3>
+          <p class="muted">Total solar energy received per square metre, year over year, from raw hourly observations.</p>
+          <p id="sy-summary" class="summary" aria-live="polite"></p>
 
-        <div id="wb-frame" class="chart-frame">
-          <div id="wb-chart" role="img" aria-label="Line chart of cumulative water balance by day of year, one line per year"></div>
-          <p id="wb-status" class="status">Loading…</p>
-        </div>
-        <ul id="wb-legend" class="legend" aria-label="Legend"></ul>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>How to read this chart</summary>
-            <p id="wb-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Table view</summary>
-            <div class="table-scroll"><table id="wb-table"></table></div>
-          </details>
-        </div>
-      </section>
-
-      <section class="card" aria-labelledby="sy-title">
-        <h3 id="sy-title">Total solar irradiation by year</h3>
-        <p class="muted">Total solar energy received per square metre, year over year, from raw hourly observations.</p>
-        <p id="sy-summary" class="summary" aria-live="polite"></p>
-
-        <div id="sy-frame" class="chart-frame">
-          <div id="sy-chart" role="img" aria-label="Bar chart of total solar irradiation in kWh per square metre for each year"></div>
-          <p id="sy-status" class="status">Loading…</p>
-        </div>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>How to read this chart</summary>
-            <p id="sy-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Table view</summary>
-            <div class="table-scroll"><table id="sy-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="sy-frame" class="chart-frame">
+            <div id="sy-chart" role="img" aria-label="Bar chart of total solar irradiation in kWh per square metre for each year"></div>
+            <p id="sy-status" class="status">Loading…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="sy-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll"><table id="sy-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
     </section>
 
     <footer class="site-footer">

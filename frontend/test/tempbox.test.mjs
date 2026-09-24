@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { quantile, boxStats, monthlyBoxes, yearlyBoxes } from "../js/tempbox.js";
+import { quantile, boxStats, monthlyBoxes, yearlyBoxes, monthlyDailyMaxBoxes } from "../js/tempbox.js";
 
 test("quantiles interpolate linearly", () => {
   assert.equal(quantile([1, 2, 3, 4, 5], 0.5), 3);
@@ -39,4 +39,37 @@ test("yearlyBoxes compares the same 1 Jan to latest-date window and drops thin y
   assert.equal(y[0].stats.max, 20);
   assert.equal(y[1].stats.median, 30);
   assert.deepEqual(yearlyBoxes([]), []);
+});
+
+test("monthlyDailyMaxBoxes takes each local day's peak, one value per day", () => {
+  // A 2-day month from local midnight (06:00 UTC): day 1 peaks at 9, day 2 at 11 (night hours are 0 or missing).
+  const uv = new Array(48).fill(0);
+  uv[12] = 9;
+  uv[13] = 4;
+  uv[36] = 11;
+  uv[26] = null; // a missing night hour (02:00) does not make day 2 incomplete
+  const [m] = monthlyDailyMaxBoxes([{ month: "2026-09", start: Date.UTC(2026, 8, 1, 6) / 1000, cols: { uv } }], "uv");
+  assert.equal(m.stats.n, 2);
+  assert.deepEqual([m.stats.min, m.stats.max], [9, 11]);
+  assert.equal(m.partial, false);
+  const [p] = monthlyDailyMaxBoxes([{ month: "2026-09", start: Date.UTC(2026, 8, 1, 6) / 1000, cols: { uv: uv.map((v, i) => (i >= 24 ? null : v)) } }], "uv");
+  assert.equal(p.partial, true); // one of two days has no data
+  assert.deepEqual(monthlyDailyMaxBoxes([{ month: "2026-09", start: 0, cols: { uv: [null, null] } }], "uv"), []);
+  const allZero = [{ month: "2026-09", start: Date.UTC(2026, 8, 1, 6) / 1000, cols: { uv: uv.map((v, i) => (i >= 24 ? 0 : v)) } }];
+  assert.equal(monthlyDailyMaxBoxes(allZero, "uv")[0].stats.n, 1); // an all-zero day is an outage, not a dark day
+});
+
+test("monthlyDailyMaxBoxes skips days missing any daylight hour", () => {
+  // Day 1 is missing 13:00 (index 13), so its too-low peak of 2 is dropped; day 2 is complete and peaks at 11.
+  const uv = new Array(48).fill(0);
+  uv[10] = 2;
+  uv[13] = null;
+  uv[36] = 11;
+  const [m] = monthlyDailyMaxBoxes([{ month: "2026-09", start: Date.UTC(2026, 8, 1, 6) / 1000, cols: { uv } }], "uv");
+  assert.equal(m.stats.n, 1);
+  assert.equal(m.stats.min, 11);
+  assert.equal(m.partial, true);
+  // A day in progress (readings only up to 08:00) is left out too.
+  const today = new Array(8).fill(1);
+  assert.deepEqual(monthlyDailyMaxBoxes([{ month: "2026-09", start: Date.UTC(2026, 8, 1, 6) / 1000, cols: { uv: today } }], "uv"), []);
 });

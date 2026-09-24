@@ -717,3 +717,19 @@ Owner decisions worth remembering:
     `.row-aligned` lines up the cards' parts like the heatmap row (six tracks, so a card with a
     legend pairs with one without). Until the UV chart is released, wind speed is alone in its
     row and spans it (`.row-pair > .card:only-child`).
+  Days are now counted only if every daylight hour (06:00–18:00) has a reading: January 2026's
+  minimum of 0.1 came from two outage days with 7–8 night-only hours, and the day in progress was
+  counted too. The other low minimums (3.4–4.6) are complete overcast or rainy days and stay.
+  - *Year over year*: cumulative rain | cumulative water balance first (the owner's most important
+    pair), then temperature range | solar irradiation by year. Cumulative lightning is off the page
+    for now (its code is kept; `LIGHTNING` in `cumulative-view.js`).
+- **UV index by month released** (merged from `uv-by-month`, 24 Sep 2026) in the Month by month
+  row next to wind speed, with the sensor note below.
+- **Everything built on solar radiation is under investigation** (owner's call, 24 Sep 2026), until
+  the light-sensor anomaly above is explained: the UV index, solar radiation and irradiation, and
+  anything computed from them, i.e. ETo and so "Rain and ETo", "Monthly rain vs ETo" and the
+  cumulative water balance, plus the rain chart's solar layer. The UV-by-month and solar-by-year
+  charts carry an on-chart "Under review" note and fade/hatch the affected months/year, driven by
+  `SENSOR_HIGH_FROM` in `common.js`; the ETo-based charts have no note yet. Next steps: the owner
+  inspects the sensor (weekend of 26–27 Sep 2026), and we compare our solar/UV with two nearby
+  Weather Underground stations to see whether the difference steps up around 25 Aug.

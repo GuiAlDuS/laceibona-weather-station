@@ -17,6 +17,13 @@ export const el = (tag, className, text) => {
   return node;
 };
 
+// From about this date the station's light sensor reads bright midday values too high (solar and UV together,
+// about 1.4x from 10:00 to 13:00; lower readings are unaffected). Cause still being checked; see PROJECT.md.
+// Charts built on those readings flag the affected months or years.
+export const SENSOR_HIGH_FROM = "2026-08-25";
+// Appends a highlighted caveat line to a summary paragraph (after its textContent has been set).
+export const addCaveat = (node, text) => node.append(el("span", "caveat", text));
+
 export const num = (v, digits = 1) => (typeof v === "number" ? v.toFixed(digits) : "—");
 
 // A bordered stat box: a label, a value with an optional unit, and any number of muted sub-lines.

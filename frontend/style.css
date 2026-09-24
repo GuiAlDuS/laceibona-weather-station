@@ -149,6 +149,8 @@ p { margin: 0 0 12px; }
 .summary { font-size: 1rem; margin: 8px 0 12px; }
 .card > p.muted, .summary { max-width: 80ch; }
 .summary strong { font-weight: 600; }
+/* A data caveat inside a summary: the same amber rule as the stale-data banner, so "check this" always looks alike. */
+.summary .caveat { display: block; margin-top: 8px; padding: 6px 10px; border-left: 4px solid #fab219; background: var(--surface); font-size: 0.875rem; color: var(--text-secondary); }
 
 .chart-frame { position: relative; min-height: 420px; transition: opacity 0.2s; }
 .chart-frame.reloading, #cc-body.reloading, #fc-body.reloading { opacity: 0.5; }
@@ -156,7 +158,7 @@ p { margin: 0 0 12px; }
 /* Every Plotly chart needs an explicit height: with `responsive: true` and no height, a Plotly.react re-render
    (the 5-minute refresh) collapses the div to 0px while the absolutely positioned SVG stays 450px, so the
    x-axis labels spill onto the note below. 450px is the Plotly default these were already drawn at. */
-#th-chart, #wh-chart, #wd-chart, #bm-chart, #wk-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
+#th-chart, #wh-chart, #wd-chart, #bm-chart, #uv-chart, #wk-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
 #lg-chart { width: 100%; height: 420px; }
 /* The hourly forecast is a glance, not a study: shorter than the observation charts. */
 #fh-frame { min-height: 360px; }
@@ -208,7 +210,7 @@ td:first-child { font-family: var(--font-sans); }
   .card { padding-top: 4px; }
   .card + .card { margin-top: 24px; padding-top: 24px; }
   .chart-frame, #fh-frame, #td-frame, #rw-frame, #rf-frame, #ds-frame { min-height: 340px; }
-  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #wh-chart, #wd-chart, #ds-chart, #bm-chart, #by-chart, #wk-chart, #rf-chart, #fh-chart, #sy-chart, #lg-chart { height: 340px; }
+  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #wh-chart, #wd-chart, #ds-chart, #bm-chart, #uv-chart, #by-chart, #wk-chart, #rf-chart, #fh-chart, #sy-chart, #lg-chart { height: 340px; }
 }
 
 .cc-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 8px; }
@@ -287,7 +289,7 @@ td:first-child { font-family: var(--font-sans); }
   .row-aligned > .card { display: grid; grid-row: span 6; grid-template-rows: subgrid; align-content: start; }
   /* A pair row holding a single card (e.g. before its partner chart is released) uses the full width. */
   .row-pair > .card:only-child { grid-column: 1 / -1; }
-  #mo-chart, #bm-chart, #wk-chart, #uv-chart { height: 420px; }
+  #mo-chart, #bm-chart, #wk-chart, #uv-chart, #by-chart, #sy-chart { height: 420px; }
   .row-three #th-chart, .row-three #wh-chart, .row-three #wd-chart { height: 420px; }
   .row-three .chart-frame { min-height: 420px; }
   .row-forecast { grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr); }
