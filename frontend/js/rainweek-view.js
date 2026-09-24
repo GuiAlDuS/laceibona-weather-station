@@ -6,8 +6,8 @@ import { weekTotals } from "./rainweek.js";
 const label = (r) => `${dayLabel(r.date)}${r.inProgress ? t("<br>so far", "<br>hasta ahora") : ""}`;
 const hrs = (h) => `${h.toFixed(1)} h`;
 
-// Two panels sharing one day axis: rain and ETo bars (mm) above, rain duration (hours) below.
-// Different units get their own axis instead of a second y-axis on one plot.
+// One plot over the days: rain and ETo bars on the left axis (mm), rain duration as a line on the right axis (hours).
+// The legend names each series' axis.
 export function renderRainWeekChart(rows) {
   const font = chartFont();
   const muted = token("--text-muted");
@@ -37,9 +37,8 @@ export function renderRainWeekChart(rows) {
     marker: { size: 8, color: token("--series-3"), line: { color: surface, width: 2 } },
     hovertemplate: "%{y:.1f} h",
   };
-  const axis = (title, domain, extra = {}) => ({
+  const axis = (title, extra = {}) => ({
     title: { text: title, font: { color: muted, size: 12 }, standoff: 8 },
-    domain,
     rangemode: "tozero",
     gridcolor: token("--grid"),
     gridwidth: 1,
@@ -49,11 +48,12 @@ export function renderRainWeekChart(rows) {
     fixedrange: true,
     ...extra,
   });
+  const maxHours = Math.max(6, ...rows.map((r) => r.hours ?? 0));
   const layout = {
     font,
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
-    margin: { l: 56, r: 12, t: 24, b: 48 },
+    margin: { l: 56, r: 48, t: 24, b: 48 },
     showlegend: false,
     barmode: "group",
     bargap: 0.3,
@@ -61,9 +61,11 @@ export function renderRainWeekChart(rows) {
     hovermode: "x unified",
     hoverlabel: hoverLabel(),
     shapes: categoryDayTicks(rows.length),
-    xaxis: { type: "category", anchor: "y2", tickmode: "array", tickvals: x.filter(keepDayLabel), ticktext: x.filter(keepDayLabel), tickangle: 0, automargin: true, showgrid: false, showline: true, linecolor: token("--baseline"), showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: token("--baseline"), spikethickness: 1, spikedash: "solid", tickfont: { color: muted, size: 12 }, fixedrange: true },
-    yaxis: axis("mm", [0.4, 1], { tickformat: ",d" }),
-    yaxis2: axis(t("hours", "horas"), [0, 0.28], { dtick: 6, rangemode: "tozero" }),
+    xaxis: { type: "category", tickmode: "array", tickvals: x.filter(keepDayLabel), ticktext: x.filter(keepDayLabel), tickangle: 0, automargin: true, showgrid: false, showline: true, linecolor: token("--baseline"), showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: token("--baseline"), spikethickness: 1, spikedash: "solid", tickfont: { color: muted, size: 12 }, fixedrange: true },
+    yaxis: axis("mm", { tickformat: ",d" }),
+    // Hours on the right, without its own gridlines so only the mm grid is drawn; at least 6 h of range so a
+    // short shower stays low, and ticks on round hours rather than synced to the mm grid.
+    yaxis2: axis(t("hours", "horas"), { overlaying: "y", side: "right", showgrid: false, zeroline: false, range: [0, maxHours * 1.15], tickmode: "linear", tick0: 0, dtick: maxHours <= 10 ? 2 : maxHours <= 20 ? 4 : 6 }),
   };
   return Plotly.react($("rw-chart"), [rain, bar("ETo", "eto", token("--series-2")), duration], layout, { displayModeBar: false, responsive: true });
 }
@@ -72,9 +74,9 @@ export function renderRainWeekText(rows) {
   const legend = $("rw-legend");
   legend.replaceChildren();
   for (const [name, color, cls] of [
-    [t("Rain", "Lluvia"), token("--series-1"), "rect"],
-    [t("ETo (evapotranspiration)", "ETo (evapotranspiración)"), token("--series-2"), "rect"],
-    [t("Rain duration (hours, lower panel)", "Duración de la lluvia (horas, panel inferior)"), token("--series-3"), "line"],
+    [t("Rain (mm, left axis)", "Lluvia (mm, eje izquierdo)"), token("--series-1"), "rect"],
+    [t("ETo, evapotranspiration (mm, left axis)", "ETo, evapotranspiración (mm, eje izquierdo)"), token("--series-2"), "rect"],
+    [t("Rain duration (hours, right axis)", "Duración de la lluvia (horas, eje derecho)"), token("--series-3"), "line"],
   ]) {
     const li = document.createElement("li");
     const key = document.createElement("span");

@@ -695,3 +695,17 @@ Owner decisions worth remembering:
   rounded up to 2 km/h with a floor of 8, so in a calm week (peak 4.9 km/h) no dot got past green.
   The top is now exactly the fastest hour (always the yellowest dot), ticks every 1/2/5/10 km/h,
   and dots are drawn slowest first so the faster ones sit on top where they overlap.
+- **Dashboard layout, started (Sept 2026)**: the page widens to 1,480 px and puts related cards side
+  by side in `.row` grids from 1,300 px up (stacked below that, so phones are unchanged). Every
+  chart's note now sits behind a "How to read this chart" toggle, on one line with "Table view".
+  - *Now*: current conditions in one band; wind rose | lightning and rain (the rose leads, since
+    the lightning chart is mostly empty in the dry season); the 24-hour forecast (20% shorter)
+    moved up from its own section | the day forecast as a 5-day table stretched to the same
+    height. The "Forecast" menu link still jumps to that row.
+  - *This week*: temperature | rain and ETo side by side; rain intensity and wind direction stay
+    stacked full width over the same 7 local calendar days (`weekStart()`), with the same plot
+    margins, so each midnight lines up between the two. Rain intensity now covers those calendar
+    days rather than a rolling 168 h.
+  - Two-scale charts are kept on purpose (the owner prefers them to split panels), each with a
+    legend naming the axis of every series: lightning and rain (km left, mm/h right) and rain and
+    ETo, now one plot (mm left, rain duration hours right, ticks on round hours).

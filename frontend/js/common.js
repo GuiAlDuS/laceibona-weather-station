@@ -43,6 +43,17 @@ export const hoverLabel = () => ({
   font: { ...chartFont(), color: token("--text-primary") },
 });
 
+// The week timelines ("Rain intensity" and "Wind direction, day by day") share one window: the WEEK_DAYS local calendar
+// days ending today (UTC-6), so they are drawn over the same days and line up one above the other.
+export const WEEK_DAYS = 7;
+export function weekStart(nowMs = Date.now()) {
+  const today = new Date(nowMs - 6 * 3600_000).toISOString().slice(0, 10);
+  return new Date(Date.parse(today) - (WEEK_DAYS - 1) * 86400_000).toISOString().slice(0, 10);
+}
+// Plot-area margins both timelines use, so their days sit at the same pixels; the right one holds the pressure axis
+// on one and the speed colour bar on the other. Tighter on phones, where every pixel of plot counts.
+export const weekMargin = () => (narrowScreen.matches ? { l: 44, r: 64 } : { l: 56, r: 96 });
+
 // Shared day axis for the week charts, where day i spans x = i..i+1: a tick mark at every midnight (minor ticks) and
 // each day's name centred under its noon, between the two marks that bound it. Every other name on narrow screens.
 // `grid` also draws the midnights as vertical gridlines.

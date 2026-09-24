@@ -123,7 +123,27 @@ export function renderLightningChart(s, buckets) {
   return Plotly.react($("lg-chart"), [rain, trace], layout, { displayModeBar: false, responsive: true });
 }
 
+// Circles for the strikes, a bar swatch for the rain, each naming its axis.
+function renderLightningLegend() {
+  const items = [
+    ["dot", rgba(token("--hot"), 0.3), token("--hot"), t("Lightning: distance of the strikes (km, left axis)", "Rayos: distancia de las descargas (km, eje izquierdo)")],
+    ["rect", rgba(token("--series-1"), 0.6), null, t("Rain intensity (mm/h, right axis)", "Intensidad de la lluvia (mm/h, eje derecho)")],
+  ];
+  $("lg-legend").replaceChildren(
+    ...items.map(([shape, fill, outline, label]) => {
+      const li = document.createElement("li");
+      const key = document.createElement("span");
+      key.className = `key ${shape}`;
+      key.style.background = fill;
+      if (outline) key.style.border = `1px solid ${outline}`;
+      li.append(key, label);
+      return li;
+    }),
+  );
+}
+
 export function renderLightningText(s, buckets) {
+  renderLightningLegend();
   const wet = rainInWindow(s, buckets);
   const mm = wet.reduce((sum, b) => sum + b.rate / RATE_PER_BUCKET, 0);
   const peak = wet.reduce((m, b) => (m === null || b.rate > m.rate ? b : m), null);

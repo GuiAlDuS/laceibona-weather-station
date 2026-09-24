@@ -1,4 +1,4 @@
-import { $, el, num, tile, token, chartFont, hoverLabel } from "./common.js";
+import { $, el, num, token, chartFont, hoverLabel } from "./common.js";
 import { t, WEEKDAYS } from "./i18n.js";
 import { isRainLikely, isStormHour, contiguousRanges, localStamp } from "./forecast.js";
 
@@ -35,19 +35,25 @@ export function dayLabel(date, index) {
   return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()}`;
 }
 
+// One row per day: day, high, low, rain chance and conditions.
 export function renderForecast(days) {
-  const grid = $("fc-body");
-  grid.replaceChildren();
+  const table = el("table", "fc-table");
+  const head = table.createTHead().insertRow();
+  for (const h of [t("Day", "Día"), t("High", "Máx."), t("Low", "Mín."), t("Rain", "Lluvia"), t("Conditions", "Condiciones")]) {
+    const th = document.createElement("th");
+    th.textContent = h;
+    head.append(th);
+  }
+  const body = table.createTBody();
   days.forEach((d, i) => {
-    const precip = typeof d.precip_probability === "number" ? t(`${d.precip_probability}% rain`, `${d.precip_probability}% de lluvia`) : null;
-    const cond = conditionLabel(d.icon);
-    grid.append(
-      tile(dayLabel(d.date, i), typeof d.temp_high === "number" ? `${num(d.temp_high, 1)}°` : "—", null, [
-        typeof d.temp_low === "number" ? t(`Low ${num(d.temp_low, 1)}°`, `Mínima ${num(d.temp_low, 1)}°`) : null,
-        [cond, precip].filter(Boolean).join(" — ") || null,
-      ]),
-    );
+    const row = body.insertRow();
+    row.insertCell().textContent = dayLabel(d.date, i);
+    row.insertCell().textContent = typeof d.temp_high === "number" ? `${num(d.temp_high, 1)}°` : "—";
+    row.insertCell().textContent = typeof d.temp_low === "number" ? `${num(d.temp_low, 1)}°` : "—";
+    row.insertCell().textContent = typeof d.precip_probability === "number" ? `${d.precip_probability}%` : "—";
+    row.insertCell().textContent = conditionLabel(d.icon) ?? "";
   });
+  $("fc-body").replaceChildren(table);
 }
 
 export function renderForecastUnavailable(message) {

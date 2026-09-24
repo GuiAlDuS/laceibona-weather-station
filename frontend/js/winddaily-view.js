@@ -1,4 +1,4 @@
-import { $, token, chartFont, hoverLabel, dayAxisTicks } from "./common.js";
+import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin } from "./common.js";
 import { t, sectorLabel } from "./i18n.js";
 import { VIRIDIS } from "./heatmap-view.js";
 import { dayLabel } from "./tempdaily-view.js";
@@ -14,11 +14,12 @@ const ROW_ORDER = [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8];
 // viewer's timezone, which would shift these local-time labels by a day.
 const dayIndex = (iso, first) => Math.round((Date.parse(iso) - Date.parse(first)) / DAY_MS);
 
-export function renderWindDailyChart(hours) {
+// first: the week's first local date (see weekStart); the x axis always spans WEEK_DAYS days from it, the same
+// days and margins as the rain intensity chart above it.
+export function renderWindDailyChart(hours, first) {
   const font = chartFont();
   const muted = token("--text-muted");
-  const first = hours[0].date;
-  const span = dayIndex(hours.at(-1).date, first) + 1;
+  const span = WEEK_DAYS;
   // Top of the colour scale: exactly the fastest hour, so it is always the yellowest dot, whatever the week.
   // Ticks at round speeds below it: every 1, 2 or 5 km/h, whichever gives about five.
   const cmax = Math.max(CMIN + 1, ...hours.map((h) => h.ws));
@@ -49,7 +50,7 @@ export function renderWindDailyChart(hours) {
     font,
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
-    margin: { l: 56, r: 8, t: 12, b: 40 },
+    margin: { ...weekMargin(), t: 12, b: 40 },
     hovermode: "closest",
     hoverlabel: hoverLabel(),
     xaxis: {

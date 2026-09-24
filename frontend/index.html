@@ -45,96 +45,137 @@
         <div id="cc-body"><p class="muted">Loading…</p></div>
       </section>
 
-      <section class="card" aria-labelledby="wr-title">
-        <div class="card-head">
-          <h3 id="wr-title">Wind rose</h3>
-          <div id="wr-window" class="toggle-group" role="group" aria-label="Time window">
-            <button type="button" class="toggle-btn" data-hours="24" aria-pressed="true">24 h</button>
-            <button type="button" class="toggle-btn" data-hours="12" aria-pressed="false">12 h</button>
-            <button type="button" class="toggle-btn" data-hours="6" aria-pressed="false">6 h</button>
+      <div class="row row-live">
+        <section class="card" aria-labelledby="wr-title">
+          <div class="card-head">
+            <h3 id="wr-title">Wind rose</h3>
+            <div id="wr-window" class="toggle-group" role="group" aria-label="Time window">
+              <button type="button" class="toggle-btn" data-hours="24" aria-pressed="true">24 h</button>
+              <button type="button" class="toggle-btn" data-hours="12" aria-pressed="false">12 h</button>
+              <button type="button" class="toggle-btn" data-hours="6" aria-pressed="false">6 h</button>
+            </div>
           </div>
-        </div>
-        <p class="muted">How often the wind blew from each direction, and how fast.</p>
-        <p id="wr-summary" class="summary" aria-live="polite"></p>
+          <p class="muted">How often the wind blew from each direction, and how fast.</p>
+          <p id="wr-summary" class="summary" aria-live="polite"></p>
 
-        <div id="wr-frame" class="chart-frame">
-          <div id="wr-chart" class="wind-rose"></div>
-          <p id="wr-status" class="status">Loading…</p>
-        </div>
-        <ul id="wr-legend" class="legend" aria-label="Legend"></ul>
-        <p id="wr-note" class="muted small"></p>
+          <div id="wr-frame" class="chart-frame">
+            <div id="wr-chart" class="wind-rose"></div>
+            <p id="wr-status" class="status">Loading…</p>
+          </div>
+          <ul id="wr-legend" class="legend" aria-label="Legend"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="wr-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll"><table id="wr-table"></table></div>
+            </details>
+          </div>
+        </section>
+        <section class="card" aria-labelledby="lg-title">
+          <h3 id="lg-title">Lightning and rain, last 24 hours</h3>
+          <p class="muted">How far away the station detected lightning, minute by minute, and how hard it rained.</p>
+          <p id="lg-summary" class="summary" aria-live="polite"></p>
 
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll"><table id="wr-table"></table></div>
-        </details>
-      </section>
-      <section class="card" aria-labelledby="lg-title">
-        <h3 id="lg-title">Lightning and rain, last 24 hours</h3>
-        <p class="muted">How far away the station detected lightning, minute by minute, and how hard it rained.</p>
-        <p id="lg-summary" class="summary" aria-live="polite"></p>
+          <div id="lg-frame" class="chart-frame">
+            <div id="lg-chart" role="img" aria-label="Scatter chart of lightning strike distance over the last 24 hours, one dot per minute with strikes, sized by strike count, over bars of 10-minute rain intensity"></div>
+            <p id="lg-status" class="status">Loading…</p>
+          </div>
+          <ul id="lg-legend" class="legend" aria-label="Legend"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="lg-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll tall"><table id="lg-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
 
-        <div id="lg-frame" class="chart-frame">
-          <div id="lg-chart" role="img" aria-label="Scatter chart of lightning strike distance over the last 24 hours, one dot per minute with strikes, sized by strike count, over bars of 10-minute rain intensity"></div>
-          <p id="lg-status" class="status">Loading…</p>
-        </div>
-        <p id="lg-note" class="muted small"></p>
+      <div class="row row-forecast" id="forecast">
+        <section class="card" aria-labelledby="fh-title">
+          <h3 id="fh-title">Forecast, next 24 hours</h3>
+          <p class="muted">Rain probability by hour from now through this time tomorrow, with thunderstorm hours marked and temperature alongside.</p>
+          <p id="fh-summary" class="summary" aria-live="polite"></p>
 
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll tall"><table id="lg-table"></table></div>
-        </details>
-      </section>
-    </section>
+          <div id="fh-frame" class="chart-frame">
+            <div id="fh-chart" role="img" aria-label="Bar chart of hourly rain probability for the next 24 hours, coloured by thunderstorm risk, with temperature as a line"></div>
+            <p id="fh-status" class="status">Loading…</p>
+          </div>
+          <ul id="fh-legend" class="legend" aria-label="Legend"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="fh-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll"><table id="fh-table"></table></div>
+            </details>
+          </div>
+        </section>
 
-    <section class="group" id="forecast" aria-labelledby="forecast-heading">
-      <h2 id="forecast-heading" class="group-title">Forecast</h2>
-
-      <section class="card" aria-labelledby="fh-title">
-        <h3 id="fh-title">Next 24 hours</h3>
-        <p class="muted">Rain probability by hour from now through this time tomorrow, with thunderstorm hours marked and temperature alongside.</p>
-        <p id="fh-summary" class="summary" aria-live="polite"></p>
-
-        <div id="fh-frame" class="chart-frame">
-          <div id="fh-chart" role="img" aria-label="Bar chart of hourly rain probability for the next 24 hours, coloured by thunderstorm risk, with temperature as a line"></div>
-          <p id="fh-status" class="status">Loading…</p>
-        </div>
-        <ul id="fh-legend" class="legend" aria-label="Legend"></ul>
-        <p id="fh-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll"><table id="fh-table"></table></div>
-        </details>
-      </section>
-
-      <section class="card" aria-labelledby="fc-title">
-        <h3 id="fc-title">The next 5 days</h3>
-        <p class="muted">Tempest's forecast model, not a measurement — everything else on this page is observed.</p>
-        <div id="fc-body" class="cc-grid"><p class="muted">Loading…</p></div>
-      </section>
+        <section class="card" aria-labelledby="fc-title">
+          <h3 id="fc-title">Forecast, next 5 days</h3>
+          <p class="muted">Tempest's forecast model, not a measurement — everything else on this page is observed.</p>
+          <div id="fc-body"><p class="muted">Loading…</p></div>
+        </section>
+      </div>
     </section>
 
     <section class="group" id="week" aria-labelledby="week-heading">
       <h2 id="week-heading" class="group-title">This week</h2>
 
-      <section class="card" aria-labelledby="td-title">
-        <h3 id="td-title">Temperature, last 7 days</h3>
-        <p class="muted">Hour-by-hour temperature for the past week, one colour per day.</p>
-        <p id="td-summary" class="summary" aria-live="polite"></p>
+      <div class="row row-pair">
+        <section class="card" aria-labelledby="td-title">
+          <h3 id="td-title">Temperature, last 7 days</h3>
+          <p class="muted">Hour-by-hour temperature for the past week, one colour per day.</p>
+          <p id="td-summary" class="summary" aria-live="polite"></p>
 
-        <div id="td-frame" class="chart-frame">
-          <div id="td-chart" role="img" aria-label="Line chart of hourly temperature by hour of day, one line per day for the last 7 days"></div>
-          <p id="td-status" class="status">Loading…</p>
-        </div>
-        <ul id="td-legend" class="legend" aria-label="Legend"></ul>
-        <p id="td-note" class="muted small"></p>
+          <div id="td-frame" class="chart-frame">
+            <div id="td-chart" role="img" aria-label="Line chart of hourly temperature by hour of day, one line per day for the last 7 days"></div>
+            <p id="td-status" class="status">Loading…</p>
+          </div>
+          <ul id="td-legend" class="legend" aria-label="Legend"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="td-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll tall"><table id="td-table"></table></div>
+            </details>
+          </div>
+        </section>
 
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll tall"><table id="td-table"></table></div>
-        </details>
-      </section>
+        <section class="card" aria-labelledby="rw-title">
+          <h3 id="rw-title">Rain and ETo, last 7 days</h3>
+          <p class="muted">Each day's rain and evapotranspiration, and how many hours it rained.</p>
+          <p id="rw-summary" class="summary" aria-live="polite"></p>
+
+          <div id="rw-frame" class="chart-frame">
+            <div id="rw-chart" role="img" aria-label="Grouped bars of daily rain and ETo in millimetres, with the hours of rain per day as a line on a second axis, for the last 7 days"></div>
+            <p id="rw-status" class="status">Loading…</p>
+          </div>
+          <ul id="rw-legend" class="legend" aria-label="Legend"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="rw-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll"><table id="rw-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
 
       <section class="card" aria-labelledby="rf-title">
         <div class="card-head">
@@ -151,30 +192,16 @@
           <div id="rf-chart" role="img" aria-label="Bar chart of 10-minute rain intensity for the last 7 days, with station pressure as a line and optional solar radiation and air humidity overlays"></div>
           <p id="rf-status" class="status">Loading…</p>
         </div>
-        <p id="rf-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll"><table id="rf-table"></table></div>
-        </details>
-      </section>
-
-      <section class="card" aria-labelledby="rw-title">
-        <h3 id="rw-title">Rain and ETo, last 7 days</h3>
-        <p class="muted">Each day's rain and evapotranspiration (top), and how many hours it rained (bottom).</p>
-        <p id="rw-summary" class="summary" aria-live="polite"></p>
-
-        <div id="rw-frame" class="chart-frame">
-          <div id="rw-chart" role="img" aria-label="Grouped bars of daily rain and ETo in millimetres, with the hours of rain per day in a panel below, for the last 7 days"></div>
-          <p id="rw-status" class="status">Loading…</p>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="rf-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll"><table id="rf-table"></table></div>
+          </details>
         </div>
-        <ul id="rw-legend" class="legend" aria-label="Legend"></ul>
-        <p id="rw-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll"><table id="rw-table"></table></div>
-        </details>
       </section>
 
       <section class="card" aria-labelledby="ds-title">
@@ -186,12 +213,16 @@
           <div id="ds-chart" role="img" aria-label="Scatter plot of hourly wind direction by day for the last 7 days, coloured by wind speed"></div>
           <p id="ds-status" class="status">Loading…</p>
         </div>
-        <p id="ds-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll tall"><table id="ds-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="ds-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll tall"><table id="ds-table"></table></div>
+          </details>
+        </div>
       </section>
     </section>
 
@@ -207,12 +238,16 @@
           <div id="th-chart" role="img" aria-label="Heatmap of average temperature by month and hour of day"></div>
           <p id="th-status" class="status">Loading…</p>
         </div>
-        <p id="th-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll tall"><table id="th-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="th-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll tall"><table id="th-table"></table></div>
+          </details>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="wh-title">
@@ -224,12 +259,16 @@
           <div id="wh-chart" role="img" aria-label="Heatmap of average wind speed by month and hour of day"></div>
           <p id="wh-status" class="status">Loading…</p>
         </div>
-        <p id="wh-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll tall"><table id="wh-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="wh-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll tall"><table id="wh-table"></table></div>
+          </details>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="wd-title">
@@ -241,12 +280,16 @@
           <div id="wd-chart" role="img" aria-label="Heatmap of the share of hours the wind blew from each direction, by month"></div>
           <p id="wd-status" class="status">Loading…</p>
         </div>
-        <p id="wd-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll tall"><table id="wd-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="wd-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll tall"><table id="wd-table"></table></div>
+          </details>
+        </div>
       </section>
     </section>
 
@@ -263,12 +306,16 @@
           <p id="mo-status" class="status">Loading…</p>
         </div>
         <ul id="mo-legend" class="legend" aria-label="Legend"></ul>
-        <p id="mo-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll"><table id="mo-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="mo-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll"><table id="mo-table"></table></div>
+          </details>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="bm-title">
@@ -280,12 +327,16 @@
           <div id="bm-chart" role="img" aria-label="Box plot of hourly temperature for each month"></div>
           <p id="bm-status" class="status">Loading…</p>
         </div>
-        <p id="bm-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll tall"><table id="bm-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="bm-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll tall"><table id="bm-table"></table></div>
+          </details>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="wk-title">
@@ -297,12 +348,16 @@
           <div id="wk-chart" role="img" aria-label="Box plot of hourly wind speed for each month"></div>
           <p id="wk-status" class="status">Loading…</p>
         </div>
-        <p id="wk-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll tall"><table id="wk-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="wk-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll tall"><table id="wk-table"></table></div>
+          </details>
+        </div>
       </section>
     </section>
 
@@ -318,12 +373,16 @@
           <div id="by-chart" role="img" aria-label="Box plot of hourly temperature for each year"></div>
           <p id="by-status" class="status">Loading…</p>
         </div>
-        <p id="by-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll tall"><table id="by-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="by-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll tall"><table id="by-table"></table></div>
+          </details>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="rn-title">
@@ -336,12 +395,16 @@
           <p id="rn-status" class="status">Loading…</p>
         </div>
         <ul id="rn-legend" class="legend" aria-label="Legend"></ul>
-        <p id="rn-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll"><table id="rn-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="rn-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll"><table id="rn-table"></table></div>
+          </details>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="lt-title">
@@ -354,12 +417,16 @@
           <p id="lt-status" class="status">Loading…</p>
         </div>
         <ul id="lt-legend" class="legend" aria-label="Legend"></ul>
-        <p id="lt-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll"><table id="lt-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="lt-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll"><table id="lt-table"></table></div>
+          </details>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="wb-title">
@@ -372,12 +439,16 @@
           <p id="wb-status" class="status">Loading…</p>
         </div>
         <ul id="wb-legend" class="legend" aria-label="Legend"></ul>
-        <p id="wb-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll"><table id="wb-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="wb-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll"><table id="wb-table"></table></div>
+          </details>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="sy-title">
@@ -389,12 +460,16 @@
           <div id="sy-chart" role="img" aria-label="Bar chart of total solar irradiation in kWh per square metre for each year"></div>
           <p id="sy-status" class="status">Loading…</p>
         </div>
-        <p id="sy-note" class="muted small"></p>
-
-        <details class="table-view">
-          <summary>Table view</summary>
-          <div class="table-scroll"><table id="sy-table"></table></div>
-        </details>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>How to read this chart</summary>
+            <p id="sy-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Table view</summary>
+            <div class="table-scroll"><table id="sy-table"></table></div>
+          </details>
+        </div>
       </section>
     </section>
 

@@ -1,4 +1,4 @@
-import { $, token, chartFont, hoverLabel, dayAxisTicks } from "./common.js";
+import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin } from "./common.js";
 import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { fineDaySummaries, finePeak } from "./rainfine.js";
@@ -14,11 +14,11 @@ const rgba = (hex, a) => `rgba(${[1, 3, 5].map((k) => parseInt(hex.slice(k, k + 
 let showSolar = false;
 let showRh = false;
 
-export function renderRainFineChart(buckets) {
+// first: the week's first local date (see weekStart); the x axis always spans WEEK_DAYS days from it.
+export function renderRainFineChart(buckets, first) {
   const font = chartFont();
   const muted = token("--text-muted");
-  const first = buckets[0].date;
-  const span = dayIndex(buckets.at(-1).date, first) + 1;
+  const span = WEEK_DAYS;
   const x = buckets.map((b) => dayIndex(b.date, first) + (b.hour * 60 + b.minute) / 1440);
 
   const rain = {
@@ -86,7 +86,7 @@ export function renderRainFineChart(buckets) {
     font,
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
-    margin: { l: 48, r: 48, t: 24, b: 40 },
+    margin: { ...weekMargin(), t: 24, b: 40 },
     showlegend: false,
     barmode: "overlay",
     shapes: nightShapes,

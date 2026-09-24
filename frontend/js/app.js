@@ -1,6 +1,6 @@
 import { API_BASE } from "./config.js";
 import { initNav } from "./nav.js";
-import { $, narrowScreen, setStatus, longDate } from "./common.js";
+import { $, narrowScreen, setStatus, longDate, weekStart, WEEK_DAYS } from "./common.js";
 import { t, TIME_LOCALE } from "./i18n.js";
 import { cumulativeByYear } from "./balance.js";
 import { monthlyTotals } from "./monthly.js";
@@ -89,7 +89,7 @@ async function loadForecast() {
     } else {
       forecast = forecastDays(doc);
       if (forecast.length === 0) throw NO_USABLE_DATA();
-      renderForecast(forecast.slice(1)); // today is covered by the 24-hour chart, not these tiles
+      renderForecast(forecast.slice(1, 6)); // the 5 days after today; today is covered by the 24-hour chart
 
       forecastHourly = forecastHours(doc);
       if (forecastHourly.length === 0) throw NO_USABLE_DATA();
@@ -253,10 +253,13 @@ async function loadRainFine() {
   }
 }
 
+// The chart and its summary cover the shared week window (weekStart), not the document's rolling 168 hours.
 function drawRainFine() {
   if (!fineBucketsData) return;
-  renderRainFineText(fineBucketsData);
-  renderRainFineChart(fineBucketsData);
+  const first = weekStart();
+  const week = fineBucketsData.filter((b) => b.date >= first);
+  renderRainFineText(week);
+  renderRainFineChart(week, first);
 }
 
 // Charts built from the monthly `obs:` documents. Each is [id prefix, draw(docs)]; one failure does not stop the others.
@@ -295,11 +298,13 @@ const OBS_CHARTS = [
     return renderWindDirChart(obsState.wd);
   }],
   ["ds", (docs) => {
-    obsState.ds = recentHours(docs, 7);
+    // A day more than the window, then cut to it, so a feed that is a day behind still fills the same week.
+    const first = weekStart();
+    obsState.ds = recentHours(docs, WEEK_DAYS + 1).filter((h) => h.date >= first);
     if (obsState.ds.length === 0) throw NO_USABLE_DATA();
   }, () => {
     renderWindDailyText(obsState.ds);
-    return renderWindDailyChart(obsState.ds);
+    return renderWindDailyChart(obsState.ds, weekStart());
   }],
   ["bm", (docs) => {
     obsState.bm = monthlyBoxes(last13(docs));
