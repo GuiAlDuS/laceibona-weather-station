@@ -282,6 +282,12 @@ td:first-child { font-family: var(--font-sans); }
      (subgrid), so the charts start at the same height even when one summary wraps to more lines. */
   .row-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .row-three > .card { display: grid; grid-row: span 5; grid-template-rows: subgrid; align-content: start; }
+  /* Cards whose first parts match (title, subtitle, summary, chart) share row tracks the same way, so paired
+     charts start level; up to six parts, so a card with a legend and one without still line up. */
+  .row-aligned > .card { display: grid; grid-row: span 6; grid-template-rows: subgrid; align-content: start; }
+  /* A pair row holding a single card (e.g. before its partner chart is released) uses the full width. */
+  .row-pair > .card:only-child { grid-column: 1 / -1; }
+  #mo-chart, #bm-chart, #wk-chart, #uv-chart { height: 420px; }
   .row-three #th-chart, .row-three #wh-chart, .row-three #wd-chart { height: 420px; }
   .row-three .chart-frame { min-height: 420px; }
   .row-forecast { grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr); }

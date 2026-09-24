@@ -298,69 +298,73 @@
     <section class="group" id="monthly" aria-labelledby="monthly-heading">
       <h2 id="monthly-heading" class="group-title">Month by month</h2>
 
-      <section class="card" aria-labelledby="mo-title">
-        <h3 id="mo-title">Monthly rain vs ETo</h3>
-        <p class="muted">Rain against the water the atmosphere could evaporate, month by month, for the last 13 months.</p>
-        <p id="mo-summary" class="summary" aria-live="polite"></p>
+      <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="mo-title">
+          <h3 id="mo-title">Monthly rain vs ETo</h3>
+          <p class="muted">Rain against the water the atmosphere could evaporate, month by month, for the last 13 months.</p>
+          <p id="mo-summary" class="summary" aria-live="polite"></p>
 
-        <div id="mo-frame" class="chart-frame">
-          <div id="mo-chart" role="img" aria-label="Grouped bar chart of monthly rain and ETo in millimetres for the last 13 months"></div>
-          <p id="mo-status" class="status">Loading…</p>
-        </div>
-        <ul id="mo-legend" class="legend" aria-label="Legend"></ul>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>How to read this chart</summary>
-            <p id="mo-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Table view</summary>
-            <div class="table-scroll"><table id="mo-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="mo-frame" class="chart-frame">
+            <div id="mo-chart" role="img" aria-label="Grouped bar chart of monthly rain and ETo in millimetres for the last 13 months"></div>
+            <p id="mo-status" class="status">Loading…</p>
+          </div>
+          <ul id="mo-legend" class="legend" aria-label="Legend"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="mo-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll"><table id="mo-table"></table></div>
+            </details>
+          </div>
+        </section>
 
-      <section class="card" aria-labelledby="bm-title">
-        <h3 id="bm-title">Temperature range by month</h3>
-        <p class="muted">How hot and cold each month gets, based on every hour of the month.</p>
-        <p id="bm-summary" class="summary" aria-live="polite"></p>
+        <section class="card" aria-labelledby="bm-title">
+          <h3 id="bm-title">Temperature range by month</h3>
+          <p class="muted">How hot and cold each month gets, based on every hour of the month.</p>
+          <p id="bm-summary" class="summary" aria-live="polite"></p>
 
-        <div id="bm-frame" class="chart-frame">
-          <div id="bm-chart" role="img" aria-label="Box plot of hourly temperature for each month"></div>
-          <p id="bm-status" class="status">Loading…</p>
-        </div>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>How to read this chart</summary>
-            <p id="bm-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Table view</summary>
-            <div class="table-scroll tall"><table id="bm-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="bm-frame" class="chart-frame">
+            <div id="bm-chart" role="img" aria-label="Box plot of hourly temperature for each month"></div>
+            <p id="bm-status" class="status">Loading…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="bm-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll tall"><table id="bm-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
 
-      <section class="card" aria-labelledby="wk-title">
-        <h3 id="wk-title">Wind speed range by month</h3>
-        <p class="muted">How windy each month gets, based on every hour of the month.</p>
-        <p id="wk-summary" class="summary" aria-live="polite"></p>
+      <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="wk-title">
+          <h3 id="wk-title">Wind speed range by month</h3>
+          <p class="muted">How windy each month gets, based on every hour of the month.</p>
+          <p id="wk-summary" class="summary" aria-live="polite"></p>
 
-        <div id="wk-frame" class="chart-frame">
-          <div id="wk-chart" role="img" aria-label="Box plot of hourly wind speed for each month"></div>
-          <p id="wk-status" class="status">Loading…</p>
-        </div>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>How to read this chart</summary>
-            <p id="wk-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Table view</summary>
-            <div class="table-scroll tall"><table id="wk-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="wk-frame" class="chart-frame">
+            <div id="wk-chart" role="img" aria-label="Box plot of hourly wind speed for each month"></div>
+            <p id="wk-status" class="status">Loading…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="wk-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll tall"><table id="wk-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
     </section>
 
     <section class="group" id="yearly" aria-labelledby="yearly-heading">

@@ -713,3 +713,7 @@ Owner decisions worth remembering:
     subgrid so titles, summaries, charts and toggles line up across the row whatever the text
     length. Narrow month axes (three across, or a phone) label every other month
     (`monthTicks()`), always keeping the latest; charts redraw when the window crosses 1,300 px.
+  - *Month by month*: monthly rain vs ETo | temperature range, then (UV index |) wind speed range.
+    `.row-aligned` lines up the cards' parts like the heatmap row (six tracks, so a card with a
+    legend pairs with one without). Until the UV chart is released, wind speed is alone in its
+    row and spans it (`.row-pair > .card:only-child`).

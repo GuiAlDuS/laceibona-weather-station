@@ -298,69 +298,73 @@
     <section class="group" id="monthly" aria-labelledby="monthly-heading">
       <h2 id="monthly-heading" class="group-title">Mes a mes</h2>
 
-      <section class="card" aria-labelledby="mo-title">
-        <h3 id="mo-title">Lluvia vs ETo mensual</h3>
-        <p class="muted">La lluvia frente al agua que la atmósfera podría evaporar, mes a mes, durante los últimos 13 meses.</p>
-        <p id="mo-summary" class="summary" aria-live="polite"></p>
+      <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="mo-title">
+          <h3 id="mo-title">Lluvia vs ETo mensual</h3>
+          <p class="muted">La lluvia frente al agua que la atmósfera podría evaporar, mes a mes, durante los últimos 13 meses.</p>
+          <p id="mo-summary" class="summary" aria-live="polite"></p>
 
-        <div id="mo-frame" class="chart-frame">
-          <div id="mo-chart" role="img" aria-label="Gráfico de barras agrupadas de lluvia y ETo mensuales en milímetros durante los últimos 13 meses"></div>
-          <p id="mo-status" class="status">Cargando…</p>
-        </div>
-        <ul id="mo-legend" class="legend" aria-label="Leyenda"></ul>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>Cómo leer este gráfico</summary>
-            <p id="mo-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Ver tabla</summary>
-            <div class="table-scroll"><table id="mo-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="mo-frame" class="chart-frame">
+            <div id="mo-chart" role="img" aria-label="Gráfico de barras agrupadas de lluvia y ETo mensuales en milímetros durante los últimos 13 meses"></div>
+            <p id="mo-status" class="status">Cargando…</p>
+          </div>
+          <ul id="mo-legend" class="legend" aria-label="Leyenda"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>Cómo leer este gráfico</summary>
+              <p id="mo-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Ver tabla</summary>
+              <div class="table-scroll"><table id="mo-table"></table></div>
+            </details>
+          </div>
+        </section>
 
-      <section class="card" aria-labelledby="bm-title">
-        <h3 id="bm-title">Rango de temperatura por mes</h3>
-        <p class="muted">Qué tan caliente y frío se pone cada mes, según cada hora del mes.</p>
-        <p id="bm-summary" class="summary" aria-live="polite"></p>
+        <section class="card" aria-labelledby="bm-title">
+          <h3 id="bm-title">Rango de temperatura por mes</h3>
+          <p class="muted">Qué tan caliente y frío se pone cada mes, según cada hora del mes.</p>
+          <p id="bm-summary" class="summary" aria-live="polite"></p>
 
-        <div id="bm-frame" class="chart-frame">
-          <div id="bm-chart" role="img" aria-label="Diagrama de caja de la temperatura horaria de cada mes"></div>
-          <p id="bm-status" class="status">Cargando…</p>
-        </div>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>Cómo leer este gráfico</summary>
-            <p id="bm-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Ver tabla</summary>
-            <div class="table-scroll tall"><table id="bm-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="bm-frame" class="chart-frame">
+            <div id="bm-chart" role="img" aria-label="Diagrama de caja de la temperatura horaria de cada mes"></div>
+            <p id="bm-status" class="status">Cargando…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>Cómo leer este gráfico</summary>
+              <p id="bm-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Ver tabla</summary>
+              <div class="table-scroll tall"><table id="bm-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
 
-      <section class="card" aria-labelledby="wk-title">
-        <h3 id="wk-title">Rango de velocidad del viento por mes</h3>
-        <p class="muted">Qué tan ventoso se pone cada mes, según cada hora del mes.</p>
-        <p id="wk-summary" class="summary" aria-live="polite"></p>
+      <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="wk-title">
+          <h3 id="wk-title">Rango de velocidad del viento por mes</h3>
+          <p class="muted">Qué tan ventoso se pone cada mes, según cada hora del mes.</p>
+          <p id="wk-summary" class="summary" aria-live="polite"></p>
 
-        <div id="wk-frame" class="chart-frame">
-          <div id="wk-chart" role="img" aria-label="Diagrama de caja de la velocidad del viento horaria de cada mes"></div>
-          <p id="wk-status" class="status">Cargando…</p>
-        </div>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>Cómo leer este gráfico</summary>
-            <p id="wk-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Ver tabla</summary>
-            <div class="table-scroll tall"><table id="wk-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="wk-frame" class="chart-frame">
+            <div id="wk-chart" role="img" aria-label="Diagrama de caja de la velocidad del viento horaria de cada mes"></div>
+            <p id="wk-status" class="status">Cargando…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>Cómo leer este gráfico</summary>
+              <p id="wk-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Ver tabla</summary>
+              <div class="table-scroll tall"><table id="wk-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
     </section>
 
     <section class="group" id="yearly" aria-labelledby="yearly-heading">
