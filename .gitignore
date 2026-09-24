@@ -5,3 +5,6 @@ node_modules/
 *.log
 .DS_Store
 .backfill/
+
+# Weather Underground downloads for data_review (other stations' data; re-fetch with data_review/wu-history.mjs)
+data_review/data/

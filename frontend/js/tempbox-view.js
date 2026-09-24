@@ -139,8 +139,8 @@ export function renderTempBoxMonthlyText(boxes, cfg = TEMP) {
     addCaveat(
       summary,
       t(
-        `Under review: since about 25 Aug 2026 the light sensor has read bright midday values too high (roughly 1.4×), so ${names} (faded) are overstated and left out of the line above. We're checking the sensor; earlier months are not affected.`,
-        `En revisión: desde alrededor del 25 ago 2026 el sensor de luz lee demasiado alto los valores de mediodía con mucho sol (cerca de 1,4×), así que ${names} (atenuados) están sobreestimados y no se usan en la línea de arriba. Estamos revisando el sensor; los meses anteriores no están afectados.`,
+        `Under review: since about 25 Aug 2026 the light sensor has read about 1.35× too high at all light levels (checked against two nearby stations), so ${names} (faded) are overstated and left out of the line above. We're checking the sensor; earlier months are not affected.`,
+        `En revisión: desde alrededor del 25 ago 2026 el sensor de luz lee cerca de 1,35× demasiado alto con cualquier nivel de luz (comparado con dos estaciones cercanas), así que ${names} (atenuados) están sobreestimados y no se usan en la línea de arriba. Estamos revisando el sensor; los meses anteriores no están afectados.`,
       ),
     );
   }

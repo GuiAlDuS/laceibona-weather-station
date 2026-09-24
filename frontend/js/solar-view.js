@@ -43,8 +43,8 @@ export function renderSolarYearText(years) {
     addCaveat(
       summary,
       t(
-        `Under review: since about 25 Aug 2026 the light sensor has read bright midday values too high (roughly 1.4×), so the ${high.join(", ")} total (hatched) is somewhat overstated. We're checking the sensor; readings before that date are not affected.`,
-        `En revisión: desde alrededor del 25 ago 2026 el sensor de luz lee demasiado alto los valores de mediodía con mucho sol (cerca de 1,4×), así que el total de ${high.join(", ")} (rayado) está algo sobreestimado. Estamos revisando el sensor; las lecturas anteriores a esa fecha no están afectadas.`,
+        `Under review: since about 25 Aug 2026 the light sensor has read about 1.35× too high at all light levels (checked against two nearby stations), so the ${high.join(", ")} total (hatched) is somewhat overstated. We're checking the sensor; readings before that date are not affected.`,
+        `En revisión: desde alrededor del 25 ago 2026 el sensor de luz lee cerca de 1,35× demasiado alto con cualquier nivel de luz (comparado con dos estaciones cercanas), así que el total de ${high.join(", ")} (rayado) está algo sobreestimado. Estamos revisando el sensor; las lecturas anteriores a esa fecha no están afectadas.`,
       ),
     );
   }

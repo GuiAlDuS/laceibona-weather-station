@@ -733,3 +733,13 @@ Owner decisions worth remembering:
   `SENSOR_HIGH_FROM` in `common.js`; the ETo-based charts have no note yet. Next steps: the owner
   inspects the sensor (weekend of 26–27 Sep 2026), and we compare our solar/UV with two nearby
   Weather Underground stations to see whether the difference steps up around 25 Aug.
+- **Neighbour comparison done (24 Sep 2026, `data_review/`)**: against IESPAR72 (Tempest, Esparza)
+  and IPUNTA186 (Davis VP2 Plus, seaside), our solar and UV read about **1.35× higher from ~25 Aug
+  2026** (possibly intermittent from ~16 Aug); neither neighbour changed, and 2025 shows no jump at
+  the same date, so it is our sensor, not season or sky. This **corrects the note above**: the
+  excess is not limited to bright midday readings, it is roughly the same ×1.3–1.4 at every
+  brightness from 300 W/m² up and at most hours, i.e. it looks like a gain/calibration change.
+  Details and tables: `data_review/results/findings.md`.
+- The dashboard's "Under review" notes now say the sensor reads about 1.35× high at all light
+  levels (checked against two nearby stations), replacing the earlier "bright midday values
+  ~1.4×". The comparison, its scripts and a report page live in `data_review/`.

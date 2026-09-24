@@ -17,8 +17,8 @@ export const el = (tag, className, text) => {
   return node;
 };
 
-// From about this date the station's light sensor reads bright midday values too high (solar and UV together,
-// about 1.4x from 10:00 to 13:00; lower readings are unaffected). Cause still being checked; see PROJECT.md.
+// From about this date the station's light sensor reads about 1.35x too high (solar and UV together, at every light
+// level; confirmed against two nearby stations in data_review/). Cause still being checked; see PROJECT.md.
 // Charts built on those readings flag the affected months or years.
 export const SENSOR_HIGH_FROM = "2026-08-25";
 // Appends a highlighted caveat line to a summary paragraph (after its textContent has been set).
