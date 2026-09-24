@@ -278,6 +278,12 @@ td:first-child { font-family: var(--font-sans); }
   .row { display: grid; gap: 0 32px; }
   .row-live { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
   .row-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  /* Three cards of the same shape: each card's title, subtitle, summary, chart and toggles share row tracks
+     (subgrid), so the charts start at the same height even when one summary wraps to more lines. */
+  .row-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .row-three > .card { display: grid; grid-row: span 5; grid-template-rows: subgrid; align-content: start; }
+  .row-three #th-chart, .row-three #wh-chart, .row-three #wd-chart { height: 420px; }
+  .row-three .chart-frame { min-height: 420px; }
   .row-forecast { grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr); }
   /* The day table stretches to the hourly chart's height beside it, its rows sharing the extra space. */
   .row-forecast > .card:last-child { display: flex; flex-direction: column; }

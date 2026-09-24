@@ -1,4 +1,4 @@
-import { $, token, MONTHS, chartFont, hoverLabel } from "./common.js";
+import { $, token, MONTHS, chartFont, hoverLabel, monthTicks } from "./common.js";
 import { t } from "./i18n.js";
 import { extremes } from "./heatmap.js";
 
@@ -40,7 +40,7 @@ export function renderMonthHourChart(cfg, hm) {
     plot_bgcolor: "rgba(0,0,0,0)",
     margin: { l: 56, r: 8, t: 12, b: 48 },
     hoverlabel: hoverLabel(),
-    xaxis: { type: "category", tickangle: 0, automargin: true, showgrid: false, ticks: "", tickfont: { color: muted, size: 12 }, fixedrange: true },
+    xaxis: { type: "category", tickmode: "array", tickvals: monthTicks(x), tickangle: 0, automargin: true, showgrid: false, ticks: "", tickfont: { color: muted, size: 12 }, fixedrange: true },
     yaxis: {
       tickmode: "array",
       tickvals: [0, 3, 6, 9, 12, 15, 18, 21],

@@ -709,3 +709,7 @@ Owner decisions worth remembering:
   - Two-scale charts are kept on purpose (the owner prefers them to split panels), each with a
     legend naming the axis of every series: lightning and rain (km left, mm/h right) and rain and
     ETo, now one plot (mm left, rain duration hours right, ticks on round hours).
+  - *A typical day*: the three 13-month heatmaps in one row (`.row-three`). The cards use CSS
+    subgrid so titles, summaries, charts and toggles line up across the row whatever the text
+    length. Narrow month axes (three across, or a phone) label every other month
+    (`monthTicks()`), always keeping the latest; charts redraw when the window crosses 1,300 px.

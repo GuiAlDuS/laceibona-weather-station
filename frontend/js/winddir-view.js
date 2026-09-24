@@ -1,4 +1,4 @@
-import { $, token, chartFont, hoverLabel } from "./common.js";
+import { $, token, chartFont, hoverLabel, monthTicks } from "./common.js";
 import { t, sectorLabel } from "./i18n.js";
 import { colorscale, monthName, longMonth, tick } from "./heatmap-view.js";
 import { SECTORS } from "./windrose.js";
@@ -11,9 +11,10 @@ export function renderWindDirChart(hm) {
   const font = chartFont();
   const muted = token("--text-muted");
   const names = ROW_SECTORS.map(sectorLabel);
+  const x = hm.months.map(tick);
   const trace = {
     type: "heatmap",
-    x: hm.months.map(tick),
+    x,
     y: names.map((_, i) => i),
     z: hm.z,
     customdata: hm.z.map((_, r) => hm.months.map((m) => t(`${longMonth(m)}, from ${names[r]}`, `${longMonth(m)}, desde ${names[r]}`))),
@@ -30,7 +31,7 @@ export function renderWindDirChart(hm) {
     plot_bgcolor: "rgba(0,0,0,0)",
     margin: { l: 56, r: 8, t: 12, b: 48 },
     hoverlabel: hoverLabel(),
-    xaxis: { type: "category", tickangle: 0, automargin: true, showgrid: false, ticks: "", tickfont: { color: muted, size: 12 }, fixedrange: true },
+    xaxis: { type: "category", tickmode: "array", tickvals: monthTicks(x), tickangle: 0, automargin: true, showgrid: false, ticks: "", tickfont: { color: muted, size: 12 }, fixedrange: true },
     yaxis: {
       tickmode: "array",
       tickvals: names.map((_, i) => i).filter((i) => i % 2 === 0),

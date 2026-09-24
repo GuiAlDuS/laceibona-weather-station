@@ -3,6 +3,12 @@ import { t, nf, MONTHS } from "./i18n.js";
 export const $ = (id) => document.getElementById(id);
 export const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 export const narrowScreen = window.matchMedia("(max-width: 600px)");
+// From this width related cards sit side by side (style.css `.row`), so their charts are narrower than the page.
+export const wideLayout = window.matchMedia("(min-width: 1300px)");
+// Month-axis ticks for the 13-month charts: every month where there is room, every other month in a narrow chart
+// (a phone, or one of three side by side), so the labels don't run together. Index 0 is kept, and so is the
+// latest month (13 months, so every other one lands on it).
+export const monthTicks = (labels) => (narrowScreen.matches || wideLayout.matches ? labels.filter((_, i) => (labels.length - 1 - i) % 2 === 0) : labels);
 
 export const el = (tag, className, text) => {
   const node = document.createElement(tag);

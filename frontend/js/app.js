@@ -1,6 +1,6 @@
 import { API_BASE } from "./config.js";
 import { initNav } from "./nav.js";
-import { $, narrowScreen, setStatus, longDate, weekStart, WEEK_DAYS } from "./common.js";
+import { $, narrowScreen, wideLayout, setStatus, longDate, weekStart, WEEK_DAYS } from "./common.js";
 import { t, TIME_LOCALE } from "./i18n.js";
 import { cumulativeByYear } from "./balance.js";
 import { monthlyTotals } from "./monthly.js";
@@ -392,6 +392,7 @@ function redraw() {
 }
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
 narrowScreen.addEventListener("change", redraw);
+wideLayout.addEventListener("change", redraw);
 
 initNav();
 initRainFineToggle();

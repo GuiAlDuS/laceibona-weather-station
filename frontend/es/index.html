@@ -229,68 +229,70 @@
     <section class="group" id="typical-day" aria-labelledby="typical-day-heading">
       <h2 id="typical-day-heading" class="group-title">Un día típico</h2>
 
-      <section class="card" aria-labelledby="th-title">
-        <h3 id="th-title">Temperatura por mes y hora</h3>
-        <p class="muted">Temperatura media para cada hora del día, mes a mes, durante los últimos 13 meses.</p>
-        <p id="th-summary" class="summary" aria-live="polite"></p>
+      <div class="row row-three">
+        <section class="card" aria-labelledby="th-title">
+          <h3 id="th-title">Temperatura por mes y hora</h3>
+          <p class="muted">Temperatura media para cada hora del día, mes a mes, durante los últimos 13 meses.</p>
+          <p id="th-summary" class="summary" aria-live="polite"></p>
 
-        <div id="th-frame" class="chart-frame">
-          <div id="th-chart" role="img" aria-label="Mapa de calor de la temperatura media por mes y hora del día"></div>
-          <p id="th-status" class="status">Cargando…</p>
-        </div>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>Cómo leer este gráfico</summary>
-            <p id="th-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Ver tabla</summary>
-            <div class="table-scroll tall"><table id="th-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="th-frame" class="chart-frame">
+            <div id="th-chart" role="img" aria-label="Mapa de calor de la temperatura media por mes y hora del día"></div>
+            <p id="th-status" class="status">Cargando…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>Cómo leer este gráfico</summary>
+              <p id="th-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Ver tabla</summary>
+              <div class="table-scroll tall"><table id="th-table"></table></div>
+            </details>
+          </div>
+        </section>
 
-      <section class="card" aria-labelledby="wh-title">
-        <h3 id="wh-title">Velocidad del viento por mes y hora</h3>
-        <p class="muted">Velocidad media del viento para cada hora del día, mes a mes, durante los últimos 13 meses.</p>
-        <p id="wh-summary" class="summary" aria-live="polite"></p>
+        <section class="card" aria-labelledby="wh-title">
+          <h3 id="wh-title">Velocidad del viento por mes y hora</h3>
+          <p class="muted">Velocidad media del viento para cada hora del día, mes a mes, durante los últimos 13 meses.</p>
+          <p id="wh-summary" class="summary" aria-live="polite"></p>
 
-        <div id="wh-frame" class="chart-frame">
-          <div id="wh-chart" role="img" aria-label="Mapa de calor de la velocidad media del viento por mes y hora del día"></div>
-          <p id="wh-status" class="status">Cargando…</p>
-        </div>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>Cómo leer este gráfico</summary>
-            <p id="wh-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Ver tabla</summary>
-            <div class="table-scroll tall"><table id="wh-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="wh-frame" class="chart-frame">
+            <div id="wh-chart" role="img" aria-label="Mapa de calor de la velocidad media del viento por mes y hora del día"></div>
+            <p id="wh-status" class="status">Cargando…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>Cómo leer este gráfico</summary>
+              <p id="wh-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Ver tabla</summary>
+              <div class="table-scroll tall"><table id="wh-table"></table></div>
+            </details>
+          </div>
+        </section>
 
-      <section class="card" aria-labelledby="wd-title">
-        <h3 id="wd-title">Dirección del viento por mes</h3>
-        <p class="muted">Con qué frecuencia sopla el viento desde cada dirección, mes a mes, durante los últimos 13 meses.</p>
-        <p id="wd-summary" class="summary" aria-live="polite"></p>
+        <section class="card" aria-labelledby="wd-title">
+          <h3 id="wd-title">Dirección del viento por mes</h3>
+          <p class="muted">Con qué frecuencia sopla el viento desde cada dirección, mes a mes, durante los últimos 13 meses.</p>
+          <p id="wd-summary" class="summary" aria-live="polite"></p>
 
-        <div id="wd-frame" class="chart-frame">
-          <div id="wd-chart" role="img" aria-label="Mapa de calor de la proporción de horas en que el viento sopló desde cada dirección, por mes"></div>
-          <p id="wd-status" class="status">Cargando…</p>
-        </div>
-        <div class="card-foot">
-          <details class="note-view">
-            <summary>Cómo leer este gráfico</summary>
-            <p id="wd-note" class="muted small"></p>
-          </details>
-          <details class="table-view">
-            <summary>Ver tabla</summary>
-            <div class="table-scroll tall"><table id="wd-table"></table></div>
-          </details>
-        </div>
-      </section>
+          <div id="wd-frame" class="chart-frame">
+            <div id="wd-chart" role="img" aria-label="Mapa de calor de la proporción de horas en que el viento sopló desde cada dirección, por mes"></div>
+            <p id="wd-status" class="status">Cargando…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>Cómo leer este gráfico</summary>
+              <p id="wd-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Ver tabla</summary>
+              <div class="table-scroll tall"><table id="wd-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
     </section>
 
     <section class="group" id="monthly" aria-labelledby="monthly-heading">
