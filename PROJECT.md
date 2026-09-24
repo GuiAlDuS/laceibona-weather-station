@@ -743,3 +743,26 @@ Owner decisions worth remembering:
 - The dashboard's "Under review" notes now say the sensor reads about 1.35× high at all light
   levels (checked against two nearby stations), replacing the earlier "bright midday values
   ~1.4×". The comparison, its scripts and a report page live in `data_review/`.
+
+**Phase 12 — Stacked-panel charts for the last 24 hours and the last 7 days (Sept 2026)**
+
+- **Temperature in `fine7d`**: the Worker's 10-minute window gains a `t` column (mean of the
+  1-minute air temperature, obs_st index 7). No extra API calls or KV writes: it comes from the same
+  fetch as rain, pressure and humidity, and adds about 5 KB to the document. Deployed to the Worker
+  (additive), then the last 7 days were refilled with `scripts/fill-fine.mjs`. The frontend reads
+  it as `temp` (null in older documents). 10 minutes rather than 5 so it lines up with the rain bars.
+- **"Temperature, rain and lightning, last 24 hours"** (was "Lightning and rain"): three panels
+  stacked on one time axis (temperature line, 10-minute rain bars, lightning dots), each on its own
+  y axis with its name above it, replacing the km/mm/h dual-axis chart. The owner asked for the
+  panel form here once more measures were added; for two measures they still prefer dual axes.
+  A pressure panel was tried and dropped so the card matches the wind rose's height. Lightning dots
+  are now `--series-7` (violet), since red is temperature. A hover hairline runs through all panels.
+- **Now row order**: this chart on the left (3fr), the wind rose on the right (2fr).
+- **"Temperature, sun, humidity, pressure and rain, last 7 days"** (was "Rain intensity, last 7
+  days"): five panels in that order, all 10-minute values, replacing the bars + pressure line and
+  the solar and humidity toggles (removed). Keeps `weekMargin()` so its days line up with "Wind
+  direction, day by day". The solar panel is labelled "under review" and the summary carries the
+  sensor caveat while the week reaches `SENSOR_HIGH_FROM`. The table view lists per-day temperature
+  range, peak solar, humidity and pressure ranges, rain and peak rate.
+- `stackDomains()` and `panelTitle()` in `common.js` lay out the panels for both charts; the gap
+  between panels is fixed in pixels, so labels fit at any chart height.

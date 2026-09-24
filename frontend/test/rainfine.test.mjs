@@ -9,13 +9,15 @@ const doc = (rows, slots = 4) => {
   const solar = new Array(slots).fill(null);
   const p = new Array(slots).fill(null);
   const rh = new Array(slots).fill(null);
-  for (const [i, r, s, pr, h = null] of rows) {
+  const tc = new Array(slots).fill(null);
+  for (const [i, r, s, pr, h = null, tt = null] of rows) {
     rain[i] = r;
     solar[i] = s;
     p[i] = pr;
     rh[i] = h;
+    tc[i] = tt;
   }
-  return { step: STEP, start: START, slots, cols: { rain, solar, p, rh } };
+  return { step: STEP, start: START, slots, cols: { rain, solar, p, rh, t: tc } };
 };
 
 test("fineBuckets carries local date/hour/minute and converts rain to a mm/h rate", () => {
@@ -50,6 +52,16 @@ test("humidity is carried per bucket and its daily range summarised; older docum
   const b = fineBuckets(d);
   assert.equal(b[0].rh, null);
   assert.deepEqual([fineDaySummaries(b)[0].rhMin, fineDaySummaries(b)[0].rhMax], [null, null]);
+});
+
+test("temperature is carried per bucket, with the daily temperature range and brightest sun; older documents without it read as null", () => {
+  const d = doc([[0, 0, 150, 1000, 88, 24.5], [1, 0, 620, 1000, 80, 29.1]], 3);
+  const [day] = fineDaySummaries(fineBuckets(d));
+  assert.deepEqual([day.tMin, day.tMax, day.solarMax], [24.5, 29.1, 620]);
+  delete d.cols.t;
+  const b = fineBuckets(d);
+  assert.equal(b[0].temp, null);
+  assert.deepEqual([fineDaySummaries(b)[0].tMin, fineDaySummaries(b)[0].tMax], [null, null]);
 });
 
 test("a day with no readings at all is left out", () => {

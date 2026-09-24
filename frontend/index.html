@@ -46,6 +46,26 @@
       </section>
 
       <div class="row row-live">
+        <section class="card" aria-labelledby="lg-title">
+          <h3 id="lg-title">Temperature, rain and lightning, last 24 hours</h3>
+          <p class="muted">Temperature, rain intensity and lightning distance over the same 24 hours, one panel each.</p>
+          <p id="lg-summary" class="summary" aria-live="polite"></p>
+
+          <div id="lg-frame" class="chart-frame">
+            <div id="lg-chart" role="img" aria-label="Three stacked charts over the last 24 hours sharing one time axis: temperature as a 10-minute line, 10-minute rain intensity as bars, and lightning strike distance as dots, one per minute with strikes, sized by strike count"></div>
+            <p id="lg-status" class="status">Loading…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="lg-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll tall"><table id="lg-table"></table></div>
+            </details>
+          </div>
+        </section>
         <section class="card" aria-labelledby="wr-title">
           <div class="card-head">
             <h3 id="wr-title">Wind rose</h3>
@@ -71,27 +91,6 @@
             <details class="table-view">
               <summary>Table view</summary>
               <div class="table-scroll"><table id="wr-table"></table></div>
-            </details>
-          </div>
-        </section>
-        <section class="card" aria-labelledby="lg-title">
-          <h3 id="lg-title">Lightning and rain, last 24 hours</h3>
-          <p class="muted">How far away the station detected lightning, minute by minute, and how hard it rained.</p>
-          <p id="lg-summary" class="summary" aria-live="polite"></p>
-
-          <div id="lg-frame" class="chart-frame">
-            <div id="lg-chart" role="img" aria-label="Scatter chart of lightning strike distance over the last 24 hours, one dot per minute with strikes, sized by strike count, over bars of 10-minute rain intensity"></div>
-            <p id="lg-status" class="status">Loading…</p>
-          </div>
-          <ul id="lg-legend" class="legend" aria-label="Legend"></ul>
-          <div class="card-foot">
-            <details class="note-view">
-              <summary>How to read this chart</summary>
-              <p id="lg-note" class="muted small"></p>
-            </details>
-            <details class="table-view">
-              <summary>Table view</summary>
-              <div class="table-scroll tall"><table id="lg-table"></table></div>
             </details>
           </div>
         </section>
@@ -178,18 +177,12 @@
       </div>
 
       <section class="card" aria-labelledby="rf-title">
-        <div class="card-head">
-          <h3 id="rf-title">Rain intensity, last 7 days</h3>
-          <div class="toggle-set">
-            <button id="rf-solar-toggle" type="button" class="toggle-btn" aria-pressed="false" disabled>Show solar radiation</button>
-            <button id="rf-rh-toggle" type="button" class="toggle-btn" aria-pressed="false" disabled>Show air humidity</button>
-          </div>
-        </div>
-        <p class="muted">Rain in 10-minute bursts, so short heavy downpours show at their true rate, with station pressure alongside and optional solar radiation and air humidity layers.</p>
+        <h3 id="rf-title">Temperature, sun, humidity, pressure and rain, last 7 days</h3>
+        <p class="muted">Temperature, solar radiation, air humidity, station pressure and rain intensity in 10-minute steps over the same 7 days, one panel each.</p>
         <p id="rf-summary" class="summary" aria-live="polite"></p>
 
         <div id="rf-frame" class="chart-frame">
-          <div id="rf-chart" role="img" aria-label="Bar chart of 10-minute rain intensity for the last 7 days, with station pressure as a line and optional solar radiation and air humidity overlays"></div>
+          <div id="rf-chart" role="img" aria-label="Five stacked charts over the last 7 days sharing one day axis, in 10-minute steps: temperature, solar radiation, air humidity and station pressure as lines, and rain intensity as bars"></div>
           <p id="rf-status" class="status">Loading…</p>
         </div>
         <div class="card-foot">

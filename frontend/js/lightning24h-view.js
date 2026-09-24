@@ -1,4 +1,4 @@
-import { $, token, nf, chartFont, hoverLabel } from "./common.js";
+import { $, token, nf, chartFont, hoverLabel, stackDomains, panelTitle } from "./common.js";
 import { t } from "./i18n.js";
 import { localStamp, localDate } from "./forecast.js";
 import { RATE_PER_BUCKET } from "./rainfine.js";
@@ -14,30 +14,47 @@ const localMidnight = (iso) => Date.parse(`${iso}T00:00:00Z`) / 1000 + 6 * 3600;
 const BUCKET_S = 600;
 const span = (b) => `${hhmm(b.t)}–${hhmm(b.t + BUCKET_S)}`;
 
-// The 10-minute rain buckets (from the `fine7d` document, see rainfine.js) that fall inside the lightning window
-// and had rain. Null or missing buckets just draw nothing.
-export function rainInWindow(s, buckets) {
-  return (buckets ?? []).filter((b) => b.t + BUCKET_S > s.from && b.t <= s.to && b.rate !== null && b.rate > 0);
+// The 10-minute buckets (from the `fine7d` document, see rainfine.js) that fall inside the lightning window.
+export function bucketsInWindow(s, buckets) {
+  return (buckets ?? []).filter((b) => b.t + BUCKET_S > s.from && b.t <= s.to);
 }
 
-// Distance of each strike minute over the last 24 hours, one dot per minute, sized by its strike count, over bars
-// of 10-minute rain intensity on a second axis. x is a zone-less local timestamp, so the viewer's own timezone
-// never shifts it.
+// The buckets in the window that had rain. Null or missing buckets just draw nothing.
+export function rainInWindow(s, buckets) {
+  return bucketsInWindow(s, buckets).filter((b) => b.rate !== null && b.rate > 0);
+}
+
+// Min and max of one bucket field over the window, or null with no readings.
+function range(bs, key) {
+  const v = bs.map((b) => b[key]).filter((x) => x !== null);
+  return v.length ? { min: Math.min(...v), max: Math.max(...v) } : null;
+}
+
+// Three panels over one shared time axis, top to bottom: temperature, rain intensity and lightning distance. Each
+// panel has its own y axis and a name above it, so no scale is shared or doubled up. x is a zone-less local
+// timestamp, so the viewer's own timezone never shifts it.
+const MARGIN = { l: 48, r: 16, t: 24, b: 36 };
+const PANEL_WEIGHTS = [1, 1, 1.3]; // lightning a little taller: its dots need room to spread out
+const panelNames = () => [t("Temperature (°C)", "Temperatura (°C)"), t("Rain intensity (mm/h)", "Intensidad de la lluvia (mm/h)"), t("Lightning: distance of the strikes (km)", "Rayos: distancia de las descargas (km)")];
+
 export function renderLightningChart(s, buckets) {
   const font = chartFont();
   const muted = token("--text-muted");
-  const placed = s.events.filter((e) => e.dist !== null);
-  const trace = {
+  const inWindow = bucketsInWindow(s, buckets);
+  // Lines through the middle of each 10-minute bucket; a missing bucket leaves a gap rather than a made-up line.
+  const mid = inWindow.map((b) => localStamp(b.t + BUCKET_S / 2));
+  const line = (key, yaxis, color, hover) => ({
     type: "scatter",
-    mode: "markers",
-    x: placed.map((e) => localStamp(e.ts)),
-    y: placed.map((e) => e.dist),
-    customdata: placed.map((e) => `${hhmm(e.ts)} · ${strikes(e.count)}`),
-    hovertemplate: t("%{customdata}<br>about %{y} km<extra></extra>", "%{customdata}<br>a unos %{y} km<extra></extra>"),
-    // See-through fill with a solid outline in the same colour: overlapping dots darken and each stays visible.
-    marker: { size: placed.map((e) => dotSize(e.count)), color: rgba(token("--hot"), 0.3), line: { color: token("--hot"), width: 1 } },
-  };
-  // Bars centred on their 10-minute window, drawn first so the lightning dots sit on top.
+    mode: "lines",
+    x: mid,
+    y: inWindow.map((b) => b[key]),
+    yaxis,
+    line: { color, width: 2 },
+    hovertemplate: hover,
+  });
+  const temp = line("temp", "y3", token("--hot"), t("temperature %{y:.1f} °C<extra></extra>", "temperatura %{y:.1f} °C<extra></extra>"));
+
+  // Bars centred on their 10-minute window.
   const wet = rainInWindow(s, buckets);
   const rain = {
     type: "bar",
@@ -45,41 +62,62 @@ export function renderLightningChart(s, buckets) {
     y: wet.map((b) => b.rate),
     width: BUCKET_S * 1000 * 0.9,
     yaxis: "y2",
-    marker: { color: rgba(token("--series-1"), 0.6) },
-    customdata: wet.map(span),
-    hovertemplate: t("%{customdata}<br>rain %{y:.1f} mm/h<extra></extra>", "%{customdata}<br>lluvia %{y:.1f} mm/h<extra></extra>"),
+    marker: { color: token("--series-1") },
+    hovertemplate: t("rain %{y:.1f} mm/h<extra></extra>", "lluvia %{y:.1f} mm/h<extra></extra>"),
   };
-  // The rate axis shares the km gridlines (0, 10, 20, 30, 40): 40 km lines up with 4 round steps of mm/h, never
-  // below 10 mm/h, so a drizzle stays a drizzle instead of filling the chart.
+  // Never under 10 mm/h at the top, so a drizzle stays a drizzle instead of filling the panel.
   const peakRate = Math.max(0, ...wet.map((b) => b.rate));
-  const rateStep = [2.5, 5, 10, 15, 20, 25, 50].find((v) => 4 * v >= peakRate) ?? Math.ceil(peakRate / 40) * 10;
+  const rateStep = [5, 10, 15, 20, 25, 50].find((v) => 2 * v >= peakRate) ?? Math.ceil(peakRate / 20) * 10;
 
-  // Night bands (18:00-06:00) and a dotted rule at midnight, labelled with the day it starts, as on the forecast chart.
+  const placed = s.events.filter((e) => e.dist !== null);
+  const lightning = {
+    type: "scatter",
+    mode: "markers",
+    x: placed.map((e) => localStamp(e.ts)),
+    y: placed.map((e) => e.dist),
+    customdata: placed.map((e) => `${hhmm(e.ts)} · ${strikes(e.count)}`),
+    hovertemplate: t("%{customdata}, about %{y} km<extra></extra>", "%{customdata}, a unos %{y} km<extra></extra>"),
+    // See-through fill with a solid outline in the same colour: overlapping dots darken and each stays visible.
+    marker: { size: placed.map((e) => dotSize(e.count)), color: rgba(token("--series-7"), 0.3), line: { color: token("--series-7"), width: 1 } },
+  };
+
+  // Night bands (18:00-06:00) and a dotted rule at midnight through every panel, as on the forecast chart.
   const shapes = [];
   const annotations = [];
+  let today = null;
   const firstDay = localDate(s.from);
   for (let m = localMidnight(firstDay) - 86400; m <= s.to; m += 86400) {
     shapes.push({ type: "rect", xref: "x", yref: "paper", x0: localStamp(m + 18 * 3600), x1: localStamp(m + 30 * 3600), y0: 0, y1: 1, fillcolor: token("--grid"), opacity: 0.5, line: { width: 0 }, layer: "below" });
     const midnight = m + 86400;
     if (midnight > s.from && midnight < s.to) {
+      today = midnight;
       const xm = localStamp(midnight);
       shapes.push({ type: "line", xref: "x", yref: "paper", x0: xm, x1: xm, y0: 0, y1: 1, line: { color: token("--baseline"), width: 1, dash: "dot" } });
-      annotations.push({ x: xm, xref: "x", y: 1, yref: "paper", yanchor: "bottom", xanchor: "left", xshift: 4, showarrow: false, text: t("Today", "Hoy"), font: { color: muted, size: 12 } });
     }
   }
-  if (s.events.length === 0) {
-    annotations.push({ xref: "paper", yref: "paper", x: 0.5, y: 0.75, showarrow: false, text: t("No lightning detected in the last 24 hours", "No se detectaron rayos en las últimas 24 horas"), font: { color: token("--text-secondary"), size: 14 } });
+  const [tempD, rainD, lightD] = stackDomains(PANEL_WEIGHTS, 28, $("lg-chart").clientHeight - MARGIN.t - MARGIN.b);
+  panelNames().forEach((name, i) => annotations.push(panelTitle(name, [tempD, rainD, lightD][i][1])));
+  if (today) {
+    // "Today" goes on the top panel's label row, unless midnight is so early in the window that it would run into
+    // the temperature label; then it drops to the bottom of the top panel.
+    const early = (today - s.from) / (s.to - s.from) < 0.25;
+    annotations.push({ x: localStamp(today), xref: "x", y: early ? tempD[0] : 1, yref: "paper", yanchor: "bottom", xanchor: "left", xshift: 4, showarrow: false, text: t("Today", "Hoy"), font: { color: muted, size: 12 } });
   }
+  const empty = (d, text) => annotations.push({ xref: "paper", yref: "paper", x: 0.5, y: (d[0] + d[1]) / 2, showarrow: false, text, font: { color: muted, size: 12 } });
+  if (s.events.length === 0) empty(lightD, t("No lightning detected in the last 24 hours", "No se detectaron rayos en las últimas 24 horas"));
+  if (buckets && wet.length === 0) empty(rainD, t("No rain in the last 24 hours", "Sin lluvia en las últimas 24 horas"));
+  if (buckets && !inWindow.some((b) => b.temp !== null)) empty(tempD, t("No temperature readings yet", "Todavía no hay lecturas de temperatura"));
 
   // A tick every 3 local hours.
   const ticks = [];
   for (let h = Math.ceil(s.from / 10800) * 10800; h <= s.to; h += 3600) if (new Date((h - 6 * 3600) * 1000).getUTCHours() % 3 === 0) ticks.push(h);
 
+  const yBase = { gridcolor: token("--grid"), gridwidth: 1, zeroline: false, tickfont: { color: muted, size: 12 }, fixedrange: true };
   const layout = {
     font,
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
-    margin: { l: 48, r: 48, t: 24, b: 36 },
+    margin: MARGIN,
     showlegend: false,
     shapes,
     annotations,
@@ -96,89 +134,60 @@ export function renderLightningChart(s, buckets) {
       showline: true,
       linecolor: token("--baseline"),
       tickfont: { color: muted, size: 12 },
+      // A hairline through all three panels at the hovered time, so a reading lines up with the others.
+      showspikes: true,
+      spikemode: "across",
+      spikesnap: "cursor",
+      spikethickness: 1,
+      spikedash: "solid",
+      spikecolor: token("--baseline"),
       fixedrange: true,
     },
-    yaxis: {
-      title: { text: "km", font: { color: muted, size: 12 }, standoff: 8 },
-      range: [0, MAX_KM + 2],
-      tickvals: [0, 10, 20, 30, 40],
-      gridcolor: token("--grid"),
-      gridwidth: 1,
-      zeroline: false,
-      tickfont: { color: muted, size: 12 },
-      fixedrange: true,
-    },
-    yaxis2: {
-      title: { text: "mm/h", font: { color: muted, size: 12 }, standoff: 8 },
-      overlaying: "y",
-      side: "right",
-      range: [0, (rateStep * (MAX_KM + 2)) / 10],
-      tickvals: [0, 1, 2, 3, 4].map((k) => k * rateStep),
-      showgrid: false,
-      zeroline: false,
-      tickfont: { color: muted, size: 12 },
-      fixedrange: true,
-    },
+    yaxis: { ...yBase, domain: lightD, range: [0, MAX_KM + 2], tickvals: [0, 20, 40] },
+    yaxis2: { ...yBase, domain: rainD, range: [0, rateStep * 2 * 1.05], tickvals: [0, rateStep, 2 * rateStep] },
+    yaxis3: { ...yBase, domain: tempD, nticks: 4 },
   };
-  return Plotly.react($("lg-chart"), [rain, trace], layout, { displayModeBar: false, responsive: true });
-}
-
-// Circles for the strikes, a bar swatch for the rain, each naming its axis.
-function renderLightningLegend() {
-  const items = [
-    ["dot", rgba(token("--hot"), 0.3), token("--hot"), t("Lightning: distance of the strikes (km, left axis)", "Rayos: distancia de las descargas (km, eje izquierdo)")],
-    ["rect", rgba(token("--series-1"), 0.6), null, t("Rain intensity (mm/h, right axis)", "Intensidad de la lluvia (mm/h, eje derecho)")],
-  ];
-  $("lg-legend").replaceChildren(
-    ...items.map(([shape, fill, outline, label]) => {
-      const li = document.createElement("li");
-      const key = document.createElement("span");
-      key.className = `key ${shape}`;
-      key.style.background = fill;
-      if (outline) key.style.border = `1px solid ${outline}`;
-      li.append(key, label);
-      return li;
-    }),
-  );
+  return Plotly.react($("lg-chart"), [temp, rain, lightning], layout, { displayModeBar: false, responsive: true });
 }
 
 export function renderLightningText(s, buckets) {
-  renderLightningLegend();
+  const inWindow = bucketsInWindow(s, buckets);
   const wet = rainInWindow(s, buckets);
   const mm = wet.reduce((sum, b) => sum + b.rate / RATE_PER_BUCKET, 0);
   const peak = wet.reduce((m, b) => (m === null || b.rate > m.rate ? b : m), null);
+  const temp = range(inWindow, "temp");
+  const tempText = temp ? t(`Temperature ${temp.min.toFixed(1)}–${temp.max.toFixed(1)} °C. `, `Temperatura ${temp.min.toFixed(1)}–${temp.max.toFixed(1)} °C. `) : "";
   const rainText = !buckets
     ? ""
     : peak
-      ? t(` Rain: ${mm.toFixed(1)} mm, heaviest ${peak.rate.toFixed(1)} mm/h at ${hhmm(peak.t)}.`, ` Lluvia: ${mm.toFixed(1)} mm, máximo ${peak.rate.toFixed(1)} mm/h a las ${hhmm(peak.t)}.`)
-      : t(" No rain.", " Sin lluvia.");
-  $("lg-summary").textContent =
-    (s.total === 0
-      ? t("No lightning detected in the last 24 hours.", "No se detectaron rayos en las últimas 24 horas.")
+      ? t(`Rain: ${mm.toFixed(1)} mm, heaviest ${peak.rate.toFixed(1)} mm/h at ${hhmm(peak.t)}. `, `Lluvia: ${mm.toFixed(1)} mm, máximo ${peak.rate.toFixed(1)} mm/h a las ${hhmm(peak.t)}. `)
+      : t("No rain. ", "Sin lluvia. ");
+  const lightningText =
+    s.total === 0
+      ? t("No lightning.", "Sin rayos.")
       : s.closest
-        ? t(
-            `${strikes(s.total)} in the last 24 hours. Closest: about ${s.closest.dist} km, at ${hhmm(s.closest.ts)}.`,
-            `${strikes(s.total)} en las últimas 24 horas. El más cercano: a unos ${s.closest.dist} km, a las ${hhmm(s.closest.ts)}.`,
-          )
-        : t(`${strikes(s.total)} in the last 24 hours.`, `${strikes(s.total)} en las últimas 24 horas.`)) + rainText;
+        ? t(`${strikes(s.total)}, the closest about ${s.closest.dist} km away at ${hhmm(s.closest.ts)}.`, `${strikes(s.total)}, el más cercano a unos ${s.closest.dist} km a las ${hhmm(s.closest.ts)}.`)
+        : `${strikes(s.total)}.`;
+  $("lg-summary").textContent = tempText + rainText + lightningText;
 
   $("lg-note").textContent = t(
-    "Each dot is one minute with strikes, at the station's estimate of their average distance; bigger dots mean more strikes in that minute. The sensor reports distance in fixed steps (1, 5, 8, 10, 12, 14, 17, 20, 24, 27, 31, 34, 37, 40 km), so dots line up in rows, and it only detects lightning within about 40 km. The blue bars are rain intensity (right axis), each one 10-minute window shown as its hourly rate, as on the 7-day rain chart. Night (18:00–06:00) is shaded.",
-    "Cada punto es un minuto con rayos, a la distancia promedio estimada por la estación; los puntos más grandes indican más rayos en ese minuto. El sensor reporta la distancia en pasos fijos (1, 5, 8, 10, 12, 14, 17, 20, 24, 27, 31, 34, 37, 40 km), por eso los puntos se alinean en filas, y solo detecta rayos a unos 40 km. Las barras azules son la intensidad de la lluvia (eje derecho), cada una una ventana de 10 minutos mostrada como su tasa horaria, como en el gráfico de lluvia de 7 días. La noche (18:00–06:00) está sombreada.",
+    "Three panels over the same 24 hours, each with its own scale. Temperature is the 10-minute average. The blue bars are rain intensity, each one 10-minute window shown as its hourly rate, as on the 7-day rain chart. Each lightning dot is one minute with strikes, at the station's estimate of their average distance; bigger dots mean more strikes in that minute. The sensor reports distance in fixed steps (1, 5, 8, 10, 12, 14, 17, 20, 24, 27, 31, 34, 37, 40 km), so dots line up in rows, and it only detects lightning within about 40 km. Night (18:00–06:00) is shaded.",
+    "Tres paneles sobre las mismas 24 horas, cada uno con su propia escala. La temperatura es el promedio de 10 minutos. Las barras azules son la intensidad de la lluvia, cada una una ventana de 10 minutos mostrada como su tasa horaria, como en el gráfico de lluvia de 7 días. Cada punto de rayos es un minuto con descargas, a la distancia promedio estimada por la estación; los puntos más grandes indican más rayos en ese minuto. El sensor reporta la distancia en pasos fijos (1, 5, 8, 10, 12, 14, 17, 20, 24, 27, 31, 34, 37, 40 km), por eso los puntos se alinean en filas, y solo detecta rayos a unos 40 km. La noche (18:00–06:00) está sombreada.",
   );
 
   const table = $("lg-table");
   table.replaceChildren();
   const head = table.createTHead().insertRow();
-  for (const h of [t("Time", "Hora"), t("Strikes", "Rayos"), t("Distance (km)", "Distancia (km)"), t("Rain (mm/h)", "Lluvia (mm/h)")]) {
+  for (const h of [t("Time", "Hora"), t("Temperature (°C)", "Temperatura (°C)"), t("Rain (mm/h)", "Lluvia (mm/h)"), t("Strikes", "Rayos"), t("Distance (km)", "Distancia (km)")]) {
     const th = document.createElement("th");
     th.textContent = h;
     head.append(th);
   }
-  // Strike minutes and rainy 10-minute windows in one list, by time.
+  // Every 10-minute window and every strike minute in one list, by time, columns in the panels' order.
+  const cell = (v, d) => (v === null ? "" : v.toFixed(d));
   const rows = [
-    ...s.events.map((e) => ({ ts: e.ts, cells: [hhmm(e.ts), String(e.count), e.dist === null ? "" : String(e.dist), ""] })),
-    ...wet.map((b) => ({ ts: b.t, cells: [span(b), "", "", b.rate.toFixed(1)] })),
+    ...inWindow.map((b) => ({ ts: b.t, cells: [span(b), cell(b.temp, 1), b.rate ? b.rate.toFixed(1) : "", "", ""] })),
+    ...s.events.map((e) => ({ ts: e.ts, cells: [hhmm(e.ts), "", "", String(e.count), e.dist === null ? "" : String(e.dist)] })),
   ].sort((a, b) => a.ts - b.ts);
   const body = table.createTBody();
   for (const r of rows) {

@@ -3,14 +3,14 @@ import assert from "node:assert/strict";
 import { aggregateFine, mergeFine, lastFilledBucket, windowEnd, STEP, SLOTS } from "../src/fine.js";
 
 // obs_st row: [ts, lull, avg, gust, dir, interval, pressure, temp, rh, lux, uv, solar, rain, ...]
-const row = (ts, o = {}) => [ts, 0, 1, 2, 90, 3, o.p ?? 1000, 27, o.rh ?? 80, 0, 1, o.solar ?? 200, o.rain ?? 0, 0, 0, 0, 2.6, 1];
+const row = (ts, o = {}) => [ts, 0, 1, 2, 90, 3, o.p ?? 1000, o.t ?? 27, o.rh ?? 80, 0, 1, o.solar ?? 200, o.rain ?? 0, 0, 0, 0, 2.6, 1];
 const T = Date.UTC(2026, 8, 21, 20, 0, 0) / 1000; // 14:00 local, on a bucket boundary
 
-test("groups minutes into 10-minute buckets: rain sums, solar, pressure and humidity average", () => {
-  const rows = [row(T, { rain: 0.2, solar: 100, p: 1000, rh: 90 }), row(T + 540, { rain: 0.3, solar: 300, p: 1001, rh: 95 }), row(T + 600, { rain: 1 })];
+test("groups minutes into 10-minute buckets: rain sums, solar, pressure, humidity and temperature average", () => {
+  const rows = [row(T, { rain: 0.2, solar: 100, p: 1000, rh: 90, t: 24.1 }), row(T + 540, { rain: 0.3, solar: 300, p: 1001, rh: 95, t: 24.4 }), row(T + 600, { rain: 1 })];
   const b = aggregateFine(rows);
   assert.equal(b.size, 2);
-  assert.deepEqual(b.get(T), { rain: 0.5, solar: 200, p: 1000.5, rh: 93, n: 2 });
+  assert.deepEqual(b.get(T), { rain: 0.5, solar: 200, p: 1000.5, rh: 93, t: 24.3, n: 2 });
   assert.equal(b.get(T + 600).rain, 1);
 });
 

@@ -11,7 +11,7 @@ import { RAIN, renderCumulativeChart, renderCumulativeText } from "./cumulative-
 import { lastRainDays, withLiveToday } from "./rainweek.js";
 import { renderRainWeekChart, renderRainWeekText } from "./rainweek-view.js";
 import { fineBuckets } from "./rainfine.js";
-import { renderRainFineChart, renderRainFineText, initRainFineToggle } from "./rainfine-view.js";
+import { renderRainFineChart, renderRainFineText } from "./rainfine-view.js";
 import { renderCurrent, renderCurrentUnavailable } from "./current-view.js";
 import { forecastDays, forecastHours } from "./forecast.js";
 import { renderForecast, renderForecastUnavailable, renderForecastHourlyChart, renderForecastHourlyText } from "./forecast-view.js";
@@ -240,8 +240,6 @@ async function loadRainFine() {
     drawRainFine();
     drawLightning(); // its rain bars come from this same document
     setStatus("rf-status", "");
-    $("rf-solar-toggle").disabled = false;
-    $("rf-rh-toggle").disabled = false;
   } catch (err) {
     console.error(err);
     if (!fineBucketsData) setStatus("rf-status", couldNotLoad(err.message), loadRainFine);
@@ -397,7 +395,6 @@ narrowScreen.addEventListener("change", redraw);
 wideLayout.addEventListener("change", redraw);
 
 initNav();
-initRainFineToggle();
 initWindRoseToggle();
 loadCurrent();
 loadForecast();

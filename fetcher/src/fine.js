@@ -1,17 +1,17 @@
-// 10-minute rain, solar, pressure and humidity for the last 7 days: the `fine7d` KV document. Pure functions; no I/O.
+// 10-minute rain, solar, pressure, humidity and temperature for the last 7 days: the `fine7d` KV document. Pure functions; no I/O.
 // Same column idea as `obs:YYYY-MM`, but a rolling window instead of a calendar month: slot i covers
 // [start + i * STEP, start + (i + 1) * STEP), and the window always ends at the newest finished bucket.
 // Buckets are aligned to local time (UTC-6 is a whole number of 10-minute steps, so UTC alignment is the same).
-const F = { ts: 0, pressure: 6, rh: 8, solar: 11, rain: 12 };
+const F = { ts: 0, pressure: 6, temp: 7, rh: 8, solar: 11, rain: 12 };
 export const STEP = 600;
 export const SLOTS = 7 * 144;
-export const FINE_COLS = ["rain", "solar", "p", "rh", "n"];
+export const FINE_COLS = ["rain", "solar", "p", "rh", "t", "n"];
 
 const num = (v) => typeof v === "number" && Number.isFinite(v);
 const mean = (a) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : null);
 const round = (v, d) => (v === null ? null : Math.round(v * 10 ** d) / 10 ** d);
 
-// rows -> Map(bucket start in unix seconds -> { rain (mm in the bucket), solar (W/m2 mean), p (hPa mean), rh (% mean), n (minutes) })
+// rows -> Map(bucket start in unix seconds -> { rain (mm in the bucket), solar (W/m2 mean), p (hPa mean), rh (% mean), t (°C mean), n (minutes) })
 export function aggregateFine(rows) {
   const buckets = new Map();
   for (const row of rows) {
@@ -29,6 +29,7 @@ export function aggregateFine(rows) {
       solar: round(mean(col(F.solar)), 0),
       p: round(mean(col(F.pressure)), 1),
       rh: round(mean(col(F.rh)), 0),
+      t: round(mean(col(F.temp)), 1),
       n: rs.length,
     });
   }

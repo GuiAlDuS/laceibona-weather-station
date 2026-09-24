@@ -46,6 +46,26 @@
       </section>
 
       <div class="row row-live">
+        <section class="card" aria-labelledby="lg-title">
+          <h3 id="lg-title">Temperatura, lluvia y rayos, últimas 24 horas</h3>
+          <p class="muted">Temperatura, intensidad de la lluvia y distancia de los rayos en las mismas 24 horas, un panel para cada una.</p>
+          <p id="lg-summary" class="summary" aria-live="polite"></p>
+
+          <div id="lg-frame" class="chart-frame">
+            <div id="lg-chart" role="img" aria-label="Tres gráficos apilados de las últimas 24 horas con un mismo eje de tiempo: temperatura como línea cada 10 minutos, intensidad de lluvia cada 10 minutos como barras y distancia de los rayos como puntos, uno por minuto con rayos, de tamaño según la cantidad de rayos"></div>
+            <p id="lg-status" class="status">Cargando…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>Cómo leer este gráfico</summary>
+              <p id="lg-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Ver tabla</summary>
+              <div class="table-scroll tall"><table id="lg-table"></table></div>
+            </details>
+          </div>
+        </section>
         <section class="card" aria-labelledby="wr-title">
           <div class="card-head">
             <h3 id="wr-title">Rosa de los vientos</h3>
@@ -71,27 +91,6 @@
             <details class="table-view">
               <summary>Ver tabla</summary>
               <div class="table-scroll"><table id="wr-table"></table></div>
-            </details>
-          </div>
-        </section>
-        <section class="card" aria-labelledby="lg-title">
-          <h3 id="lg-title">Rayos y lluvia, últimas 24 horas</h3>
-          <p class="muted">A qué distancia detectó rayos la estación, minuto a minuto, y con qué intensidad llovió.</p>
-          <p id="lg-summary" class="summary" aria-live="polite"></p>
-
-          <div id="lg-frame" class="chart-frame">
-            <div id="lg-chart" role="img" aria-label="Gráfico de dispersión de la distancia de los rayos en las últimas 24 horas, un punto por minuto con rayos, de tamaño según la cantidad de rayos, sobre barras de intensidad de lluvia cada 10 minutos"></div>
-            <p id="lg-status" class="status">Cargando…</p>
-          </div>
-          <ul id="lg-legend" class="legend" aria-label="Leyenda"></ul>
-          <div class="card-foot">
-            <details class="note-view">
-              <summary>Cómo leer este gráfico</summary>
-              <p id="lg-note" class="muted small"></p>
-            </details>
-            <details class="table-view">
-              <summary>Ver tabla</summary>
-              <div class="table-scroll tall"><table id="lg-table"></table></div>
             </details>
           </div>
         </section>
@@ -178,18 +177,12 @@
       </div>
 
       <section class="card" aria-labelledby="rf-title">
-        <div class="card-head">
-          <h3 id="rf-title">Intensidad de lluvia, últimos 7 días</h3>
-          <div class="toggle-set">
-            <button id="rf-solar-toggle" type="button" class="toggle-btn" aria-pressed="false" disabled>Mostrar radiación solar</button>
-            <button id="rf-rh-toggle" type="button" class="toggle-btn" aria-pressed="false" disabled>Mostrar humedad del aire</button>
-          </div>
-        </div>
-        <p class="muted">Lluvia en ráfagas de 10 minutos, para que los aguaceros cortos e intensos se vean a su tasa real, junto con la presión de la estación y capas opcionales de radiación solar y humedad del aire.</p>
+        <h3 id="rf-title">Temperatura, sol, humedad, presión y lluvia, últimos 7 días</h3>
+        <p class="muted">Temperatura, radiación solar, humedad del aire, presión de la estación e intensidad de la lluvia cada 10 minutos en los mismos 7 días, un panel para cada una.</p>
         <p id="rf-summary" class="summary" aria-live="polite"></p>
 
         <div id="rf-frame" class="chart-frame">
-          <div id="rf-chart" role="img" aria-label="Gráfico de barras de intensidad de lluvia cada 10 minutos durante los últimos 7 días, con la presión de la estación como línea y capas opcionales de radiación solar y humedad del aire"></div>
+          <div id="rf-chart" role="img" aria-label="Cinco gráficos apilados de los últimos 7 días con un mismo eje de días, cada 10 minutos: temperatura, radiación solar, humedad del aire y presión de la estación como líneas, e intensidad de la lluvia como barras"></div>
           <p id="rf-status" class="status">Cargando…</p>
         </div>
         <div class="card-foot">

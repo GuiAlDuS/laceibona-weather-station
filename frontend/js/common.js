@@ -63,8 +63,8 @@ export function weekStart(nowMs = Date.now()) {
   const today = new Date(nowMs - 6 * 3600_000).toISOString().slice(0, 10);
   return new Date(Date.parse(today) - (WEEK_DAYS - 1) * 86400_000).toISOString().slice(0, 10);
 }
-// Plot-area margins both timelines use, so their days sit at the same pixels; the right one holds the pressure axis
-// on one and the speed colour bar on the other. Tighter on phones, where every pixel of plot counts.
+// Plot-area margins both timelines use, so their days sit at the same pixels; the right one holds the speed colour
+// bar on the wind chart and is left empty on the rain panels to match. Tighter on phones, where every pixel of plot counts.
 export const weekMargin = () => (narrowScreen.matches ? { l: 44, r: 64 } : { l: 56, r: 96 });
 
 // Shared day axis for the week charts, where day i spans x = i..i+1: a tick mark at every midnight (minor ticks) and
@@ -89,6 +89,22 @@ export function dayAxisTicks(labels, { grid = false } = {}) {
 // Pair with `tickvals: categories.filter(keepDayLabel)` for the same every-other-name rule on narrow screens.
 export const categoryDayTicks = (n) =>
   Array.from({ length: n + 1 }, (_, i) => ({ type: "line", xref: "x", yref: "paper", ysizemode: "pixel", yanchor: 0, x0: i - 0.5, x1: i - 0.5, y0: 0, y1: -DAY_TICK_LEN, line: { color: token("--baseline"), width: 1 } }));
+
+// Panels stacked over one shared x axis, each on its own y axis. weights: relative panel heights, top first;
+// gapPx: the space between panels (room for each panel's name); plotPx: the plot area's height. Returns each
+// panel's [bottom, top] y-axis domain, top panel first.
+export function stackDomains(weights, gapPx, plotPx) {
+  const gap = Math.min(0.2, gapPx / plotPx);
+  const unit = (1 - gap * (weights.length - 1)) / weights.reduce((a, b) => a + b, 0);
+  let top = 1;
+  return weights.map((w) => {
+    const d = [Math.max(0, top - w * unit), top];
+    top = d[0] - gap;
+    return d;
+  });
+}
+// A panel's name, just above its top-left corner, in place of a legend.
+export const panelTitle = (text, top) => ({ xref: "paper", yref: "paper", x: 0, y: top, xanchor: "left", yanchor: "bottom", showarrow: false, text, font: { color: token("--text-secondary"), size: 12 } });
 
 // entries: [{ label, color }]; shape "line" for line charts, "rect" for bars.
 export function fillLegend(ul, entries, shape) {

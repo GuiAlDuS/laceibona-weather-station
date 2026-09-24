@@ -159,7 +159,8 @@ p { margin: 0 0 12px; }
    (the 5-minute refresh) collapses the div to 0px while the absolutely positioned SVG stays 450px, so the
    x-axis labels spill onto the note below. 450px is the Plotly default these were already drawn at. */
 #th-chart, #wh-chart, #wd-chart, #bm-chart, #uv-chart, #wk-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
-#lg-chart { width: 100%; height: 420px; }
+#lg-chart { width: 100%; height: 460px; }
+#lg-frame { min-height: 460px; }
 /* The hourly forecast is a glance, not a study: shorter than the observation charts. */
 #fh-frame { min-height: 360px; }
 #fh-chart { height: 360px; }
@@ -167,8 +168,10 @@ p { margin: 0 0 12px; }
 #td-chart { width: 100%; height: 400px; }
 #rw-chart { height: 400px; }
 #td-frame, #rw-frame { min-height: 400px; }
-#rf-chart, #ds-chart { width: 100%; height: 380px; }
-#rf-frame, #ds-frame { min-height: 380px; }
+#ds-chart { width: 100%; height: 380px; }
+#ds-frame { min-height: 380px; }
+#rf-chart { width: 100%; height: 720px; }
+#rf-frame { min-height: 720px; }
 .status { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; color: var(--text-secondary); text-align: center; padding: 0 16px; }
 .status:empty { display: none; }
 .status button { margin-left: 8px; font: inherit; }
@@ -210,7 +213,11 @@ td:first-child { font-family: var(--font-sans); }
   .card { padding-top: 4px; }
   .card + .card { margin-top: 24px; padding-top: 24px; }
   .chart-frame, #fh-frame, #td-frame, #rw-frame, #rf-frame, #ds-frame { min-height: 340px; }
-  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #wh-chart, #wd-chart, #ds-chart, #bm-chart, #uv-chart, #by-chart, #wk-chart, #rf-chart, #fh-chart, #sy-chart, #lg-chart { height: 340px; }
+  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #wh-chart, #wd-chart, #ds-chart, #bm-chart, #uv-chart, #by-chart, #wk-chart, #fh-chart, #sy-chart { height: 340px; }
+  #lg-chart { height: 460px; }
+  #lg-frame { min-height: 460px; }
+  #rf-chart { height: 640px; }
+  #rf-frame { min-height: 640px; }
 }
 
 .cc-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 8px; }
@@ -278,7 +285,7 @@ td:first-child { font-family: var(--font-sans); }
 }
 @media (min-width: 1300px) {
   .row { display: grid; gap: 0 32px; }
-  .row-live { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .row-live { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
   .row-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   /* Three cards of the same shape: each card's title, subtitle, summary, chart and toggles share row tracks
      (subgrid), so the charts start at the same height even when one summary wraps to more lines. */
