@@ -678,3 +678,6 @@ Owner decisions worth remembering:
 - **UV index by month** (daily peak UV per day, one box per month, over shaded UV risk bands) was
   built and reviewed on the test site, but is held on the `uv-by-month` branch until the sensor
   anomaly is explained.
+  Days are now counted only if every daylight hour (06:00–18:00) has a reading: January 2026's
+  minimum of 0.1 came from two outage days with 7–8 night-only hours, and the day in progress was
+  counted too. The other low minimums (3.4–4.6) are complete overcast or rainy days and stay.

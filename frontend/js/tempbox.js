@@ -57,10 +57,15 @@ export function yearlyBoxes(docs) {
     .map(([year, v]) => ({ year, days: v.days.size, through, stats: boxStats(v.values) }));
 }
 
+// Local hours that must all have a reading for a day's peak to count (06:00-18:00, when the sun is up).
+export const DAYLIGHT_FROM = 6;
+export const DAYLIGHT_TO = 18;
+
 // One box per month of each local day's highest hourly value (e.g. `uv`, stored as each hour's maximum), oldest
-// first. A day counts once, so a month's box shows its days rather than the shape of the daily cycle. Days with
-// no reading, or a peak of exactly 0 (a sensor outage: daylight always gives some UV), are skipped; months with
-// none are left out.
+// first. A day counts once, so a month's box shows its days rather than the shape of the daily cycle. A day is
+// skipped unless every daylight hour has a reading (an outage or the day in progress would report a peak that
+// is too low), or if its peak is exactly 0 (a sensor outage: daylight always gives some UV); months with none
+// are left out.
 export function monthlyDailyMaxBoxes(docs, col) {
   return [...docs]
     .sort((a, b) => a.month.localeCompare(b.month))
@@ -68,10 +73,15 @@ export function monthlyDailyMaxBoxes(docs, col) {
       const days = new Map();
       doc.cols[col].forEach((v, i) => {
         if (typeof v !== "number") return;
-        const date = new Date((doc.start + i * 3600 + LOCAL_OFFSET_S) * 1000).toISOString().slice(0, 10);
-        days.set(date, Math.max(days.get(date) ?? -Infinity, v));
+        const local = new Date((doc.start + i * 3600 + LOCAL_OFFSET_S) * 1000);
+        const date = local.toISOString().slice(0, 10);
+        if (!days.has(date)) days.set(date, { max: -Infinity, daylight: 0 });
+        const d = days.get(date);
+        d.max = Math.max(d.max, v);
+        const h = local.getUTCHours();
+        if (h >= DAYLIGHT_FROM && h < DAYLIGHT_TO) d.daylight++;
       });
-      const v = [...days.values()].filter((x) => x > 0);
+      const v = [...days.values()].filter((d) => d.daylight === DAYLIGHT_TO - DAYLIGHT_FROM && d.max > 0).map((d) => d.max);
       return { key: doc.month, partial: v.length < (doc.cols[col].length / 24) * PARTIAL_BELOW, stats: boxStats(v) };
     })
     .filter((m) => m.stats);

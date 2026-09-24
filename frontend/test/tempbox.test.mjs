@@ -47,7 +47,7 @@ test("monthlyDailyMaxBoxes takes each local day's peak, one value per day", () =
   uv[12] = 9;
   uv[13] = 4;
   uv[36] = 11;
-  uv[40] = null;
+  uv[26] = null; // a missing night hour (02:00) does not make day 2 incomplete
   const [m] = monthlyDailyMaxBoxes([{ month: "2026-09", start: Date.UTC(2026, 8, 1, 6) / 1000, cols: { uv } }], "uv");
   assert.equal(m.stats.n, 2);
   assert.deepEqual([m.stats.min, m.stats.max], [9, 11]);
@@ -57,4 +57,19 @@ test("monthlyDailyMaxBoxes takes each local day's peak, one value per day", () =
   assert.deepEqual(monthlyDailyMaxBoxes([{ month: "2026-09", start: 0, cols: { uv: [null, null] } }], "uv"), []);
   const allZero = [{ month: "2026-09", start: Date.UTC(2026, 8, 1, 6) / 1000, cols: { uv: uv.map((v, i) => (i >= 24 ? 0 : v)) } }];
   assert.equal(monthlyDailyMaxBoxes(allZero, "uv")[0].stats.n, 1); // an all-zero day is an outage, not a dark day
+});
+
+test("monthlyDailyMaxBoxes skips days missing any daylight hour", () => {
+  // Day 1 is missing 13:00 (index 13), so its too-low peak of 2 is dropped; day 2 is complete and peaks at 11.
+  const uv = new Array(48).fill(0);
+  uv[10] = 2;
+  uv[13] = null;
+  uv[36] = 11;
+  const [m] = monthlyDailyMaxBoxes([{ month: "2026-09", start: Date.UTC(2026, 8, 1, 6) / 1000, cols: { uv } }], "uv");
+  assert.equal(m.stats.n, 1);
+  assert.equal(m.stats.min, 11);
+  assert.equal(m.partial, true);
+  // A day in progress (readings only up to 08:00) is left out too.
+  const today = new Array(8).fill(1);
+  assert.deepEqual(monthlyDailyMaxBoxes([{ month: "2026-09", start: Date.UTC(2026, 8, 1, 6) / 1000, cols: { uv: today } }], "uv"), []);
 });

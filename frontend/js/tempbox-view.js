@@ -21,7 +21,7 @@ export const UV = {
   low: t("Weakest", "Más débil"),
   fmt: (v) => `${t("UV index", "índice UV")} ${v.toFixed(1)}`,
   bands: UV_BANDS,
-  extraNote: t("The shaded bands are the standard UV index risk levels. ", "Las bandas sombreadas son los niveles de riesgo estándar del índice UV. "),
+  extraNote: t("The shaded bands are the standard UV index risk levels. Days missing any daylight hour (06:00–18:00), such as sensor outages or today, are left out, since their peak could be too low. ", "Las bandas sombreadas son los niveles de riesgo estándar del índice UV. Los días a los que les falta alguna hora de luz (06:00–18:00), como cortes del sensor o el día de hoy, se excluyen, porque su máximo podría quedar demasiado bajo. "),
 };
 const BAND_ALPHA = "26"; // hex alpha, about 15%
 const f1 = (v) => v.toFixed(1);
