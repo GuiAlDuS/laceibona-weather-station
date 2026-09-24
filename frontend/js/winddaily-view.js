@@ -19,20 +19,25 @@ export function renderWindDailyChart(hours) {
   const muted = token("--text-muted");
   const first = hours[0].date;
   const span = dayIndex(hours.at(-1).date, first) + 1;
-  // Top of the colour scale: the fastest hour, rounded up to 2 km/h, and never below 8 so a calm week is not stretched.
-  const cmax = Math.max(8, Math.ceil(Math.max(...hours.map((h) => h.ws)) / 2) * 2);
-  const cticks = Array.from({ length: cmax / 2 }, (_, i) => (i + 1) * 2);
+  // Top of the colour scale: exactly the fastest hour, so it is always the yellowest dot, whatever the week.
+  // Ticks at round speeds below it: every 1, 2 or 5 km/h, whichever gives about five.
+  const cmax = Math.max(CMIN + 1, ...hours.map((h) => h.ws));
+  const cstep = [1, 2, 5, 10].find((v) => (cmax - CMIN) / v <= 6) ?? 20;
+  const cticks = [];
+  for (let v = Math.ceil(CMIN / cstep) * cstep; v <= cmax; v += cstep) cticks.push(v);
+  // Slowest first, so where dots overlap the faster (yellower) ones are drawn on top.
+  const dots = [...hours].sort((a, b) => a.ws - b.ws);
   const trace = {
     type: "scatter",
     mode: "markers",
-    x: hours.map((h) => dayIndex(h.date, first) + (h.hour + 0.5) / 24), // each dot at its own hour, so time runs left to right
-    y: hours.map((h) => h.y),
-    customdata: hours.map((h) => t(`${dayLabel(h.date)}, ${String(h.hour).padStart(2, "0")}:00<br>from ${sectorName(h.dir)} (${Math.round(h.dir)}°)`, `${dayLabel(h.date)}, ${String(h.hour).padStart(2, "0")}:00<br>desde ${sectorName(h.dir)} (${Math.round(h.dir)}°)`)),
+    x: dots.map((h) => dayIndex(h.date, first) + (h.hour + 0.5) / 24), // each dot at its own hour, so time runs left to right
+    y: dots.map((h) => h.y),
+    customdata: dots.map((h) => t(`${dayLabel(h.date)}, ${String(h.hour).padStart(2, "0")}:00<br>from ${sectorName(h.dir)} (${Math.round(h.dir)}°)`, `${dayLabel(h.date)}, ${String(h.hour).padStart(2, "0")}:00<br>desde ${sectorName(h.dir)} (${Math.round(h.dir)}°)`)),
     hovertemplate: "%{customdata}<br>%{marker.color:.1f} km/h<extra></extra>",
     marker: {
       size: 7,
       opacity: 0.85,
-      color: hours.map((h) => h.ws),
+      color: dots.map((h) => h.ws),
       cmin: CMIN,
       cmax,
       colorscale: VIRIDIS, // same scale as the wind speed heatmap: the strongest wind is the yellowest
@@ -79,8 +84,8 @@ export function renderWindDailyText(hours) {
     `${dayLabel(days[0].date)} a ${dayLabel(days.at(-1).date)}. Viento horario más fuerte: ${top.ws.toFixed(1)} km/h desde ${sectorName(top.dir)} el ${dayLabel(top.date)}.`,
   );
   $("ds-note").textContent = t(
-    "Each dot is one hour, placed at its actual time of day (midnight at the left edge of each day), and coloured by the hour's mean speed, so daily patterns such as a sea breeze switching to a land breeze show up as a repeating shape. South is at both top and bottom, so the north and east winds sit in the middle. Calm hours (under 1.8 km/h) are left out.",
-    "Cada punto es una hora, ubicada en su momento real del día (la medianoche en el borde izquierdo de cada día), y coloreada según la velocidad media de la hora, así que patrones diarios como el cambio de brisa marina a terral se ven como una forma que se repite. El sur está arriba y abajo, así que los vientos del norte y del este quedan en el medio. Las horas de calma (bajo 1,8 km/h) se excluyen.",
+    "Each dot is one hour, placed at its actual time of day (midnight at the left edge of each day), and coloured by the hour's mean speed, with the colour scale stretched to the days shown (the yellowest dot is the fastest hour), so daily patterns such as a sea breeze switching to a land breeze show up as a repeating shape. South is at both top and bottom, so the north and east winds sit in the middle. Calm hours (under 1.8 km/h) are left out.",
+    "Cada punto es una hora, ubicada en su momento real del día (la medianoche en el borde izquierdo de cada día), y coloreada según la velocidad media de la hora, con la escala de colores ajustada a los días mostrados (el punto más amarillo es la hora más ventosa), así que patrones diarios como el cambio de brisa marina a terral se ven como una forma que se repite. El sur está arriba y abajo, así que los vientos del norte y del este quedan en el medio. Las horas de calma (bajo 1,8 km/h) se excluyen.",
   );
 
   const table = $("ds-table");
