@@ -1,4 +1,4 @@
-import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin } from "./common.js";
+import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin, weekNightBands } from "./common.js";
 import { t, sectorLabel } from "./i18n.js";
 import { VIRIDIS } from "./heatmap-view.js";
 import { dayLabel } from "./tempdaily-view.js";
@@ -50,7 +50,9 @@ export function renderWindDailyChart(hours, first) {
     font,
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
-    margin: { ...weekMargin(), t: 12, b: 40 },
+    margin: { ...weekMargin({ colorbar: true }), t: 12, b: 40 },
+    // The same night (18:00-06:00) bands as the panels above, so the two week charts read alike.
+    shapes: weekNightBands(span),
     hovermode: "closest",
     hoverlabel: hoverLabel(),
     xaxis: {
@@ -85,8 +87,8 @@ export function renderWindDailyText(hours) {
     `${dayLabel(days[0].date)} a ${dayLabel(days.at(-1).date)}. Viento horario más fuerte: ${top.ws.toFixed(1)} km/h desde ${sectorName(top.dir)} el ${dayLabel(top.date)}.`,
   );
   $("ds-note").textContent = t(
-    "Each dot is one hour, placed at its actual time of day (midnight at the left edge of each day), and coloured by the hour's mean speed, with the colour scale stretched to the days shown (the yellowest dot is the fastest hour), so daily patterns such as a sea breeze switching to a land breeze show up as a repeating shape. South is at both top and bottom, so the north and east winds sit in the middle. Calm hours (under 1.8 km/h) are left out.",
-    "Cada punto es una hora, ubicada en su momento real del día (la medianoche en el borde izquierdo de cada día), y coloreada según la velocidad media de la hora, con la escala de colores ajustada a los días mostrados (el punto más amarillo es la hora más ventosa), así que patrones diarios como el cambio de brisa marina a terral se ven como una forma que se repite. El sur está arriba y abajo, así que los vientos del norte y del este quedan en el medio. Las horas de calma (bajo 1,8 km/h) se excluyen.",
+    "Each dot is one hour, placed at its actual time of day (midnight at the left edge of each day), and coloured by the hour's mean speed, with the colour scale stretched to the days shown (the yellowest dot is the fastest hour), so daily patterns such as a sea breeze switching to a land breeze show up as a repeating shape. South is at both top and bottom, so the north and east winds sit in the middle. Calm hours (under 1.8 km/h) are left out. Night (18:00–06:00) is shaded.",
+    "Cada punto es una hora, ubicada en su momento real del día (la medianoche en el borde izquierdo de cada día), y coloreada según la velocidad media de la hora, con la escala de colores ajustada a los días mostrados (el punto más amarillo es la hora más ventosa), así que patrones diarios como el cambio de brisa marina a terral se ven como una forma que se repite. El sur está arriba y abajo, así que los vientos del norte y del este quedan en el medio. Las horas de calma (bajo 1,8 km/h) se excluyen. La noche (18:00–06:00) está sombreada.",
   );
 
   const table = $("ds-table");

@@ -1,4 +1,4 @@
-import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin, stackDomains, panelTitle, SENSOR_HIGH_FROM, addCaveat } from "./common.js";
+import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin, stackDomains, panelTitle, PANEL_GAP_PX, perPanel, weekNightBands, SENSOR_HIGH_FROM, addCaveat } from "./common.js";
 import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { fineDaySummaries, finePeak } from "./rainfine.js";
@@ -13,7 +13,6 @@ const rgba = (hex, a) => `rgba(${[1, 3, 5].map((k) => parseInt(hex.slice(k, k + 
 // Five panels over one shared day axis, top to bottom: temperature, solar radiation, air humidity, station pressure
 // and rain intensity. Each has its own y axis and a name above it, so no scale is shared or doubled up.
 const PANEL_WEIGHTS = [1, 1, 1, 1, 1.2];
-const PANEL_GAP_PX = 28;
 // The week is on or after the date the light sensor started reading high, so the solar panel is flagged.
 const sensorHigh = (buckets) => buckets.some((b) => b.date >= SENSOR_HIGH_FROM && b.solar !== null);
 
@@ -62,20 +61,9 @@ export function renderRainFineChart(buckets, first) {
   const maxSolar = Math.max(100, ...buckets.map((b) => b.solar ?? 0));
   const minRh = Math.min(100, ...buckets.map((b) => b.rh ?? 100));
 
-  // A faint band from 18:00 to 06:00 each day, so night and day are easy to tell apart at a glance.
-  const nightShapes = Array.from({ length: span + 2 }, (_, i) => i - 1).map((i) => ({
-    type: "rect",
-    xref: "x",
-    yref: "paper",
-    x0: i + 0.75,
-    x1: i + 1.25,
-    y0: 0,
-    y1: 1,
-    fillcolor: token("--grid"),
-    opacity: 0.5,
-    line: { width: 0 },
-    layer: "below",
-  }));
+  // A faint band from 18:00 to 06:00 each day, so night and day are easy to tell apart at a glance; drawn inside
+  // each panel, so the white gaps between panels stay clear.
+  const nightShapes = perPanel(weekNightBands(span), [tempD, solarD, rhD, pD, rainD]);
   const names = [
     t("Temperature (°C)", "Temperatura (°C)"),
     sensorHigh(buckets) ? t("Solar radiation (W/m², under review)", "Radiación solar (W/m², en revisión)") : t("Solar radiation (W/m²)", "Radiación solar (W/m²)"),

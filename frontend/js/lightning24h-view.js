@@ -1,4 +1,4 @@
-import { $, token, nf, chartFont, hoverLabel, stackDomains, panelTitle } from "./common.js";
+import { $, token, nf, chartFont, hoverLabel, stackDomains, panelTitle, PANEL_GAP_PX, perPanel } from "./common.js";
 import { t } from "./i18n.js";
 import { localStamp, localDate } from "./forecast.js";
 import { RATE_PER_BUCKET } from "./rainfine.js";
@@ -81,7 +81,8 @@ export function renderLightningChart(s, buckets) {
     marker: { size: placed.map((e) => dotSize(e.count)), color: rgba(token("--series-7"), 0.3), line: { color: token("--series-7"), width: 1 } },
   };
 
-  // Night bands (18:00-06:00) and a dotted rule at midnight through every panel, as on the forecast chart.
+  // Night bands (18:00-06:00) and a dotted rule at midnight in every panel, as on the forecast chart; each is drawn
+  // inside the panels (see perPanel below), so the gaps between them stay clear.
   const shapes = [];
   const annotations = [];
   let today = null;
@@ -95,7 +96,7 @@ export function renderLightningChart(s, buckets) {
       shapes.push({ type: "line", xref: "x", yref: "paper", x0: xm, x1: xm, y0: 0, y1: 1, line: { color: token("--baseline"), width: 1, dash: "dot" } });
     }
   }
-  const [tempD, rainD, lightD] = stackDomains(PANEL_WEIGHTS, 28, $("lg-chart").clientHeight - MARGIN.t - MARGIN.b);
+  const [tempD, rainD, lightD] = stackDomains(PANEL_WEIGHTS, PANEL_GAP_PX, $("lg-chart").clientHeight - MARGIN.t - MARGIN.b);
   panelNames().forEach((name, i) => annotations.push(panelTitle(name, [tempD, rainD, lightD][i][1])));
   if (today) {
     // "Today" goes on the top panel's label row, unless midnight is so early in the window that it would run into
@@ -119,7 +120,7 @@ export function renderLightningChart(s, buckets) {
     plot_bgcolor: "rgba(0,0,0,0)",
     margin: MARGIN,
     showlegend: false,
-    shapes,
+    shapes: perPanel(shapes, [tempD, rainD, lightD]),
     annotations,
     hovermode: "closest",
     hoverlabel: hoverLabel(),

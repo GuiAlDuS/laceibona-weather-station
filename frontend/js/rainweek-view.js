@@ -1,4 +1,4 @@
-import { $, token, nf, chartFont, hoverLabel, categoryDayTicks, keepDayLabel } from "./common.js";
+import { $, token, nf, chartFont, hoverLabel, categoryDayTicks, keepDayLabel, stackDomains, panelTitle, PANEL_GAP_PX } from "./common.js";
 import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { weekTotals } from "./rainweek.js";
@@ -6,8 +6,10 @@ import { weekTotals } from "./rainweek.js";
 const label = (r) => `${dayLabel(r.date)}${r.inProgress ? t("<br>so far", "<br>hasta ahora") : ""}`;
 const hrs = (h) => `${h.toFixed(1)} h`;
 
-// One plot over the days: rain and ETo bars on the left axis (mm), rain duration as a line on the right axis (hours).
-// The legend names each series' axis.
+// Two panels over one shared day axis, like the other stacked charts: rain and ETo bars (mm) above, rain duration
+// (hours) below. Each has its own y axis and a name above it; the legend tells rain from ETo.
+const PANEL_WEIGHTS = [2, 1];
+const MARGIN = { l: 56, r: 12, t: 24, b: 48 };
 export function renderRainWeekChart(rows) {
   const font = chartFont();
   const muted = token("--text-muted");
@@ -37,8 +39,9 @@ export function renderRainWeekChart(rows) {
     marker: { size: 8, color: token("--series-3"), line: { color: surface, width: 2 } },
     hovertemplate: "%{y:.1f} h",
   };
-  const axis = (title, extra = {}) => ({
-    title: { text: title, font: { color: muted, size: 12 }, standoff: 8 },
+  const [mmD, hoursD] = stackDomains(PANEL_WEIGHTS, PANEL_GAP_PX, $("rw-chart").clientHeight - MARGIN.t - MARGIN.b);
+  const axis = (domain, extra = {}) => ({
+    domain,
     rangemode: "tozero",
     gridcolor: token("--grid"),
     gridwidth: 1,
@@ -48,12 +51,14 @@ export function renderRainWeekChart(rows) {
     fixedrange: true,
     ...extra,
   });
+  // Headroom above the tallest bar for its label; at least 6 h on the duration panel so a short shower stays low.
+  const maxMm = Math.max(5, ...rows.flatMap((r) => [r.rain ?? 0, r.eto ?? 0]));
   const maxHours = Math.max(6, ...rows.map((r) => r.hours ?? 0));
   const layout = {
     font,
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
-    margin: { l: 56, r: 48, t: 24, b: 48 },
+    margin: MARGIN,
     showlegend: false,
     barmode: "group",
     bargap: 0.3,
@@ -61,11 +66,10 @@ export function renderRainWeekChart(rows) {
     hovermode: "x unified",
     hoverlabel: hoverLabel(),
     shapes: categoryDayTicks(rows.length),
-    xaxis: { type: "category", tickmode: "array", tickvals: x.filter(keepDayLabel), ticktext: x.filter(keepDayLabel), tickangle: 0, automargin: true, showgrid: false, showline: true, linecolor: token("--baseline"), showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: token("--baseline"), spikethickness: 1, spikedash: "solid", tickfont: { color: muted, size: 12 }, fixedrange: true },
-    yaxis: axis("mm", { tickformat: ",d" }),
-    // Hours on the right, without its own gridlines so only the mm grid is drawn; at least 6 h of range so a
-    // short shower stays low, and ticks on round hours rather than synced to the mm grid.
-    yaxis2: axis(t("hours", "horas"), { overlaying: "y", side: "right", showgrid: false, zeroline: false, range: [0, maxHours * 1.15], tickmode: "linear", tick0: 0, dtick: maxHours <= 10 ? 2 : maxHours <= 20 ? 4 : 6 }),
+    annotations: [panelTitle(t("Rain and ETo (mm)", "Lluvia y ETo (mm)"), mmD[1]), panelTitle(t("Rain duration (hours)", "Duración de la lluvia (horas)"), hoursD[1])],
+    xaxis: { type: "category", anchor: "y2", tickmode: "array", tickvals: x.filter(keepDayLabel), ticktext: x.filter(keepDayLabel), tickangle: 0, automargin: true, showgrid: false, showline: true, linecolor: token("--baseline"), showspikes: true, spikemode: "across", spikesnap: "cursor", spikecolor: token("--baseline"), spikethickness: 1, spikedash: "solid", tickfont: { color: muted, size: 12 }, fixedrange: true },
+    yaxis: axis(mmD, { range: [0, maxMm * 1.2], tickformat: ",d", nticks: 5 }),
+    yaxis2: axis(hoursD, { range: [0, maxHours * 1.1], tickmode: "linear", tick0: 0, dtick: maxHours <= 6 ? 3 : maxHours <= 12 ? 6 : 12 }),
   };
   return Plotly.react($("rw-chart"), [rain, bar("ETo", "eto", token("--series-2")), duration], layout, { displayModeBar: false, responsive: true });
 }
@@ -74,9 +78,9 @@ export function renderRainWeekText(rows) {
   const legend = $("rw-legend");
   legend.replaceChildren();
   for (const [name, color, cls] of [
-    [t("Rain (mm, left axis)", "Lluvia (mm, eje izquierdo)"), token("--series-1"), "rect"],
-    [t("ETo, evapotranspiration (mm, left axis)", "ETo, evapotranspiración (mm, eje izquierdo)"), token("--series-2"), "rect"],
-    [t("Rain duration (hours, right axis)", "Duración de la lluvia (horas, eje derecho)"), token("--series-3"), "line"],
+    [t("Rain", "Lluvia"), token("--series-1"), "rect"],
+    [t("ETo (evapotranspiration)", "ETo (evapotranspiración)"), token("--series-2"), "rect"],
+    [t("Rain duration (lower panel)", "Duración de la lluvia (panel inferior)"), token("--series-3"), "line"],
   ]) {
     const li = document.createElement("li");
     const key = document.createElement("span");

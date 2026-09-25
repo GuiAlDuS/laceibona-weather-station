@@ -64,8 +64,9 @@ export function weekStart(nowMs = Date.now()) {
   return new Date(Date.parse(today) - (WEEK_DAYS - 1) * 86400_000).toISOString().slice(0, 10);
 }
 // Plot-area margins both timelines use, so their days sit at the same pixels; the right one holds the speed colour
-// bar on the wind chart and is left empty on the rain panels to match. Tighter on phones, where every pixel of plot counts.
-export const weekMargin = () => (narrowScreen.matches ? { l: 44, r: 64 } : { l: 56, r: 96 });
+// bar on the wind chart and is left empty on the rain panels to match. On phones, where every pixel of plot counts,
+// only the wind chart keeps that space (pass colorbar), so the panels run the full width.
+export const weekMargin = ({ colorbar = false } = {}) => (narrowScreen.matches ? { l: 44, r: colorbar ? 64 : 12 } : { l: 56, r: 96 });
 
 // Shared day axis for the week charts, where day i spans x = i..i+1: a tick mark at every midnight (minor ticks) and
 // each day's name centred under its noon, between the two marks that bound it. Every other name on narrow screens.
@@ -90,7 +91,10 @@ export function dayAxisTicks(labels, { grid = false } = {}) {
 export const categoryDayTicks = (n) =>
   Array.from({ length: n + 1 }, (_, i) => ({ type: "line", xref: "x", yref: "paper", ysizemode: "pixel", yanchor: 0, x0: i - 0.5, x1: i - 0.5, y0: 0, y1: -DAY_TICK_LEN, line: { color: token("--baseline"), width: 1 } }));
 
-// Panels stacked over one shared x axis, each on its own y axis. weights: relative panel heights, top first;
+// Panels stacked over one shared x axis, each on its own y axis. PANEL_GAP_PX: the white space between panels, wide
+// enough that each panel's name sits clearly closer to its own panel than to the one above.
+export const PANEL_GAP_PX = 40;
+// weights: relative panel heights, top first;
 // gapPx: the space between panels (room for each panel's name); plotPx: the plot area's height. Returns each
 // panel's [bottom, top] y-axis domain, top panel first.
 export function stackDomains(weights, gapPx, plotPx) {
@@ -103,8 +107,15 @@ export function stackDomains(weights, gapPx, plotPx) {
     return d;
   });
 }
-// A panel's name, just above its top-left corner, in place of a legend.
-export const panelTitle = (text, top) => ({ xref: "paper", yref: "paper", x: 0, y: top, xanchor: "left", yanchor: "bottom", showarrow: false, text, font: { color: token("--text-secondary"), size: 12 } });
+// A panel's name, just above its top-left corner, in place of a legend. Primary ink and semibold, a step above the
+// muted tick labels, so it reads as the start of a new panel rather than as one more axis label.
+export const panelTitle = (text, top) => ({ xref: "paper", yref: "paper", x: 0, y: top, xanchor: "left", yanchor: "bottom", showarrow: false, text, font: { color: token("--text-primary"), size: 13, weight: 600 } });
+// Copies a paper-height shape (a night band, a midnight rule) into each panel's own y range, so it stops at the
+// panel's edges and leaves the gaps between panels clear.
+export const perPanel = (shapes, domains) => domains.flatMap(([y0, y1]) => shapes.map((s) => ({ ...s, y0, y1 })));
+// Night (18:00-06:00) bands for a week axis where day i spans x = i..i+1, from the day before the first to the day after.
+export const weekNightBands = (span) =>
+  Array.from({ length: span + 2 }, (_, i) => i - 1).map((i) => ({ type: "rect", xref: "x", yref: "paper", x0: i + 0.75, x1: i + 1.25, y0: 0, y1: 1, fillcolor: token("--grid"), opacity: 0.5, line: { width: 0 }, layer: "below" }));
 
 // entries: [{ label, color }]; shape "line" for line charts, "rect" for bars.
 export function fillLegend(ul, entries, shape) {
