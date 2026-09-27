@@ -1,4 +1,4 @@
-import { $, el, num, token, chartFont, hoverLabel } from "./common.js";
+import { $, el, num, token, chartFont, hoverLabel, stackDomains, panelTitle, PANEL_GAP_PX, perPanel } from "./common.js";
 import { t, WEEKDAYS } from "./i18n.js";
 import { isRainLikely, isStormHour, contiguousRanges, localStamp } from "./forecast.js";
 
@@ -62,53 +62,60 @@ export function renderForecastUnavailable(message) {
 
 const hourLabel = (h) => `${String(h).padStart(2, "0")}:00`;
 // A range that starts on a later date than the window's first hour is tomorrow's; one that only runs past midnight is tonight's.
-const rangesText = (ranges, today) =>
-  ranges
+// When every hour in the window matches, it reads "all day" rather than a range that ends where it starts ("19:00–19:00").
+const rangesText = (hours, predicate) => {
+  const today = hours[0]?.date;
+  if (hours.every(predicate)) return t("all day", "todo el día");
+  return contiguousRanges(hours, predicate)
     .map((r) => {
       const span = `${hourLabel(r.start)}–${hourLabel((r.end + 1) % 24)}`;
       return r.date > today ? t(`${span} tomorrow`, `${span} mañana`) : span;
     })
     .join(", ");
+};
 
 export function outlookText(hours) {
-  const today = hours[0]?.date;
   const rain = contiguousRanges(hours, isRainLikely);
   const storm = contiguousRanges(hours, isStormHour);
   if (rain.length === 0 && storm.length === 0) return t("No significant rain expected in the next 24 hours.", "No se espera lluvia significativa en las próximas 24 horas.");
   const parts = [];
-  if (rain.length) parts.push(t(`Rain likely ${rangesText(rain, today)}`, `Lluvia probable ${rangesText(rain, today)}`));
-  if (storm.length) parts.push(t(`thunderstorms possible ${rangesText(storm, today)}`, `posibles tormentas ${rangesText(storm, today)}`));
+  if (rain.length) parts.push(t(`Rain likely ${rangesText(hours, isRainLikely)}`, `Lluvia probable ${rangesText(hours, isRainLikely)}`));
+  if (storm.length) parts.push(t(`thunderstorms possible ${rangesText(hours, isStormHour)}`, `posibles tormentas ${rangesText(hours, isStormHour)}`));
   parts[0] = parts[0][0].toUpperCase() + parts[0].slice(1);
   return `${parts.join(", ")}.`;
 }
 
-// Rain probability by hour (bars, coloured by storm risk) with temperature overlaid, for the next 24 hours.
-// x is each hour's local start time, so the bar for 14:00-15:00 sits on the 14:00 tick, as on the other hourly charts.
+// Two panels over the next 24 hours on one shared time axis: temperature on top, then rain probability by hour (bars,
+// coloured by storm risk). Temperature is red and rain blue, as on the observed charts, so storm hours take the
+// lightning colour. x is each hour's local start time, so the bar for 14:00-15:00 sits on the 14:00 tick, as on the
+// other hourly charts.
+const MARGIN = { l: 48, r: 16, t: 24, b: 36 };
+const panelNames = () => [t("Temperature (°C)", "Temperatura (°C)"), t("Rain probability (%)", "Probabilidad de lluvia (%)")];
+
 export function renderForecastHourlyChart(hours) {
   const font = chartFont();
   const muted = token("--text-muted");
   const at = (h, offsetH = 0) => localStamp(h.time + offsetH * 3600);
   const x = hours.map((h) => at(h));
   const rainColor = token("--series-1");
-  const stormColor = token("--hot");
+  const stormColor = token("--series-7");
+  const temp = {
+    type: "scatter",
+    mode: "lines",
+    x,
+    y: hours.map((h) => h.temp),
+    yaxis: "y2",
+    line: { color: token("--hot"), width: 2 },
+    hovertemplate: t("temperature %{y:.1f} °C<extra></extra>", "temperatura %{y:.1f} °C<extra></extra>"),
+  };
   const precip = {
     type: "bar",
-    name: t("Rain probability", "Probabilidad de lluvia"),
     x,
     y: hours.map((h) => h.precip_probability),
     width: 0.8 * 3_600_000,
     marker: { color: hours.map((h) => (isStormHour(h) ? stormColor : rainColor)) },
-    hovertemplate: "%{y}%<extra></extra>",
-  };
-  const temp = {
-    type: "scatter",
-    mode: "lines",
-    name: t("Temperature", "Temperatura"),
-    x,
-    y: hours.map((h) => h.temp),
-    yaxis: "y2",
-    line: { color: token("--series-3"), width: 1.5 },
-    hovertemplate: "%{y:.1f} °C<extra></extra>",
+    customdata: hours.map((h) => (isStormHour(h) ? t(", thunderstorm", ", tormenta") : "")),
+    hovertemplate: t("rain %{y}%%{customdata}<extra></extra>", "lluvia %{y}%%{customdata}<extra></extra>"),
   };
   // A faint band for night (18:00-06:00), same convention as the weekly rain-intensity chart; one rect per run of night hours.
   const shapes = [];
@@ -120,23 +127,27 @@ export function renderForecastHourlyChart(hours) {
       run = null;
     }
   }
-  // Midnight: a thin rule between 23:00 and 00:00, labelled with the day it starts.
-  const annotations = [];
+  const [tempD, rainD] = stackDomains([1, 1], PANEL_GAP_PX, $("fh-chart").clientHeight - MARGIN.t - MARGIN.b);
+  const annotations = panelNames().map((name, i) => panelTitle(name, [tempD, rainD][i][1]));
+  // Midnight: a thin rule between 23:00 and 00:00 in both panels, labelled with the day it starts on the top panel's
+  // label row, unless midnight is so early that it would run into the temperature label; then it drops into the panel.
   const midnight = hours.findIndex((h, i) => i > 0 && h.hour === 0);
   if (midnight > 0) {
     const xm = at(hours[midnight], -0.5);
     shapes.push({ type: "line", xref: "x", yref: "paper", x0: xm, x1: xm, y0: 0, y1: 1, line: { color: token("--baseline"), width: 1, dash: "dot" } });
-    annotations.push({ x: xm, xref: "x", y: 1, yref: "paper", yanchor: "bottom", xanchor: "left", xshift: 4, showarrow: false, text: t("Tomorrow", "Mañana"), font: { color: muted, size: 12 } });
+    const early = midnight / hours.length < 0.25;
+    annotations.push({ x: xm, xref: "x", y: early ? tempD[0] : 1, yref: "paper", yanchor: "bottom", xanchor: "left", xshift: 4, showarrow: false, text: t("Tomorrow", "Mañana"), font: { color: muted, size: 12 } });
   }
   const ticks = hours.filter((h) => h.hour % 3 === 0);
 
+  const yBase = { gridcolor: token("--grid"), gridwidth: 1, zeroline: false, tickfont: { color: muted, size: 12 }, fixedrange: true };
   const layout = {
     font,
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
-    margin: { l: 48, r: 48, t: 24, b: 36 },
+    margin: MARGIN,
     showlegend: false,
-    shapes,
+    shapes: perPanel(shapes, [tempD, rainD]),
     annotations,
     hovermode: "x unified",
     hoverlabel: hoverLabel(),
@@ -154,10 +165,10 @@ export function renderForecastHourlyChart(hours) {
       tickfont: { color: muted, size: 12 },
       fixedrange: true,
     },
-    yaxis: { title: { text: "%", font: { color: muted, size: 12 }, standoff: 8 }, range: [0, 100], gridcolor: token("--grid"), gridwidth: 1, zeroline: false, tickfont: { color: muted, size: 12 }, fixedrange: true },
-    yaxis2: { title: { text: "°C", font: { color: muted, size: 12 }, standoff: 8 }, overlaying: "y", side: "right", showgrid: false, tickfont: { color: muted, size: 12 }, fixedrange: true },
+    yaxis: { ...yBase, domain: rainD, range: [0, 105], tickvals: [0, 50, 100] },
+    yaxis2: { ...yBase, domain: tempD, nticks: 4 },
   };
-  return Plotly.react($("fh-chart"), [precip, temp], layout, { displayModeBar: false, responsive: true });
+  return Plotly.react($("fh-chart"), [temp, precip], layout, { displayModeBar: false, responsive: true });
 }
 
 export function renderForecastHourlyText(hours) {
@@ -167,8 +178,7 @@ export function renderForecastHourlyText(hours) {
   legend.replaceChildren();
   for (const [name, color, cls] of [
     [t("Rain probability", "Probabilidad de lluvia"), token("--series-1"), "rect"],
-    [t("Thunderstorm risk", "Riesgo de tormenta"), token("--hot"), "rect"],
-    [t("Temperature", "Temperatura"), token("--series-3"), "line"],
+    [t("Thunderstorm risk", "Riesgo de tormenta"), token("--series-7"), "rect"],
   ]) {
     const li = document.createElement("li");
     const key = document.createElement("span");
@@ -181,8 +191,8 @@ export function renderForecastHourlyText(hours) {
   }
 
   $("fh-note").textContent = t(
-    "Bar height is that hour's rain probability; red marks hours where any rain is expected to come as a thunderstorm, not a separate risk on top of the rain chance. Tempest's hourly forecast model for the next 24 hours, starting with the next full hour; not a measurement. Night (18:00–06:00) is shaded and the dotted line marks midnight.",
-    "La altura de la barra es la probabilidad de lluvia de esa hora; el rojo marca las horas en que, de llover, se espera que sea en forma de tormenta, no un riesgo aparte que se suma a la probabilidad de lluvia. Modelo de pronóstico horario de Tempest para las próximas 24 horas, a partir de la próxima hora en punto; no una medición. La noche (18:00–06:00) está sombreada y la línea punteada marca la medianoche.",
+    "Two panels over the same 24 hours, each with its own scale: temperature on top, rain probability below. Bar height is that hour's rain probability; purple (the lightning colour on the last-24-hours chart) marks hours where any rain is expected to come as a thunderstorm, not a separate risk on top of the rain chance. Tempest's hourly forecast model for the next 24 hours, starting with the next full hour; not a measurement. Night (18:00–06:00) is shaded and the dotted line marks midnight.",
+    "Dos paneles sobre las mismas 24 horas, cada uno con su propia escala: la temperatura arriba y la probabilidad de lluvia abajo. La altura de la barra es la probabilidad de lluvia de esa hora; el morado (el color de los rayos en el gráfico de las últimas 24 horas) marca las horas en que, de llover, se espera que sea en forma de tormenta, no un riesgo aparte que se suma a la probabilidad de lluvia. Modelo de pronóstico horario de Tempest para las próximas 24 horas, a partir de la próxima hora en punto; no una medición. La noche (18:00–06:00) está sombreada y la línea punteada marca la medianoche.",
   );
 
   const table = $("fh-table");

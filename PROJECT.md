@@ -766,3 +766,8 @@ Owner decisions worth remembering:
   range, peak solar, humidity and pressure ranges, rain and peak rate.
 - `stackDomains()` and `panelTitle()` in `common.js` lay out the panels for both charts; the gap
   between panels is fixed in pixels, so labels fit at any chart height.
+- **"Forecast, next 24 hours"** in two panels too, for consistency: forecast temperature on top
+  (`--hot`, as on the observed charts, replacing the green `--series-3` line on a right axis), rain
+  probability bars below. Thunderstorm hours move from red to `--series-7`, the lightning colour
+  on the last-24-hours chart, since red is temperature. The summary says "all day" / "todo el
+  día" when every hour in the window is rainy or stormy, instead of a range like "19:00–19:00".
