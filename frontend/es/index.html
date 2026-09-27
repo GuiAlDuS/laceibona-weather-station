@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>Estación Meteorológica La Ceibona</title>
+  <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -43,6 +44,25 @@
         </div>
         <p id="cc-stale" class="stale" role="status" hidden></p>
         <div id="cc-body"><p class="muted">Cargando…</p></div>
+      </section>
+
+      <section class="card" aria-labelledby="nb-title">
+        <h3 id="nb-title">Estaciones cercanas, ahora</h3>
+        <p class="muted">Temperatura, lluvia y viento en nuestra estación y dos vecinas, según su último reporte. Datos de las vecinas proporcionados por <a href="https://www.wunderground.com/">Weather Underground</a>.</p>
+        <p id="nb-summary" class="summary" aria-live="polite"></p>
+        <div id="nb-frame" class="nb-frame">
+          <div id="nb-map" role="region" aria-label="Mapa de nuestra estación y dos estaciones cercanas, cada una marcada con su temperatura, la lluvia de hoy y la dirección y velocidad del viento"></div>
+        </div>
+        <div class="card-foot">
+          <details class="note-view">
+            <summary>Cómo leer este mapa</summary>
+            <p id="nb-note" class="muted small"></p>
+          </details>
+          <details class="table-view">
+            <summary>Vista de tabla</summary>
+            <div class="table-scroll"><table id="nb-table"></table></div>
+          </details>
+        </div>
       </section>
 
       <div class="row row-live">
@@ -483,6 +503,7 @@
   </div>
 
   <script src="/vendor/plotly-cartesian.min.js"></script>
+  <script src="/vendor/leaflet/leaflet.js"></script>
   <script type="module" src="/js/app.js"></script>
 </body>
 </html>

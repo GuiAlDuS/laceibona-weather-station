@@ -1,4 +1,4 @@
-import { API_BASE } from "./config.js";
+import { API_BASE, STATION_POSITION } from "./config.js";
 import { initNav } from "./nav.js";
 import { $, narrowScreen, wideLayout, setStatus, longDate, weekStart, WEEK_DAYS } from "./common.js";
 import { t, TIME_LOCALE } from "./i18n.js";
@@ -13,6 +13,8 @@ import { renderRainWeekChart, renderRainWeekText } from "./rainweek-view.js";
 import { fineBuckets } from "./rainfine.js";
 import { renderRainFineChart, renderRainFineText } from "./rainfine-view.js";
 import { renderCurrent, renderCurrentUnavailable } from "./current-view.js";
+import { nearbyStations } from "./nearby.js";
+import { renderNearbyMap, renderNearbyText, renderNearbyUnavailable } from "./nearby-view.js";
 import { forecastDays, forecastHours } from "./forecast.js";
 import { renderForecast, renderForecastUnavailable, renderForecastHourlyChart, renderForecastHourlyText } from "./forecast-view.js";
 import { getMonths, monthKeys } from "./obs-data.js";
@@ -57,11 +59,15 @@ async function loadCurrent() {
     } else {
       currentDoc = doc;
       renderCurrent(doc, Date.now());
+      renderNearby();
       refreshRainWeekLive();
     }
   } catch (err) {
     console.error(err);
-    if (!currentDoc) renderCurrentUnavailable(t(`Could not load current conditions (${err.message}).`, `No se pudieron cargar las condiciones actuales (${err.message}).`));
+    if (!currentDoc) {
+      renderCurrentUnavailable(t(`Could not load current conditions (${err.message}).`, `No se pudieron cargar las condiciones actuales (${err.message}).`));
+      renderNearbyUnavailable(t(`Could not load the stations (${err.message}).`, `No se pudieron cargar las estaciones (${err.message}).`));
+    }
   } finally {
     $("cc-body").classList.remove("reloading");
   }
@@ -69,6 +75,18 @@ async function loadCurrent() {
 
 // Ages advance between fetches, so re-render from the last document without refetching.
 setInterval(() => currentDoc && renderCurrent(currentDoc, Date.now()), 30_000);
+
+// The map is an extra: if Leaflet or the tiles fail to load, the rest of the page carries on.
+function renderNearby() {
+  try {
+    const stations = nearbyStations(currentDoc, STATION_POSITION);
+    renderNearbyText(stations, Date.now());
+    renderNearbyMap(stations, Date.now());
+  } catch (err) {
+    console.error("nearby map:", err);
+    renderNearbyUnavailable(t("The map could not be drawn.", "No se pudo dibujar el mapa."));
+  }
+}
 setInterval(loadCurrent, 60_000);
 
 let forecast = null;

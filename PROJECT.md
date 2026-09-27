@@ -771,3 +771,31 @@ Owner decisions worth remembering:
   probability bars below. Thunderstorm hours move from red to `--series-7`, the lightning colour
   on the last-24-hours chart, since red is temperature. The summary says "all day" / "todo el
   día" when every hour in the window is rainy or stormy, instead of a range like "19:00–19:00".
+
+**Phase 13 — Nearby stations map and a larger masthead (Sept 2026)**
+
+- **"Nearby stations, now"** (Now group, right after Current conditions): a Leaflet map (vendored
+  1.9.4 in `frontend/vendor/leaflet/`, OSM tiles, muted; inverted in dark mode) with our station
+  and two Weather Underground neighbours, IESPAR72 "Esparza" and IPUNTA186 "Puntarenas". Each
+  station is a dial: red upper half with the temperature, blue lower half with today's rain (drop
+  filled while raining), and a wind arrow on the upwind side pointing at the station with the
+  speed at its tail (none when calm). Dials that would overlap (Ceibona and Esparza are 3.5 km
+  apart; on phones) step apart with a leader line (`spreadApart` in `nearby.js`). Readings older
+  than 30 min fade. Hover/tap for details; table view.
+- **Terms**: WU's PWS data feed (Weather Company Terms of Use §18, read 26 Sep 2026) allows
+  personal, non-commercial use with visible attribution and no modified or derived data. So the
+  neighbours are shown exactly as reported (no comparisons computed from them), the card credits
+  Weather Underground in its subtitle, and nothing is kept: they ride in the `current` KV document.
+- **Fetcher** (`fetcher/src/nearby.js`): each 5-minute run also calls WU's current-observation API
+  for the two neighbours (576 calls/day of the key's 1,500; secret `WU_API_KEY`). Our own station
+  still comes from Tempest. No extra KV writes on a normal day (793/day as before). A failing
+  neighbour keeps its last reading for up to 6 h. If our own reading fails (e.g. no readings yet
+  today after a power cut), the neighbours are still refreshed into the previous `current`, but
+  only every 15 minutes, keeping a day-long outage at ~889 writes/day instead of ~1,081.
+  Cloudflare's Cache API is a no-op on `workers.dev`, which is why this is not a per-request proxy.
+- **Shared WU budget**: `data_review/wu-history.mjs` uses the same key and still stops itself at
+  ~1,490 calls/day without knowing about the fetcher's 576; lower its `DAILY_LIMIT` to ~900 before
+  re-running it.
+- **Masthead**: the title is now clearly above the card titles (clamp 1.75–2.5rem), the place line
+  1.125rem, and the facts line in `--text-secondary` at 0.875rem (the muted grey was below 4.5:1),
+  with a rule under the header. Links in card subtitles inherit the text colour.

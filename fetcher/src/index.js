@@ -5,6 +5,7 @@ import { aggregateHours, mergeHours, lastFilledHour, monthKeyLocal } from "./hou
 import { aggregateFine, mergeFine, lastFilledBucket, windowEnd } from "./fine.js";
 import { buildForecast } from "./forecast.js";
 import { handleRequest } from "./api.js";
+import { fetchNeighbours, withFallback } from "./nearby.js";
 
 const TEMPEST_BASE = "https://swd.weatherflow.com/swd/rest";
 
@@ -28,11 +29,27 @@ async function refreshDailyStats(env) {
   return doc;
 }
 
-async function refreshCurrent(env) {
+async function refreshCurrent(env, scheduledMs = Date.now()) {
   const now = Date.now();
   const start = localMidnightSec(now);
-  const body = await tempestGet(env, `/observations/device/${env.DEVICE_ID}?time_start=${start}&time_end=${Math.floor(now / 1000)}`);
-  const doc = buildCurrent(body.obs ?? [], now);
+  // Our reading and the neighbours' are independent: a failing neighbour keeps its last reading (withFallback), and
+  // if our own station fails (Tempest down, or no readings yet today after a power cut) the neighbours are still
+  // refreshed into the previous document (every 15 minutes, see below), then the error is reported as usual.
+  const [ours, fresh, previous] = await Promise.all([
+    tempestGet(env, `/observations/device/${env.DEVICE_ID}?time_start=${start}&time_end=${Math.floor(now / 1000)}`)
+      .then((body) => buildCurrent(body.obs ?? [], now))
+      .catch((err) => err),
+    fetchNeighbours(env.WU_API_KEY),
+    env.WEATHER_DATA.get("current", "json"),
+  ]);
+  const nearby = withFallback(fresh, previous?.nearby, now);
+  if (ours instanceof Error) {
+    // Only every 15 minutes: each failed run already costs a `status:last_error` write, and a day-long outage
+    // refreshing the neighbours every 5 minutes on top would push KV past its 1,000 writes a day.
+    if (previous && new Date(scheduledMs).getUTCMinutes() % 15 < 5) await env.WEATHER_DATA.put("current", JSON.stringify({ ...previous, nearby }));
+    throw ours;
+  }
+  const doc = { ...ours, nearby };
   await env.WEATHER_DATA.put("current", JSON.stringify(doc));
   return doc;
 }
