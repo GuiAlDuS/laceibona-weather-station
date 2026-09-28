@@ -1,4 +1,4 @@
-import { $, el, num, token, chartFont, hoverLabel, stackDomains, panelTitle, PANEL_GAP_PX, perPanel } from "./common.js";
+import { $, el, num, token, chartFont, hoverLabel, stackDomains, panelTitle, PANEL_GAP_PX, perPanel, nowRing } from "./common.js";
 import { t, WEEKDAYS } from "./i18n.js";
 import { isRainLikely, isStormHour, contiguousRanges, localStamp } from "./forecast.js";
 
@@ -92,20 +92,37 @@ export function outlookText(hours) {
 const MARGIN = { l: 48, r: 16, t: 24, b: 36 };
 const panelNames = () => [t("Temperature (°C)", "Temperatura (°C)"), t("Rain probability (%)", "Probabilidad de lluvia (%)")];
 
-export function renderForecastHourlyChart(hours) {
+// now: the station's current reading { ts (unix s), temp (°C) }, or null. It is drawn as a ring at its own time on the
+// temperature line, so the chart starts from what the station measures now; a dotted segment bridges it to the first
+// forecast hour when that hour is still ahead. The x axis reaches back to include it.
+export function renderForecastHourlyChart(hours, now = null) {
   const font = chartFont();
   const muted = token("--text-muted");
+  const hot = token("--hot");
   const at = (h, offsetH = 0) => localStamp(h.time + offsetH * 3600);
   const x = hours.map((h) => at(h));
   const rainColor = token("--series-1");
   const stormColor = token("--series-7");
+  // The axis runs from half an hour before the first hour (or a quarter of an hour before the current reading, if
+  // earlier) to half an hour after the last, in unix seconds.
+  const x0 = hours.length ? Math.min(hours[0].time - 1800, now ? now.ts - 900 : Infinity) : 0;
+  const x1 = hours.length ? hours.at(-1).time + 1800 : 0;
+  const xStart = hours.length ? localStamp(x0) : undefined;
+  const xEnd = hours.length ? localStamp(x1) : undefined;
+  let nowTraces = [];
+  let nowLabel = null;
+  if (now?.temp != null && hours.length) {
+    const next = hours.find((h) => h.time > now.ts && typeof h.temp === "number");
+    const join = next && next === hours[0] ? { x: at(next), y: next.temp } : null;
+    ({ traces: nowTraces, label: nowLabel } = nowRing(localStamp(now.ts), now.temp, hot, { join, yaxis: "y2", frac: (now.ts - x0) / (x1 - x0) }));
+  }
   const temp = {
     type: "scatter",
     mode: "lines",
     x,
     y: hours.map((h) => h.temp),
     yaxis: "y2",
-    line: { color: token("--hot"), width: 2 },
+    line: { color: hot, width: 2 },
     hovertemplate: t("temperature %{y:.1f} °C<extra></extra>", "temperatura %{y:.1f} °C<extra></extra>"),
   };
   const precip = {
@@ -123,12 +140,14 @@ export function renderForecastHourlyChart(hours) {
     const isNight = i < hours.length && (hours[i].hour >= 18 || hours[i].hour < 6);
     if (isNight && run === null) run = i;
     if (!isNight && run !== null) {
-      shapes.push({ type: "rect", xref: "x", yref: "paper", x0: at(hours[run], -0.5), x1: at(hours[i - 1], 0.5), y0: 0, y1: 1, fillcolor: token("--grid"), opacity: 0.5, line: { width: 0 }, layer: "below" });
+      // A night run at the start also covers the stretch before the first hour where the current reading sits.
+      shapes.push({ type: "rect", xref: "x", yref: "paper", x0: run === 0 ? xStart : at(hours[run], -0.5), x1: at(hours[i - 1], 0.5), y0: 0, y1: 1, fillcolor: token("--grid"), opacity: 0.5, line: { width: 0 }, layer: "below" });
       run = null;
     }
   }
   const [tempD, rainD] = stackDomains([1, 1], PANEL_GAP_PX, $("fh-chart").clientHeight - MARGIN.t - MARGIN.b);
   const annotations = panelNames().map((name, i) => panelTitle(name, [tempD, rainD][i][1]));
+  if (nowLabel) annotations.push(nowLabel);
   // Midnight: a thin rule between 23:00 and 00:00 in both panels, labelled with the day it starts on the top panel's
   // label row, unless midnight is so early that it would run into the temperature label; then it drops into the panel.
   const midnight = hours.findIndex((h, i) => i > 0 && h.hour === 0);
@@ -153,7 +172,7 @@ export function renderForecastHourlyChart(hours) {
     hoverlabel: hoverLabel(),
     xaxis: {
       type: "date",
-      range: hours.length ? [at(hours[0], -0.5), at(hours.at(-1), 0.5)] : undefined,
+      range: hours.length ? [xStart, xEnd] : undefined,
       tickmode: "array",
       tickvals: ticks.map((h) => at(h)),
       ticktext: ticks.map((h) => hourLabel(h.hour)),
@@ -168,7 +187,7 @@ export function renderForecastHourlyChart(hours) {
     yaxis: { ...yBase, domain: rainD, range: [0, 105], tickvals: [0, 50, 100] },
     yaxis2: { ...yBase, domain: tempD, nticks: 4 },
   };
-  return Plotly.react($("fh-chart"), [temp, precip], layout, { displayModeBar: false, responsive: true });
+  return Plotly.react($("fh-chart"), [temp, precip, ...nowTraces], layout, { displayModeBar: false, responsive: true });
 }
 
 export function renderForecastHourlyText(hours) {
@@ -191,8 +210,8 @@ export function renderForecastHourlyText(hours) {
   }
 
   $("fh-note").textContent = t(
-    "Two panels over the same 24 hours, each with its own scale: temperature on top, rain probability below. Bar height is that hour's rain probability; purple (the lightning colour on the last-24-hours chart) marks hours where any rain is expected to come as a thunderstorm, not a separate risk on top of the rain chance. Tempest's hourly forecast model for the next 24 hours, starting with the next full hour; not a measurement. Night (18:00–06:00) is shaded and the dotted line marks midnight.",
-    "Dos paneles sobre las mismas 24 horas, cada uno con su propia escala: la temperatura arriba y la probabilidad de lluvia abajo. La altura de la barra es la probabilidad de lluvia de esa hora; el morado (el color de los rayos en el gráfico de las últimas 24 horas) marca las horas en que, de llover, se espera que sea en forma de tormenta, no un riesgo aparte que se suma a la probabilidad de lluvia. Modelo de pronóstico horario de Tempest para las próximas 24 horas, a partir de la próxima hora en punto; no una medición. La noche (18:00–06:00) está sombreada y la línea punteada marca la medianoche.",
+    "Two panels over the same 24 hours, each with its own scale: temperature on top, rain probability below. Bar height is that hour's rain probability; purple (the lightning colour on the last-24-hours chart) marks hours where any rain is expected to come as a thunderstorm, not a separate risk on top of the rain chance. Tempest's hourly forecast model for the next 24 hours, starting with the next full hour; not a measurement. The ring at the start of the temperature line is the one exception: the station's current measured temperature, so you can see where the forecast starts from. Night (18:00–06:00) is shaded and the dotted line marks midnight.",
+    "Dos paneles sobre las mismas 24 horas, cada uno con su propia escala: la temperatura arriba y la probabilidad de lluvia abajo. La altura de la barra es la probabilidad de lluvia de esa hora; el morado (el color de los rayos en el gráfico de las últimas 24 horas) marca las horas en que, de llover, se espera que sea en forma de tormenta, no un riesgo aparte que se suma a la probabilidad de lluvia. Modelo de pronóstico horario de Tempest para las próximas 24 horas, a partir de la próxima hora en punto; no una medición. La única excepción es el círculo al inicio de la línea de temperatura: la temperatura medida ahora en la estación, para ver desde dónde arranca el pronóstico. La noche (18:00–06:00) está sombreada y la línea punteada marca la medianoche.",
   );
 
   const table = $("fh-table");

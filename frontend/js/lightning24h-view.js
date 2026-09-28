@@ -1,4 +1,4 @@
-import { $, token, nf, chartFont, hoverLabel, stackDomains, panelTitle, PANEL_GAP_PX, perPanel } from "./common.js";
+import { $, token, nf, chartFont, hoverLabel, stackDomains, panelTitle, PANEL_GAP_PX, perPanel, nowRing } from "./common.js";
 import { t } from "./i18n.js";
 import { localStamp, localDate } from "./forecast.js";
 import { RATE_PER_BUCKET } from "./rainfine.js";
@@ -37,7 +37,7 @@ const MARGIN = { l: 48, r: 16, t: 24, b: 36 };
 const PANEL_WEIGHTS = [1, 1, 1.3]; // lightning a little taller: its dots need room to spread out
 const panelNames = () => [t("Temperature (°C)", "Temperatura (°C)"), t("Rain intensity (mm/h)", "Intensidad de la lluvia (mm/h)"), t("Lightning: distance of the strikes (km)", "Rayos: distancia de las descargas (km)")];
 
-export function renderLightningChart(s, buckets) {
+export function renderLightningChart(s, buckets, now = null) {
   const font = chartFont();
   const muted = token("--text-muted");
   const inWindow = bucketsInWindow(s, buckets);
@@ -53,6 +53,14 @@ export function renderLightningChart(s, buckets) {
     hovertemplate: hover,
   });
   const temp = line("temp", "y3", token("--hot"), t("temperature %{y:.1f} °C<extra></extra>", "temperatura %{y:.1f} °C<extra></extra>"));
+  // The current temperature as a ring (see nowRing), joined to the last 10-minute average. The axis stretches to
+  // reach it if the reading is a little newer than the 24-hour window.
+  const xEnd = Math.max(s.to, now?.ts ?? 0);
+  const lastTemp = inWindow.findLast((b) => b.temp !== null);
+  const ring =
+    now?.temp != null
+      ? nowRing(localStamp(now.ts), now.temp, token("--hot"), { join: lastTemp && { x: localStamp(lastTemp.t + BUCKET_S / 2), y: lastTemp.temp }, yaxis: "y3", frac: (now.ts - s.from) / (xEnd - s.from) })
+      : null;
 
   // Bars centred on their 10-minute window.
   const wet = rainInWindow(s, buckets);
@@ -98,6 +106,7 @@ export function renderLightningChart(s, buckets) {
   }
   const [tempD, rainD, lightD] = stackDomains(PANEL_WEIGHTS, PANEL_GAP_PX, $("lg-chart").clientHeight - MARGIN.t - MARGIN.b);
   panelNames().forEach((name, i) => annotations.push(panelTitle(name, [tempD, rainD, lightD][i][1])));
+  if (ring) annotations.push(ring.label);
   if (today) {
     // "Today" goes on the top panel's label row, unless midnight is so early in the window that it would run into
     // the temperature label; then it drops to the bottom of the top panel.
@@ -126,7 +135,7 @@ export function renderLightningChart(s, buckets) {
     hoverlabel: hoverLabel(),
     xaxis: {
       type: "date",
-      range: [localStamp(s.from), localStamp(s.to)],
+      range: [localStamp(s.from), localStamp(xEnd)],
       tickmode: "array",
       tickvals: ticks.map(localStamp),
       ticktext: ticks.map(hhmm),
@@ -148,7 +157,7 @@ export function renderLightningChart(s, buckets) {
     yaxis2: { ...yBase, domain: rainD, range: [0, rateStep * 2 * 1.05], tickvals: [0, rateStep, 2 * rateStep] },
     yaxis3: { ...yBase, domain: tempD, nticks: 4 },
   };
-  return Plotly.react($("lg-chart"), [temp, rain, lightning], layout, { displayModeBar: false, responsive: true });
+  return Plotly.react($("lg-chart"), [temp, rain, lightning, ...(ring ? ring.traces : [])], layout, { displayModeBar: false, responsive: true });
 }
 
 export function renderLightningText(s, buckets) {
@@ -172,8 +181,8 @@ export function renderLightningText(s, buckets) {
   $("lg-summary").textContent = tempText + rainText + lightningText;
 
   $("lg-note").textContent = t(
-    "Three panels over the same 24 hours, each with its own scale. Temperature is the 10-minute average. The blue bars are rain intensity, each one 10-minute window shown as its hourly rate, as on the 7-day rain chart. Each lightning dot is one minute with strikes, at the station's estimate of their average distance; bigger dots mean more strikes in that minute. The sensor reports distance in fixed steps (1, 5, 8, 10, 12, 14, 17, 20, 24, 27, 31, 34, 37, 40 km), so dots line up in rows, and it only detects lightning within about 40 km. Night (18:00–06:00) is shaded.",
-    "Tres paneles sobre las mismas 24 horas, cada uno con su propia escala. La temperatura es el promedio de 10 minutos. Las barras azules son la intensidad de la lluvia, cada una una ventana de 10 minutos mostrada como su tasa horaria, como en el gráfico de lluvia de 7 días. Cada punto de rayos es un minuto con descargas, a la distancia promedio estimada por la estación; los puntos más grandes indican más rayos en ese minuto. El sensor reporta la distancia en pasos fijos (1, 5, 8, 10, 12, 14, 17, 20, 24, 27, 31, 34, 37, 40 km), por eso los puntos se alinean en filas, y solo detecta rayos a unos 40 km. La noche (18:00–06:00) está sombreada.",
+    "Three panels over the same 24 hours, each with its own scale. Temperature is the 10-minute average; the ring at its end is the station's current reading, as in Current conditions, joined to the last average by a dotted line, so the two can differ while the temperature is changing fast. The blue bars are rain intensity, each one 10-minute window shown as its hourly rate, as on the 7-day rain chart. Each lightning dot is one minute with strikes, at the station's estimate of their average distance; bigger dots mean more strikes in that minute. The sensor reports distance in fixed steps (1, 5, 8, 10, 12, 14, 17, 20, 24, 27, 31, 34, 37, 40 km), so dots line up in rows, and it only detects lightning within about 40 km. Night (18:00–06:00) is shaded.",
+    "Tres paneles sobre las mismas 24 horas, cada uno con su propia escala. La temperatura es el promedio de 10 minutos; el círculo al final es la lectura actual de la estación, como en Condiciones actuales, unido al último promedio por una línea punteada, así que ambos pueden diferir cuando la temperatura cambia rápido. Las barras azules son la intensidad de la lluvia, cada una una ventana de 10 minutos mostrada como su tasa horaria, como en el gráfico de lluvia de 7 días. Cada punto de rayos es un minuto con descargas, a la distancia promedio estimada por la estación; los puntos más grandes indican más rayos en ese minuto. El sensor reporta la distancia en pasos fijos (1, 5, 8, 10, 12, 14, 17, 20, 24, 27, 31, 34, 37, 40 km), por eso los puntos se alinean en filas, y solo detecta rayos a unos 40 km. La noche (18:00–06:00) está sombreada.",
   );
 
   const table = $("lg-table");

@@ -1,4 +1,4 @@
-import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin, stackDomains, panelTitle, PANEL_GAP_PX, perPanel, weekNightBands, SENSOR_HIGH_FROM, addCaveat } from "./common.js";
+import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin, stackDomains, panelTitle, PANEL_GAP_PX, perPanel, weekNightBands, SENSOR_HIGH_FROM, addCaveat, nowRing } from "./common.js";
 import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { fineDaySummaries, finePeak } from "./rainfine.js";
@@ -17,7 +17,7 @@ const PANEL_WEIGHTS = [1, 1, 1, 1, 1.2];
 const sensorHigh = (buckets) => buckets.some((b) => b.date >= SENSOR_HIGH_FROM && b.solar !== null);
 
 // first: the week's first local date (see weekStart); the x axis always spans WEEK_DAYS days from it.
-export function renderRainFineChart(buckets, first) {
+export function renderRainFineChart(buckets, first, now = null) {
   const font = chartFont();
   const muted = token("--text-muted");
   const span = WEEK_DAYS;
@@ -58,8 +58,9 @@ export function renderRainFineChart(buckets, first) {
   // Never under 10 mm/h at the top, so a drizzle stays a drizzle instead of filling the panel.
   const peakRate = Math.max(0, ...buckets.map((b) => b.rate ?? 0));
   const rateStep = [5, 10, 15, 20, 25, 50].find((v) => 2 * v >= peakRate) ?? Math.ceil(peakRate / 20) * 10;
-  const maxSolar = Math.max(100, ...buckets.map((b) => b.solar ?? 0));
-  const minRh = Math.min(100, ...buckets.map((b) => b.rh ?? 100));
+  // Both ranges also take in the current reading, so its ring (below) stays inside the panel.
+  const maxSolar = Math.max(100, now?.solar ?? 0, ...buckets.map((b) => b.solar ?? 0));
+  const minRh = Math.min(100, now?.rh ?? 100, ...buckets.map((b) => b.rh ?? 100));
 
   // A faint band from 18:00 to 06:00 each day, so night and day are easy to tell apart at a glance; drawn inside
   // each panel, so the white gaps between panels stay clear.
@@ -72,6 +73,20 @@ export function renderRainFineChart(buckets, first) {
     t("Rain intensity (mm/h)", "Intensidad de la lluvia (mm/h)"),
   ];
   const annotations = names.map((name, i) => panelTitle(name, [tempD, solarD, rhD, pD, rainD][i][1]));
+  // Each line's current reading as a ring (see nowRing), joined to its last 10-minute average.
+  const local = now && new Date((now.ts - 6 * 3600) * 1000);
+  const nowX = local && dayIndex(local.toISOString().slice(0, 10), first) + (local.getUTCHours() * 60 + local.getUTCMinutes()) / 1440;
+  const rings = [
+    ["temp", "y5", token("--hot"), 1],
+    ["solar", "y4", token("--sun"), 0],
+    ["rh", "y3", token("--series-6"), 0],
+    ["p", "y2", token("--series-4"), 1],
+  ].flatMap(([key, yaxis, color, digits]) => {
+    if (now?.[key] == null || nowX > span) return [];
+    const i = buckets.findLastIndex((b) => b[key] !== null);
+    return [nowRing(nowX, now[key], color, { join: i < 0 ? null : { x: x[i], y: buckets[i][key] }, yaxis, digits, frac: nowX / span })];
+  });
+  annotations.push(...rings.map((r) => r.label));
 
   const dayTicks = Array.from({ length: span }, (_, i) => i);
   const yBase = { gridcolor: token("--grid"), gridwidth: 1, zeroline: false, tickfont: { color: muted, size: 12 }, fixedrange: true };
@@ -108,7 +123,7 @@ export function renderRainFineChart(buckets, first) {
     yaxis4: { ...yBase, domain: solarD, range: [0, maxSolar * 1.05], nticks: 3 },
     yaxis5: { ...yBase, domain: tempD, nticks: 4 },
   };
-  return Plotly.react($("rf-chart"), [temp, solar, rh, pressure, rain], layout, { displayModeBar: false, responsive: true });
+  return Plotly.react($("rf-chart"), [temp, solar, rh, pressure, rain, ...rings.flatMap((r) => r.traces)], layout, { displayModeBar: false, responsive: true });
 }
 
 export function renderRainFineText(buckets) {
@@ -135,8 +150,8 @@ export function renderRainFineText(buckets) {
     );
   }
   $("rf-note").textContent = t(
-    "Five panels over the same 7 days, each with its own scale; every value is a 10-minute average. Station pressure is measured at the station's height, so it reads about 9–10 hPa below the sea-level pressure in forecasts; it rises and falls twice a day on its own, and a sharp drop often comes before a storm. Each rain bar is one 10-minute window, shown as its hourly rate, so a short burst reads at its true intensity instead of being smeared across the hour. Night (18:00–06:00) is shaded.",
-    "Cinco paneles sobre los mismos 7 días, cada uno con su propia escala; cada valor es un promedio de 10 minutos. La presión de la estación se mide a la altura de la estación, por eso marca unos 9–10 hPa menos que la presión a nivel del mar de los pronósticos; sube y baja dos veces al día por sí sola, y una caída brusca suele anteceder a una tormenta. Cada barra de lluvia es una ventana de 10 minutos, mostrada como su tasa horaria, así que una ráfaga corta se lee con su verdadera intensidad en lugar de diluirse en la hora. La noche (18:00–06:00) está sombreada.",
+    "Five panels over the same 7 days, each with its own scale; every value is a 10-minute average, except the rings at the end of the lines: those are the station's current readings, as in Current conditions, joined to the last average by a dotted line. Station pressure is measured at the station's height, so it reads about 9–10 hPa below the sea-level pressure in forecasts; it rises and falls twice a day on its own, and a sharp drop often comes before a storm. Each rain bar is one 10-minute window, shown as its hourly rate, so a short burst reads at its true intensity instead of being smeared across the hour. Night (18:00–06:00) is shaded.",
+    "Cinco paneles sobre los mismos 7 días, cada uno con su propia escala; cada valor es un promedio de 10 minutos, salvo los círculos al final de las líneas: son las lecturas actuales de la estación, como en Condiciones actuales, unidas al último promedio por una línea punteada. La presión de la estación se mide a la altura de la estación, por eso marca unos 9–10 hPa menos que la presión a nivel del mar de los pronósticos; sube y baja dos veces al día por sí sola, y una caída brusca suele anteceder a una tormenta. Cada barra de lluvia es una ventana de 10 minutos, mostrada como su tasa horaria, así que una ráfaga corta se lee con su verdadera intensidad en lugar de diluirse en la hora. La noche (18:00–06:00) está sombreada.",
   );
 
   const table = $("rf-table");

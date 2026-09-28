@@ -117,6 +117,23 @@ export const perPanel = (shapes, domains) => domains.flatMap(([y0, y1]) => shape
 export const weekNightBands = (span) =>
   Array.from({ length: span + 2 }, (_, i) => i - 1).map((i) => ({ type: "rect", xref: "x", yref: "paper", x0: i + 0.75, x1: i + 1.25, y0: 0, y1: 1, fillcolor: token("--grid"), opacity: 0.5, line: { width: 0 }, layer: "below" }));
 
+// The station's current reading (as in "Current conditions") on a line of averages or forecast: a hollow ring in the
+// line's colour at the reading's own time, its value just above, and a thin dotted segment joining it to `join`, the
+// nearest point on the line, so the step from an average to the live reading reads as a step, not a break. Every
+// number next to a ring is the current reading, so it always matches the top of the page.
+// yaxis names the line's axis ("y3") on stacked charts; frac is how far along the x range the ring sits, so a label
+// near either edge turns inward instead of running off the plot. A null `join` (no line to join) is allowed.
+// Returns { traces, label }: add the traces after the lines and the label to the layout's annotations.
+export function nowRing(x, y, color, { join = null, yaxis = "y", digits = 1, frac = 0.5 } = {}) {
+  const traces = [];
+  if (join) traces.push({ type: "scatter", mode: "lines", x: [join.x, x], y: [join.y, y], yaxis, line: { color, width: 1.5, dash: "dot" }, hoverinfo: "skip", showlegend: false });
+  traces.push({ type: "scatter", mode: "markers", x: [x], y: [y], yaxis, cliponaxis: false, marker: { size: 9, color: token("--surface"), line: { color, width: 2 } }, hoverinfo: "skip", showlegend: false });
+  // The value sits on the side away from the line: below the ring when the line comes down to it, so it isn't struck through.
+  const below = join !== null && join.y > y;
+  const label = { x, y, xref: "x", yref: yaxis, xanchor: frac > 0.9 ? "right" : frac < 0.1 ? "left" : "center", yanchor: below ? "top" : "bottom", yshift: below ? -10 : 10, showarrow: false, text: y.toFixed(digits), font: chartFont() };
+  return { traces, label };
+}
+
 // entries: [{ label, color }]; shape "line" for line charts, "rect" for bars.
 export function fillLegend(ul, entries, shape) {
   ul.replaceChildren();

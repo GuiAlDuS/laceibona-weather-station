@@ -2,6 +2,7 @@ import { API_BASE, STATION_POSITION } from "./config.js";
 import { initNav } from "./nav.js";
 import { $, narrowScreen, wideLayout, setStatus, longDate, weekStart, WEEK_DAYS } from "./common.js";
 import { t, TIME_LOCALE } from "./i18n.js";
+import { ageMinutes, isStale, stationTime } from "./conditions.js";
 import { cumulativeByYear } from "./balance.js";
 import { monthlyTotals } from "./monthly.js";
 import { cumulativeRainByYear } from "./cumulative.js";
@@ -40,6 +41,22 @@ const couldNotLoad = (msg) => t(`Could not load data (${msg}). `, `No se pudiero
 
 let currentDoc = null;
 
+// The station's current readings, as shown in Current conditions, for the rings on the line charts (see nowRing in
+// common.js); null when there are none or they are stale, and a field is null when that reading is missing.
+function nowReading() {
+  if (!currentDoc || isStale(ageMinutes(currentDoc.updated_at, Date.now()))) return null;
+  const val = (v) => (typeof v === "number" ? v : null);
+  return { ts: Date.parse(currentDoc.updated_at) / 1000, temp: val(currentDoc.temp), rh: val(currentDoc.humidity), p: val(currentDoc.pressure), solar: val(currentDoc.solar) };
+}
+
+// Redraws every chart that carries a ring, after a new current reading.
+function refreshNowRings() {
+  if (forecastHourly) renderForecastHourlyChart(forecastHourly, nowReading());
+  if (strikes24h) renderLightningChart(strikes24h, fineBucketsData, nowReading());
+  drawRainFine();
+  if (obsState.td) renderTempDailyChart(obsState.td, nowReading());
+}
+
 // Re-renders the rain-week chart with today's row overlaid from `currentDoc`, once both are loaded.
 function refreshRainWeekLive() {
   if (!rainWeek) return;
@@ -61,6 +78,7 @@ async function loadCurrent() {
       renderCurrent(doc, Date.now());
       renderNearby();
       refreshRainWeekLive();
+      refreshNowRings();
     }
   } catch (err) {
     console.error(err);
@@ -112,7 +130,7 @@ async function loadForecast() {
       forecastHourly = forecastHours(doc);
       if (forecastHourly.length === 0) throw NO_USABLE_DATA();
       renderForecastHourlyText(forecastHourly);
-      await renderForecastHourlyChart(forecastHourly);
+      await renderForecastHourlyChart(forecastHourly, nowReading());
       setStatus("fh-status", "");
     }
   } catch (err) {
@@ -204,7 +222,7 @@ async function loadWind() {
 function drawLightning() {
   if (!strikes24h) return;
   renderLightningText(strikes24h, fineBucketsData);
-  renderLightningChart(strikes24h, fineBucketsData);
+  renderLightningChart(strikes24h, fineBucketsData, nowReading());
 }
 
 // Recomputes `rose` from the already-fetched 24h document for the selected window; no re-fetch needed.
@@ -272,7 +290,7 @@ function drawRainFine() {
   const first = weekStart();
   const week = fineBucketsData.filter((b) => b.date >= first);
   renderRainFineText(week);
-  renderRainFineChart(week, first);
+  renderRainFineChart(week, first, nowReading());
 }
 
 // Charts built from the monthly `obs:` documents. Each is [id prefix, draw(docs)]; one failure does not stop the others.
@@ -287,7 +305,7 @@ const OBS_CHARTS = [
     obsState.td = days;
   }, () => {
     renderTempDailyText(obsState.td);
-    return renderTempDailyChart(obsState.td);
+    return renderTempDailyChart(obsState.td, nowReading());
   }],
   ["th", (docs) => {
     obsState.th = monthHourMeans(last13(docs), "t");
@@ -397,7 +415,7 @@ function redraw() {
   drawLightning();
   drawObsCharts();
   drawRainFine();
-  if (forecastHourly) renderForecastHourlyChart(forecastHourly);
+  if (forecastHourly) renderForecastHourlyChart(forecastHourly, nowReading());
   if (!balance) return;
   renderWaterBalanceText(balance);
   renderMonthlyText(months);
@@ -412,8 +430,36 @@ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", red
 narrowScreen.addEventListener("change", redraw);
 wideLayout.addEventListener("change", redraw);
 
+// The footer's "code last updated" line, from the build.json that deploy.sh writes. Missing (a local preview) or
+// unreadable, the line just stays hidden.
+async function loadBuildInfo() {
+  try {
+    const res = await fetch("/build.json");
+    if (!res.ok) return;
+    const b = await res.json();
+    const ms = Date.parse(b.updated);
+    if (Number.isNaN(ms)) return;
+    const when = `${longDate(new Date(ms - 6 * 3600_000).toISOString().slice(0, 10))}, ${stationTime(b.updated)}`;
+    const p = $("build-info");
+    p.replaceChildren(t("Code last updated ", "Código actualizado por última vez el "));
+    if (b.uncommitted) p.append(when);
+    else {
+      const a = document.createElement("a");
+      a.href = `https://github.com/GuiAlDuS/laceibona-weather-station/commit/${b.commit}`;
+      a.textContent = when;
+      p.append(a);
+    }
+    p.append(t(", Costa Rica time", ", hora de Costa Rica"));
+    p.append(b.uncommitted ? t(" (preview with uncommitted changes).", " (vista previa con cambios sin confirmar).") : ".");
+    p.hidden = false;
+  } catch (err) {
+    console.error("build info:", err);
+  }
+}
+
 initNav();
 initWindRoseToggle();
+loadBuildInfo();
 loadCurrent();
 loadForecast();
 load();
