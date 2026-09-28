@@ -8,3 +8,7 @@ node_modules/
 
 # Weather Underground downloads for data_review (other stations' data; re-fetch with data_review/wu-history.mjs)
 data_review/data/
+
+# Results built from the neighbours' Weather Underground data (derived data; personal use only under the WU terms).
+# Rebuild locally with the scripts in data_review/ (see its README).
+data_review/results/

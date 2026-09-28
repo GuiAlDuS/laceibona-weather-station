@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La Ceibona Temperature</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+  /* Tokens follow the La Ceibona dashboard and the light-sensor report (report_template.html). */
+  :root {
+    --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --text-primary: #17171a;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(23, 23, 26, 0.1);
+    /* Stations (identity) */
+    --ours: #2a78d6;
+    --esparza: #eb6834;
+    --seaside: #1baf7a;
+    --context: #898781;
+    /* Hotter / about the same / colder (polarity: warm, neutral gray, cool) */
+    --hotter: #e34948;
+    --same: #d6d5cf;
+    --colder: #1c5cab;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --page: #0d0d0d;
+      --surface: #1a1a19;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #9a9890;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255, 255, 255, 0.1);
+      --ours: #3987e5;
+      --esparza: #d95926;
+      --seaside: #199e70;
+      --context: #8a8880;
+      --hotter: #e66767;
+      --same: #4a4945;
+      --colder: #3987e5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #9a9890;
+    --grid: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+    --ours: #3987e5;
+    --esparza: #d95926;
+    --seaside: #199e70;
+    --context: #8a8880;
+    --hotter: #e66767;
+    --same: #4a4945;
+    --colder: #3987e5;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--text-primary); font-family: var(--font-sans); font-size: 16px; line-height: 1.55; }
+  .wrap { max-width: 860px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 64px; display: grid; gap: 44px; }
+  @media (max-width: 480px) { .wrap { padding-inline: 16px; } }
+  header { display: grid; gap: 12px; }
+  .station { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--text-muted); margin: 0; }
+  h1 { font-size: clamp(1.6rem, 4.2vw, 2.25rem); line-height: 1.2; margin: 0; font-weight: 600; text-wrap: balance; }
+  h2 { font-size: 1.25rem; line-height: 1.3; margin: 0; font-weight: 600; text-wrap: balance; }
+  p { margin: 0; max-width: 68ch; }
+  .lead { font-size: 1.0625rem; color: var(--text-secondary); }
+  section { display: grid; gap: 14px; }
+  section + section { border-top: 1px solid var(--border); padding-top: 36px; }
+  .muted { color: var(--text-secondary); }
+  .small { font-size: 0.875rem; }
+  code { font-family: var(--font-mono); font-size: 0.875em; }
+
+  .stations { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 20px; margin: 0; padding: 0; list-style: none; }
+  .stations li { display: grid; grid-template-columns: 12px 1fr; gap: 2px 10px; align-items: baseline; font-size: 0.9375rem; }
+  .swatch { width: 12px; height: 12px; border-radius: 50%; align-self: center; }
+  .stations .id { font-weight: 600; }
+  .stations .what { grid-column: 2; color: var(--text-secondary); font-size: 0.875rem; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; display: grid; gap: 2px; }
+  .tile .label { font-size: 0.8125rem; color: var(--text-secondary); }
+  .tile .value { font-size: 1.75rem; font-weight: 600; line-height: 1.2; }
+  .tile .sub { font-size: 0.8125rem; color: var(--text-muted); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.875rem; color: var(--text-secondary); margin: 0; padding: 0; list-style: none; }
+  .legend li { display: flex; align-items: center; gap: 7px; }
+  .legend .rect { width: 12px; height: 12px; border-radius: 2px; }
+  .legend .line { width: 16px; height: 2px; border-radius: 1px; }
+  .legend .band { width: 16px; height: 10px; border-radius: 2px; opacity: 0.25; }
+
+  .charts { display: grid; gap: 12px; }
+  .charts.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 720px) { .charts.two { grid-template-columns: minmax(0, 1fr); } }
+  .chart { width: 100%; height: 320px; }
+  .chart.share { height: 150px; }
+  .panel-title { font-size: 0.875rem; color: var(--text-secondary); margin: 0 0 -4px; }
+
+  details { font-size: 0.875rem; }
+  summary { cursor: pointer; color: var(--text-secondary); }
+  summary:focus-visible { outline: 2px solid var(--ours); outline-offset: 2px; }
+  details .table-wrap { margin-top: 10px; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+  th, td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--text-secondary); font-weight: 600; }
+  td { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  td:first-child { font-family: var(--font-sans); }
+
+  .checks { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; max-width: 68ch; }
+  .note { font-size: 0.875rem; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="station">La Ceibona weather station · IESPAR102 · Mojón de Esparza, Costa Rica</p>
+    <h1>By day La Ceibona is warmer than downtown Esparza; by night it is cooler than the coast</h1>
+    <p class="lead">We compared our temperature with two nearby stations, 5 minutes at a time, for the 2026 rainy season. Against Esparza we are warmer for about half the day and hardly ever colder. Against the seaside station we are colder for almost three quarters of the day, all night long, and only catch up in the late morning.</p>
+    <ul class="stations" id="stations"></ul>
+  </header>
+
+  <section>
+    <h2>How much of the day we are hotter or colder</h2>
+    <p>Each 5 minutes counts as <b>hotter</b> or <b>colder</b> when our reading differs from the neighbour's by more than <span class="th"></span> °C; smaller gaps are within what the sensors can resolve, so they count as about the same.</p>
+    <div class="tiles" id="tiles"></div>
+    <ul class="legend" id="shareLegend"></ul>
+    <div id="share" class="chart share" role="img" aria-label="Share of the day La Ceibona is hotter, about the same, or colder than each neighbour"></div>
+    <div class="table-wrap"><table id="shareTable"></table></div>
+  </section>
+
+  <section>
+    <h2>A typical day at the three stations</h2>
+    <p>The median temperature every half hour, over the <span id="typDays"></span> days all three reported (<span id="typRange"></span>). We have the widest swing: nights as cool as Esparza's, and a midday as hot as the coast's, reached about an hour and a half earlier. The seaside station stays about 2.5 °C warmer through the night.</p>
+    <ul class="legend" id="typLegend"></ul>
+    <div id="typical" class="chart" role="img" aria-label="Median temperature by time of day for the three stations"></div>
+    <details><summary>Show the numbers</summary><div class="table-wrap"><table id="typTable"></table></div></details>
+  </section>
+
+  <section>
+    <h2>The gap, hour by hour</h2>
+    <p>Our temperature minus the neighbour's. The line is the median for each hour; the band holds the middle half of all readings, so it shows how much the gap varies from day to day. Above zero, we are warmer.</p>
+    <div class="charts two">
+      <div><p class="panel-title" id="gapTitle72"></p><div id="gap72" class="chart" role="img" aria-label="Temperature gap to Esparza by hour of day"></div></div>
+      <div><p class="panel-title" id="gapTitle186"></p><div id="gap186" class="chart" role="img" aria-label="Temperature gap to the seaside station by hour of day"></div></div>
+    </div>
+    <p class="note">Against Esparza the gap opens after sunrise, peaks near +2 °C between 09:00 and 14:00 and closes after sunset; at night we are a few tenths warmer. Against the coast the gap swings the other way: about −2.5 °C at night, briefly positive between 08:00 and 11:00, then negative again once the afternoon sea breeze sets in.</p>
+  </section>
+
+  <section>
+    <h2>How often, hour by hour</h2>
+    <p>The same count as the first chart, split by hour of the day.</p>
+    <ul class="legend" id="hourLegend"></ul>
+    <div class="charts two">
+      <div><p class="panel-title" id="hourTitle72"></p><div id="hour72" class="chart" role="img" aria-label="Share of each hour La Ceibona is hotter, about the same, or colder than Esparza"></div></div>
+      <div><p class="panel-title" id="hourTitle186"></p><div id="hour186" class="chart" role="img" aria-label="Share of each hour La Ceibona is hotter, about the same, or colder than the seaside station"></div></div>
+    </div>
+    <details><summary>Show the numbers</summary><div class="table-wrap"><table id="hourTable"></table></div></details>
+  </section>
+
+  <section>
+    <h2>Sunny and cloudy days</h2>
+    <p>Days split in thirds by how much sunshine they got (measured at Esparza, because our own light sensor reads high since 25 August). The pattern holds either way; sun mainly stretches our morning lead. On sunny days we are about 1 °C warmer than the coast from 08:00 to 10:00, while on cloudy days the two are level then.</p>
+    <ul class="legend" id="skyLegend"></ul>
+    <div class="charts two">
+      <div><p class="panel-title" id="skyTitle72"></p><div id="sky72" class="chart" role="img" aria-label="Median gap to Esparza by hour, sunny days against cloudy days"></div></div>
+      <div><p class="panel-title" id="skyTitle186"></p><div id="sky186" class="chart" role="img" aria-label="Median gap to the seaside station by hour, sunny days against cloudy days"></div></div>
+    </div>
+    <div class="table-wrap"><table id="skyTable"></table></div>
+  </section>
+
+  <section>
+    <h2>Why only 2026: the Esparza station moved</h2>
+    <p>IESPAR72 used to stand about 3 km from us and moved to downtown Esparza during the 2026 dry season. The daytime gap shows it: a median of +2.6 °C a week through June to September 2025 and +1.7 °C in 2026, with no step within either season (nights went from +0.1 to +0.4 °C). Its Weather Underground location was never updated, so the old site's data looks like the new one's. Mixing the two years would describe neither site, so everything above uses 2026 only.</p>
+    <ul class="legend" id="moveLegend"></ul>
+    <div id="move" class="chart" role="img" aria-label="Weekly median daytime gap to Esparza, 2025 against 2026, on the same calendar dates"></div>
+    <p class="note">Each point: the week's median of daily medians, 10:00–15:00. Weeks with fewer than 4 days of data are left out.</p>
+  </section>
+
+  <section>
+    <h2>Limits of this comparison</h2>
+    <ul class="checks">
+      <li>Rainy season only (June to September). The dry season, with clearer skies and drier air, may look quite different.</li>
+      <li>The seaside station only reports from 30 July 2026: <span id="days186"></span> days.</li>
+      <li>The three stations have different sensors, radiation shields and mountings. Part of our midday lead may come from the instruments rather than the climate; a gap that holds night and day, sunny and cloudy, is more trustworthy than its exact size.</li>
+      <li>The neighbours' readings come from other owners' Weather Underground stations. Their terms allow personal use only, with no derived data published, so this report is for our own review and stays off the dashboard.</li>
+    </ul>
+    <p class="note" id="method"></p>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/4.1.1/plotly-basic.min.js"></script>
+<script>
+const DATA = /*DATA*/null;
+const NAMES = { IESPAR102: "La Ceibona (ours)", IESPAR72: "Esparza", IPUNTA186: "Seaside" };
+const WHAT = {
+  IESPAR102: "IESPAR102 · Tempest",
+  IESPAR72: "IESPAR72 · downtown Esparza, higher up · Tempest",
+  IPUNTA186: "IPUNTA186 · near the sea, Puntarenas · Davis Vantage Pro2 Plus",
+};
+const COLOR_VAR = { IESPAR102: "--ours", IESPAR72: "--esparza", IPUNTA186: "--seaside" };
+const NEIGH = ["IESPAR72", "IPUNTA186"];
+const CLASSES = [["hotter", "Hotter"], ["same", "About the same"], ["colder", "Colder"]];
+const tok = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+const color = (s) => tok(COLOR_VAR[s]);
+const fmtDate = (iso) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+const signed = (v, d = 1) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
+const pct = (v) => `${Math.round(v)}%`;
+const hh = (h) => `${String(h).padStart(2, "0")}:00`;
+const el = (tag, cls, text) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+};
+
+// ---------- static text and tables ----------
+document.querySelectorAll(".th").forEach((e) => (e.textContent = DATA.threshold.toFixed(1)));
+document.getElementById("stations").replaceChildren(
+  ...Object.keys(NAMES).map((s) => {
+    const li = el("li");
+    const sw = el("span", "swatch");
+    sw.dataset.var = COLOR_VAR[s];
+    li.append(sw, el("span", "id", NAMES[s]), el("span", "what", WHAT[s]));
+    return li;
+  }),
+);
+document.getElementById("tiles").replaceChildren(
+  ...NEIGH.flatMap((s) => {
+    const sh = DATA.share[s];
+    return [
+      ["hotter", `Hotter than ${NAMES[s]}`],
+      ["colder", `Colder than ${NAMES[s]}`],
+    ].map(([k, label]) => {
+      const t = el("div", "tile");
+      t.append(el("span", "label", label), el("span", "value", pct(sh[k])), el("span", "sub", `about ${(sh[k] * 0.24).toFixed(1)} h a day`));
+      return t;
+    });
+  }),
+);
+
+function legend(id, items) {
+  document.getElementById(id).replaceChildren(
+    ...items.map(([kind, cssVar, label]) => {
+      const li = el("li");
+      const key = el("span", kind);
+      key.dataset.var = cssVar;
+      li.append(key, el("span", null, label));
+      return li;
+    }),
+  );
+}
+legend("shareLegend", CLASSES.map(([k, l]) => ["rect", `--${k}`, l]));
+legend("hourLegend", CLASSES.map(([k, l]) => ["rect", `--${k}`, l]));
+legend("typLegend", Object.keys(NAMES).map((s) => ["line", COLOR_VAR[s], NAMES[s]]));
+legend("skyLegend", [["line", "--text-primary", "Sunny days (top third)"], ["line", "--context", "Cloudy days (bottom third)"]]);
+legend("moveLegend", [["line", "--context", "2025, old site near us"], ["line", "--esparza", "2026, downtown Esparza"]]);
+
+function table(id, head, rows) {
+  const t = document.getElementById(id);
+  t.replaceChildren();
+  const tr = t.createTHead().insertRow();
+  for (const h of head) tr.append(el("th", null, h));
+  const body = t.createTBody();
+  for (const r of rows) {
+    const row = body.insertRow();
+    for (const v of r) row.insertCell().textContent = v ?? "–";
+  }
+}
+table("shareTable", ["vs", "Hotter", "About the same", "Colder", "Median gap", "Days"], NEIGH.map((s) => {
+  const sh = DATA.share[s];
+  return [`${NAMES[s]} (${s})`, pct(sh.hotter), pct(sh.same), pct(sh.colder), `${signed(sh.median)} °C`, DATA.coverage[s].days];
+}));
+const typ = DATA.typical;
+document.getElementById("typDays").textContent = typ.days;
+document.getElementById("typRange").textContent = `${fmtDate(typ.first)} to ${fmtDate(typ.last)}`;
+const halfLabel = (i) => `${String(Math.floor(i / 2)).padStart(2, "0")}:${i % 2 ? "30" : "00"}`;
+table("typTable", ["Time", ...Object.values(NAMES)], typ.median.IESPAR102.map((_, i) => [halfLabel(i), ...Object.keys(NAMES).map((s) => `${typ.median[s][i].toFixed(1)} °C`)]));
+table("hourTable", ["Hour", ...NEIGH.flatMap((s) => [`${NAMES[s]}: hotter`, "same", "colder", "median gap"])], DATA.hours.IESPAR72.map((_, h) => [
+  `${hh(h)}–${hh(h + 1)}`,
+  ...NEIGH.flatMap((s) => {
+    const r = DATA.hours[s][h];
+    return [pct(r.hotter), pct(r.same), pct(r.colder), `${signed(r.q[1])} °C`];
+  }),
+]));
+table("skyTable", ["Share of the day", "Days", "Hotter", "About the same", "Colder"], NEIGH.flatMap((s) =>
+  ["sunny", "mixed", "cloudy"].map((c) => {
+    const v = DATA.sky[s][c];
+    return [`vs ${NAMES[s]}, ${c} days`, v.days, pct(v.hotter), pct(v.same), pct(v.colder)];
+  }),
+));
+document.getElementById("days186").textContent = DATA.coverage.IPUNTA186.days;
+for (const s of NEIGH) {
+  const n = s.replace(/\D/g, "");
+  const days = `${DATA.coverage[s].days} days`;
+  document.getElementById(`gapTitle${n}`).textContent = `Ours minus ${NAMES[s]} · ${days}`;
+  document.getElementById(`hourTitle${n}`).textContent = `vs ${NAMES[s]} · ${days}`;
+  document.getElementById(`skyTitle${n}`).textContent = `Ours minus ${NAMES[s]}, median by hour`;
+}
+const last = Object.values(DATA.coverage).map((c) => c.last).sort().at(-1);
+document.getElementById("method").textContent =
+  `Data: 1 June to ${fmtDate(last)} 2026 (Esparza's 2025 only for the last chart). Ours: raw 1-minute Tempest readings reduced to 5 minutes. Neighbours: Weather Underground 5-minute history. ` +
+  "Built with the scripts in data_review/ (wu-history.mjs, tempest-history.mjs, temperature.py, temperature_report.py); the same tables are in data_review/results/findings.md.";
+
+// ---------- charts (colours come from the theme tokens, so they redraw when the theme changes) ----------
+const cfg = { displayModeBar: false, responsive: true };
+function base(extra = {}) {
+  const muted = tok("--text-muted");
+  const axis = { gridcolor: tok("--grid"), zeroline: false, tickfont: { color: muted, size: 12 }, fixedrange: true, linecolor: tok("--baseline") };
+  return {
+    font: { family: tok("--font-sans"), color: tok("--text-secondary"), size: 12 },
+    paper_bgcolor: "rgba(0,0,0,0)",
+    plot_bgcolor: "rgba(0,0,0,0)",
+    margin: { l: 48, r: 12, t: 10, b: 36 },
+    hovermode: "x unified",
+    hoverlabel: { bgcolor: tok("--surface"), bordercolor: tok("--baseline"), font: { color: tok("--text-primary"), family: tok("--font-sans") } },
+    showlegend: false,
+    xaxis: { ...axis, showline: true },
+    yaxis: { ...axis },
+    ...extra,
+  };
+}
+const hourAxis = (range) => ({ ...base().xaxis, range, tickvals: [0, 6, 12, 18, 24], ticktext: ["00:00", "06:00", "12:00", "18:00", "24:00"] });
+const zeroLine = () => ({ type: "line", xref: "paper", x0: 0, x1: 1, y0: 0, y1: 0, line: { color: tok("--baseline"), width: 1 } });
+
+function drawShare() {
+  const rows = NEIGH.map((s) => `vs ${NAMES[s]}`);
+  const traces = CLASSES.map(([k, label]) => ({
+    type: "bar",
+    orientation: "h",
+    name: label,
+    y: rows,
+    x: NEIGH.map((s) => DATA.share[s][k]),
+    marker: { color: tok(`--${k}`), line: { color: tok("--page"), width: 2 } },
+    text: NEIGH.map((s) => (DATA.share[s][k] >= 9 ? pct(DATA.share[s][k]) : "")),
+    textposition: "inside",
+    insidetextanchor: "middle",
+    textfont: { color: k === "same" ? tok("--text-primary") : "#ffffff", size: 13 },
+    hovertemplate: `<b>%{x:.0f}%</b> ${label.toLowerCase()}<extra>%{y}</extra>`,
+  }));
+  Plotly.react("share", traces, base({
+    barmode: "stack",
+    bargap: 0.45,
+    hovermode: "closest",
+    margin: { l: 120, r: 12, t: 4, b: 30 },
+    xaxis: { ...base().xaxis, range: [0, 100.5], ticksuffix: "%", tickvals: [0, 25, 50, 75, 100], showline: false },
+    yaxis: { ...base().yaxis, autorange: "reversed", tickfont: { color: tok("--text-secondary"), size: 13 }, showgrid: false },
+  }), cfg);
+}
+
+// Unified hover titles show the x value, so the time-of-day charts use real times on a dummy date.
+const clock = (hours) => {
+  const m = Math.round(hours * 60);
+  return `2026-01-01T${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+};
+const timeAxis = () => ({ ...base().xaxis, type: "date", range: ["2026-01-01T00:00", "2026-01-02T00:00"], tickformat: "%H:%M", hoverformat: "%H:%M", dtick: 6 * 3600e3 });
+
+function drawTypical() {
+  const x = typ.median.IESPAR102.map((_, i) => clock(i / 2 + 0.25));
+  const traces = Object.keys(NAMES).map((s) => ({
+    type: "scatter",
+    mode: "lines",
+    name: NAMES[s],
+    x,
+    y: typ.median[s],
+    line: { color: color(s), width: 2, shape: "spline", smoothing: 0.6 },
+    hovertemplate: `<b>%{y:.1f} °C</b> ${NAMES[s]}<extra></extra>`,
+  }));
+  Plotly.react("typical", traces, base({
+    xaxis: timeAxis(),
+    yaxis: { ...base().yaxis, ticksuffix: " °C", dtick: 2 },
+  }), cfg);
+}
+
+function drawGap(s) {
+  const n = s.replace(/\D/g, "");
+  const h = DATA.hours[s];
+  const x = h.map((r) => r.h + 0.5);
+  const col = color(s);
+  const traces = [
+    { type: "scatter", mode: "lines", x, y: h.map((r) => r.q[2]), line: { width: 0 }, hoverinfo: "skip" },
+    { type: "scatter", mode: "lines", x, y: h.map((r) => r.q[0]), line: { width: 0 }, fill: "tonexty", fillcolor: hexA(col, 0.14), hoverinfo: "skip" },
+    {
+      type: "scatter", mode: "lines+markers", x, y: h.map((r) => r.q[1]),
+      customdata: h.map((r) => [`${hh(r.h)}–${hh(r.h + 1)}`, signed(r.q[0]), signed(r.q[2])]),
+      line: { color: col, width: 2 }, marker: { size: 7, color: col, line: { color: tok("--surface"), width: 2 } },
+      hovertemplate: "<b>%{y:+.1f} °C</b> median · %{customdata[0]}<br>middle half %{customdata[1]} to %{customdata[2]} °C<extra></extra>",
+    },
+  ];
+  Plotly.react(`gap${n}`, traces, base({
+    hovermode: "closest",
+    shapes: [zeroLine()],
+    xaxis: hourAxis([0, 24]),
+    yaxis: { ...base().yaxis, range: [-4, 4], dtick: 1, ticksuffix: " °C", tickformat: "+d" },
+    annotations: [
+      { xref: "paper", yref: "y", x: 0.01, y: 3.6, xanchor: "left", showarrow: false, text: "we are warmer", font: { color: tok("--text-muted"), size: 11 } },
+      { xref: "paper", yref: "y", x: 0.01, y: -3.6, xanchor: "left", showarrow: false, text: "we are cooler", font: { color: tok("--text-muted"), size: 11 } },
+    ],
+  }), cfg);
+}
+
+function drawHours(s) {
+  const n = s.replace(/\D/g, "");
+  const h = DATA.hours[s];
+  const traces = CLASSES.map(([k, label]) => ({
+    type: "bar",
+    name: label,
+    x: h.map((r) => r.h + 0.5),
+    y: h.map((r) => r[k]),
+    customdata: h.map((r) => `${hh(r.h)}–${hh(r.h + 1)}`),
+    marker: { color: tok(`--${k}`), line: { color: tok("--page"), width: 1 } },
+    hovertemplate: `<b>%{y:.0f}%</b> ${label.toLowerCase()} · %{customdata}<extra></extra>`,
+  }));
+  Plotly.react(`hour${n}`, traces, base({
+    barmode: "stack",
+    bargap: 0.18,
+    hovermode: "closest",
+    xaxis: hourAxis([0, 24]),
+    yaxis: { ...base().yaxis, range: [0, 100], ticksuffix: "%", dtick: 25 },
+  }), cfg);
+}
+
+function drawSky(s) {
+  const n = s.replace(/\D/g, "");
+  const x = [...Array(24).keys()].map((h) => clock(h + 0.5));
+  const lines = [
+    ["cloudy", "Cloudy days", tok("--context")],
+    ["sunny", "Sunny days", tok("--text-primary")],
+  ];
+  const traces = lines.map(([c, label, col]) => ({
+    type: "scatter", mode: "lines", name: label, x, y: DATA.sky[s][c].median_by_hour,
+    line: { color: col, width: 2 },
+    hovertemplate: `<b>%{y:+.1f} °C</b> ${label.toLowerCase()} (${DATA.sky[s][c].days})<extra></extra>`,
+  }));
+  Plotly.react(`sky${n}`, traces, base({
+    shapes: [zeroLine()],
+    xaxis: timeAxis(),
+    yaxis: { ...base().yaxis, range: [-3.5, 3.5], dtick: 1, ticksuffix: " °C", tickformat: "+d" },
+  }), cfg);
+}
+
+function drawMove() {
+  // 2025 weeks are shifted by a year, so the two seasons share the same calendar axis.
+  const pick = (y) => DATA.move.filter((w) => w.week.startsWith(y));
+  const shift = (d) => {
+    const t = new Date(d + "T12:00:00Z");
+    t.setUTCFullYear(2026);
+    return t.toISOString().slice(0, 10);
+  };
+  const series = [
+    ["2025", "2025, old site", tok("--context"), shift],
+    ["2026", "2026, downtown", color("IESPAR72"), (d) => d],
+  ];
+  const traces = series.map(([y, label, col, mapX]) => {
+    const w = pick(y);
+    return {
+      type: "scatter", mode: "lines+markers", name: label,
+      x: w.map((r) => mapX(r.week)), y: w.map((r) => r.day),
+      customdata: w.map((r) => `week of ${fmtDate(r.week)} ${y}`),
+      line: { color: col, width: 2 }, marker: { size: 7, color: col, line: { color: tok("--surface"), width: 2 } },
+      hovertemplate: `<b>%{y:+.1f} °C</b> %{customdata}<extra></extra>`,
+    };
+  });
+  Plotly.react("move", traces, base({
+    hovermode: "closest",
+    xaxis: { ...base().xaxis, range: ["2026-05-29", "2026-09-26"], tickformat: "%b", dtick: "M1", tick0: "2026-06-01" },
+    yaxis: { ...base().yaxis, range: [0, 3.5], dtick: 1, ticksuffix: " °C", tickformat: "+d", title: { text: "ours minus Esparza, 10:00–15:00", font: { size: 12 } } },
+    margin: { l: 60, r: 12, t: 10, b: 36 },
+  }), cfg);
+}
+
+function hexA(hex, a) {
+  const v = parseInt(hex.replace("#", ""), 16);
+  return `rgba(${(v >> 16) & 255},${(v >> 8) & 255},${v & 255},${a})`;
+}
+
+function drawAll() {
+  document.querySelectorAll("[data-var]").forEach((e) => (e.style.background = tok(e.dataset.var)));
+  drawShare();
+  drawTypical();
+  NEIGH.forEach((s) => {
+    drawGap(s);
+    drawHours(s);
+    drawSky(s);
+  });
+  drawMove();
+}
+
+drawAll();
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll);
+new MutationObserver(drawAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+</script>
+</body>
+</html>

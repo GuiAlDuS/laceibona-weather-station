@@ -16,6 +16,8 @@ Periods: June to September 2025 (baseline) and 1 June 2026 to the latest day.
 
 **Result:** from about 25 Aug 2026 ours reads about 1.35× high at every light level, and neither neighbour changed; see `results/findings.md` (tables) and `results/report.html` (the same with charts).
 
+`results/` is git-ignored: everything in it is built from other owners' Weather Underground data, which their terms allow for personal use only. The scripts rebuild `compare.json` and the two HTML reports; `findings.md` is written by hand and exists only locally.
+
 Our own station's Weather Underground feed only starts on 23 Sep 2026, so our side comes from Tempest directly. IPUNTA186 only reports from 30 Jul 2026.
 
 Files:
@@ -47,3 +49,17 @@ Files:
   ```
   python3 data_review/report.py
   ```
+
+## Temperature compared with nearby stations (Sept 2026)
+
+`temperature.py` uses the same caches to work out what share of the day we are hotter or colder than each neighbour, by time of day (2026 only: IESPAR72 moved to downtown Esparza in the 2026 dry season). Results are in `results/findings.md`.
+
+```
+python3 data_review/temperature.py
+```
+
+`temperature_report.py` runs it and fills `temperature_template.html` into `results/temperature.html`, a page with charts:
+
+```
+python3 data_review/temperature_report.py
+```
