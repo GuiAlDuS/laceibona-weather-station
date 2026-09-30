@@ -53,6 +53,7 @@ const hour = (h, o = {}) => ({
   icon: o.icon ?? "clear-day",
   air_temperature: o.temp ?? 25,
   precip_probability: o.precip ?? 0,
+  precip: o.mm ?? 0,
   precip_type: o.ptype ?? null,
 });
 
@@ -63,9 +64,9 @@ test("keeps only today's hours (0-23 local) and tags each with its local hour", 
 });
 
 test("maps the named hourly fields through", () => {
-  const hourly = [hour(14, { temp: 31.5, precip: 80, ptype: "storm", conditions: "Thunderstorms Likely", icon: "thunderstorm" })];
+  const hourly = [hour(14, { temp: 31.5, precip: 80, mm: 3.23, ptype: "storm", conditions: "Thunderstorms Likely", icon: "thunderstorm" })];
   const doc = buildForecast({ forecast: { daily: [{ day_start_local: TODAY_START }], hourly } }, { now });
-  assert.deepEqual(doc.hours[0], { time: TODAY_START + 14 * 3600, hour: 14, conditions: "Thunderstorms Likely", icon: "thunderstorm", temp: 31.5, precip_probability: 80, precip_type: "storm" });
+  assert.deepEqual(doc.hours[0], { time: TODAY_START + 14 * 3600, hour: 14, conditions: "Thunderstorms Likely", icon: "thunderstorm", temp: 31.5, precip_probability: 80, precip: 3.23, precip_type: "storm" });
 });
 
 test("no daily entry (so no 'today' to filter by) or no hourly array yields an empty hour list", () => {

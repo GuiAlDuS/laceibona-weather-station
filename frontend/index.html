@@ -120,11 +120,11 @@
       <div class="row row-forecast" id="forecast">
         <section class="card" aria-labelledby="fh-title">
           <h3 id="fh-title">Forecast, next 24 hours</h3>
-          <p class="muted">Temperature and rain probability by hour from now through this time tomorrow, with thunderstorm hours marked.</p>
+          <p class="muted">Temperature and expected rain by hour from now through this time tomorrow, shaded by the chance of rain, with thunderstorm hours marked.</p>
           <p id="fh-summary" class="summary" aria-live="polite"></p>
 
           <div id="fh-frame" class="chart-frame">
-            <div id="fh-chart" role="img" aria-label="Two stacked panels for the next 24 hours: forecast temperature as a line on top, and hourly rain probability as bars below, coloured by thunderstorm risk"></div>
+            <div id="fh-chart" role="img" aria-label="Two stacked panels for the next 24 hours: forecast temperature as a line on top, and hourly expected rain in mm as bars below, shaded by the chance of rain, with a dot over thunderstorm hours"></div>
             <p id="fh-status" class="status">Loading…</p>
           </div>
           <ul id="fh-legend" class="legend" aria-label="Legend"></ul>

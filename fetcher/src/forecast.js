@@ -29,6 +29,7 @@ function hourRecord(h) {
     icon: str(h?.icon),
     temp: num(h?.air_temperature),
     precip_probability: num(h?.precip_probability),
+    precip: num(h?.precip), // mm expected in that hour (requested with units_precip=mm); Tempest spreads each model step evenly over 2-4 hours
     precip_type: str(h?.precip_type),
   };
 }

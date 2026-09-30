@@ -799,3 +799,15 @@ Owner decisions worth remembering:
 - **Masthead**: the title is now clearly above the card titles (clamp 1.75–2.5rem), the place line
   1.125rem, and the facts line in `--text-secondary` at 0.875rem (the muted grey was below 4.5:1),
   with a rule under the header. Links in card subtitles inherit the text colour.
+
+**Phase 14 — Forecast rain amounts (Sept 2026)**
+
+- **"Forecast, next 24 hours"** rain panel: bar height is now the model's expected rain for the
+  hour in mm (Tempest `better_forecast` hourly `precip`, requested in mm), not the probability.
+  Colour is the chance of rain in three steps of the `--seq` ramp (under 25%, 25–49%, 50% or
+  more; 50% is the summary's "likely" threshold); thunderstorm hours get a purple (`--series-7`)
+  dot above the bar instead of a purple bar, since a pattern fill vanishes on bars a few pixels
+  tall. The scale never drops below 2 mm so drizzle stays short. Table view has a Rain (mm) column.
+- **Fetcher**: `next_hours`/`hours` records carry `precip` (mm). Tempest computes rain in
+  2–4 hour steps and spreads each evenly, so neighbouring hours often share a value; amounts are
+  unconditional model rain (0.09 mm at 0% chance happens).
