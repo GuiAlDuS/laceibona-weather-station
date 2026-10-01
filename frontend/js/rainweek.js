@@ -14,17 +14,24 @@ export function lastRainDays(days, n = 7) {
   }));
 }
 
-// Overlays today's running totals from the `current` document onto the last row, but only when
-// that row is still the in-progress day. `current` has no ETo (only worked out for finished days),
-// so eto is left as-is.
+// Brings the last row up to date with today's running totals from the `current` document. If that row is today
+// (still in progress), its rain and duration are replaced; if `daily:all` has no row for today yet (it is rebuilt
+// once a day, at 01:00 local, and Tempest's daily stats may not have started the new day by then), a today row is
+// added and the oldest dropped, so the chart keeps its length. `current` has no ETo (only worked out for finished
+// days), so today's eto is null. A `current` from an earlier day than the last row changes nothing.
 export function withLiveToday(rows, current) {
   const last = rows.at(-1);
-  if (!last?.inProgress || !current?.today) return rows;
+  const date = current?.local_date;
+  if (!last || !current?.today || !date) return rows;
   const { rain_mm, rain_min } = current.today;
-  const patched = { ...last };
-  if (typeof rain_mm === "number") patched.rain = rain_mm;
-  if (typeof rain_min === "number") patched.hours = rain_min / 60;
-  return [...rows.slice(0, -1), patched];
+  const rain = typeof rain_mm === "number" ? rain_mm : null;
+  const hours = typeof rain_min === "number" ? rain_min / 60 : null;
+  if (date === last.date) {
+    if (!last.inProgress) return rows;
+    return [...rows.slice(0, -1), { ...last, rain: rain ?? last.rain, hours: hours ?? last.hours }];
+  }
+  if (date < last.date) return rows;
+  return [...rows.slice(1), { date, rain, eto: null, hours, inProgress: true }];
 }
 
 export function weekTotals(rows) {

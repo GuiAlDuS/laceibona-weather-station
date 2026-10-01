@@ -22,6 +22,15 @@ export function monthlyTotals(days, { months = 13 } = {}) {
     .map((m) => ({ ...m, rain: m.days ? m.rain : null, eto: m.days ? m.eto : null, partial: m.days < m.daysInMonth }));
 }
 
+// Adds an empty entry for the month of `localDate` (today, from the `current` document) when the daily data has
+// none yet, as on the 1st before `daily:all` has a row for it, so the month in progress always has its place.
+// It has no complete days, so its totals are null and it is marked partial. The oldest month is dropped to keep `months`.
+export function withMonthInProgress(list, localDate, { months = 13 } = {}) {
+  const key = localDate?.slice(0, 7);
+  if (!key || (list.length && key <= list.at(-1).month)) return list;
+  return [...list, { month: key, rain: null, eto: null, days: 0, daysInMonth: daysInMonth(key), partial: true }].slice(-months);
+}
+
 // How many of the shown months had rain above ETo (months with no data are excluded).
 export function summarizeMonths(months) {
   const withData = months.filter((m) => m.days > 0);

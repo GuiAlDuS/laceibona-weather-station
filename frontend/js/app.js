@@ -4,7 +4,7 @@ import { $, narrowScreen, wideLayout, setStatus, longDate, weekStart, WEEK_DAYS 
 import { t, TIME_LOCALE } from "./i18n.js";
 import { ageMinutes, isStale, stationTime } from "./conditions.js";
 import { cumulativeByYear } from "./balance.js";
-import { monthlyTotals } from "./monthly.js";
+import { monthlyTotals, withMonthInProgress } from "./monthly.js";
 import { cumulativeRainByYear } from "./cumulative.js";
 import { renderWaterBalanceChart, renderWaterBalanceText } from "./waterbalance-view.js";
 import { renderMonthlyChart, renderMonthlyText } from "./monthly-view.js";
@@ -57,12 +57,19 @@ function refreshNowRings() {
   if (obsState.td) renderTempDailyChart(obsState.td, nowReading());
 }
 
-// Re-renders the rain-week chart with today's row overlaid from `currentDoc`, once both are loaded.
-function refreshRainWeekLive() {
+// The rain-week and monthly charts with today filled in from `currentDoc` (see withLiveToday and withMonthInProgress).
+const liveRainWeek = () => withLiveToday(rainWeek, currentDoc);
+const liveMonths = () => withMonthInProgress(months, currentDoc?.local_date);
+
+// Re-renders those two charts after a new `currentDoc`, once the daily data is loaded.
+function refreshLiveToday() {
   if (!rainWeek) return;
-  const rows = withLiveToday(rainWeek, currentDoc);
+  const rows = liveRainWeek();
   renderRainWeekText(rows);
   renderRainWeekChart(rows);
+  const mo = liveMonths();
+  renderMonthlyText(mo);
+  renderMonthlyChart(mo);
 }
 
 async function loadCurrent() {
@@ -77,7 +84,7 @@ async function loadCurrent() {
       currentDoc = doc;
       renderCurrent(doc, Date.now());
       renderNearby();
-      refreshRainWeekLive();
+      refreshLiveToday();
       refreshNowRings();
     }
   } catch (err) {
@@ -165,14 +172,15 @@ async function load() {
     rain = cumulativeRainByYear(doc.days);
     rainWeek = lastRainDays(doc.days);
     if (balance.length === 0 || months.length === 0 || rain.length === 0 || rainWeek.length === 0) throw NO_USABLE_DATA();
-    const rainWeekRows = withLiveToday(rainWeek, currentDoc);
+    const rainWeekRows = liveRainWeek();
+    const monthRows = liveMonths();
     renderWaterBalanceText(balance);
-    renderMonthlyText(months);
+    renderMonthlyText(monthRows);
     renderCumulativeText(RAIN, rain);
     renderRainWeekText(rainWeekRows);
     await Promise.all([
       renderWaterBalanceChart(balance),
-      renderMonthlyChart(months),
+      renderMonthlyChart(monthRows),
       renderCumulativeChart(RAIN, rain),
       renderRainWeekChart(rainWeekRows),
     ]);
@@ -418,13 +426,13 @@ function redraw() {
   if (forecastHourly) renderForecastHourlyChart(forecastHourly, nowReading());
   if (!balance) return;
   renderWaterBalanceText(balance);
-  renderMonthlyText(months);
+  renderMonthlyText(liveMonths());
   renderCumulativeText(RAIN, rain);
-  renderRainWeekText(rainWeek);
+  renderRainWeekText(liveRainWeek());
   renderWaterBalanceChart(balance);
-  renderMonthlyChart(months);
+  renderMonthlyChart(liveMonths());
   renderCumulativeChart(RAIN, rain);
-  renderRainWeekChart(rainWeek);
+  renderRainWeekChart(liveRainWeek());
 }
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw);
 narrowScreen.addEventListener("change", redraw);

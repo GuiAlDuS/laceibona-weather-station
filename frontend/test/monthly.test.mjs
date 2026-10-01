@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { monthlyTotals, summarizeMonths, peak } from "../js/monthly.js";
+import { monthlyTotals, withMonthInProgress, summarizeMonths, peak } from "../js/monthly.js";
 
 const day = (date, rain, eto, complete = true) => ({ date, rain_mm: rain, eto, complete });
 
@@ -51,4 +51,19 @@ test("summarizeMonths and peak", () => {
   assert.deepEqual(summarizeMonths(m), { total: 2, rainAboveEto: 1 });
   assert.equal(peak(m, "rain"), 1);
   assert.equal(peak(m, "eto"), 0);
+});
+
+test("withMonthInProgress adds an empty partial month for today when the data has none yet", () => {
+  const m = monthlyTotals([...month("2025-09", 30, 1, 2), ...month("2026-09", 30, 1, 2)], { months: 2 });
+  const live = withMonthInProgress(m, "2026-10-01", { months: 2 });
+  assert.deepEqual(live.map((x) => x.month), ["2026-09", "2026-10"]);
+  assert.deepEqual(live[1], { month: "2026-10", rain: null, eto: null, days: 0, daysInMonth: 31, partial: true });
+  assert.equal(summarizeMonths(live).total, 1); // the empty month is not counted
+});
+
+test("withMonthInProgress changes nothing when the month is already there or there is no date", () => {
+  const m = monthlyTotals(month("2026-10", 1, 1, 2));
+  assert.equal(withMonthInProgress(m, "2026-10-01"), m);
+  assert.equal(withMonthInProgress(m, "2026-09-30"), m);
+  assert.equal(withMonthInProgress(m, undefined), m);
 });
