@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 BRANCH="${1:-test}"
 OUT="$(mktemp -d)"
 trap 'rm -rf "$OUT"' EXIT
-cp -r index.html style.css js vendor es img "$OUT"/
+cp -r index.html sensor-correction.html style.css js vendor es img "$OUT"/
 # The footer's "code last updated" line: the commit's time, or the deploy time when the tree has uncommitted changes.
 COMMIT="$(git rev-parse HEAD)"
 if [ -n "$(git status --porcelain -- .)" ]; then

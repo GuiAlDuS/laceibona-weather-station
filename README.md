@@ -28,7 +28,7 @@ A section menu on the left jumps between the groups below.
 - **Month by month**: rain vs ETo for the last 13 months, and box plots of monthly temperature and wind speed.
 - **Year over year**: box plots of temperature per year (same calendar window), cumulative rain, cumulative lightning and the cumulative water balance (rain minus ETo) by day of year.
 
-ETo is the FAO-56 Penman-Monteith daily reference evapotranspiration, computed from the station's own readings (`fetcher/src/eto.js`, validated against the worked example in FAO Irrigation and Drainage Paper 56).
+ETo is the FAO-56 Penman-Monteith daily reference evapotranspiration, computed from the station's own readings (`frontend/js/eto.js`, shared with the fetcher, validated against the worked example in FAO Irrigation and Drainage Paper 56).
 
 ## Layout
 
@@ -40,6 +40,7 @@ ETo is the FAO-56 Penman-Monteith daily reference evapotranspiration, computed f
 
 ## Data notes worth knowing
 
+- The light sensor read about 1.35× too high from 25 Aug to 30 Sep 2026. The API serves those readings as reported; the dashboard divides solar radiation and UV by 1.35 for those days and recomputes ETo (`frontend/js/sensor-fix.js`, explained on the site's `sensor-correction.html`).
 - Tempest's `stats/station` endpoint returns positional arrays; the verified field map is in `PROJECT.md`.
 - The raw observation array (`obs_st`) has 18 fields, including a wind sample interval at index 5.
 - Stats wind is in m/s regardless of the units chosen in the Tempest app.

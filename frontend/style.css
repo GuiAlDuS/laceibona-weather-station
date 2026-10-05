@@ -160,6 +160,8 @@ p { margin: 0 0 12px; }
 .summary strong { font-weight: 600; }
 /* A data caveat inside a summary: the same amber rule as the stale-data banner, so "check this" always looks alike. */
 .summary .caveat { display: block; margin-top: 8px; padding: 6px 10px; border-left: 4px solid #fab219; background: var(--surface); font-size: 0.875rem; color: var(--text-secondary); }
+/* A caveat that is settled (the readings are corrected): the same shape, without the amber that asks for attention. */
+.summary .caveat.settled { border-left-color: var(--baseline); }
 
 .chart-frame { position: relative; min-height: 420px; transition: opacity 0.2s; }
 .chart-frame.reloading, #cc-body.reloading, #fc-body.reloading { opacity: 0.5; }
@@ -358,3 +360,8 @@ td:first-child { font-family: var(--font-sans); }
   :root:where(:not([data-theme="light"])) #nb-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6); }
 }
 :root[data-theme="dark"] #nb-map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(0.9) saturate(0.6); }
+
+/* The write-up pages (sensor-correction.html): running text at a comfortable measure, the chart at full width. */
+.article .card > p, .article .page-head > p { max-width: 75ch; }
+.article .after-chart { margin-top: 16px; }
+#sp-chart { width: 100%; height: 420px; }

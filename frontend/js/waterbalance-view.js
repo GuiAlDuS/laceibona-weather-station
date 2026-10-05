@@ -1,4 +1,5 @@
-import { $, nf, mm, MONTHS, longDate, fillLegend, SOLAR_NOTE } from "./common.js";
+import { $, nf, mm, MONTHS, longDate, fillLegend, SOLAR_NOTE, addSensorFixNote, FIX_FACTOR } from "./common.js";
+import { sensorFixed } from "./sensor-fix.js";
 import { t } from "./i18n.js";
 import { renderYearLines, colorFor } from "./line-chart.js";
 import { monthEnds, summarize } from "./balance.js";
@@ -23,6 +24,10 @@ export function renderWaterBalanceText(series) {
   el.append(t(`${s.year} to ${longDate(s.throughDate)}: `, `${s.year} al ${longDate(s.throughDate)}: `), strong);
   if (s.prev) el.append(t(` · ${s.prevYear} at the same date: ${mm(s.prev.balance)}`, ` · ${s.prevYear} en la misma fecha: ${mm(s.prev.balance)}`));
   el.append(t(` · rain ${nf.format(Math.round(s.rain))} mm, ETo ${nf.format(Math.round(s.eto))} mm`, ` · lluvia ${nf.format(Math.round(s.rain))} mm, ETo ${nf.format(Math.round(s.eto))} mm`));
+
+  if (series.at(-1).points.some((p) => sensorFixed(p.date))) {
+    addSensorFixNote(el, t(`, so ETo for those days is worked out from solar radiation divided by ${FIX_FACTOR}.`, `, así que la ETo de esos días se calcula con la radiación solar dividida entre ${FIX_FACTOR}.`));
+  }
 
   const parts = series.filter((y) => y.skipped > 0).map((y) => `${y.skipped} ${t("in", "en")} ${y.year}`);
   const skipped = parts.length ? t(`Days without complete sensor data are left out of both rain and ETo (${parts.join(", ")}). `, `Los días sin datos completos del sensor se excluyen tanto de la lluvia como de la ETo (${parts.join(", ")}). `) : "";

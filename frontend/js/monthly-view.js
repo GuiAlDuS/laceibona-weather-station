@@ -1,4 +1,5 @@
-import { $, token, nf, narrowScreen, MONTHS, chartFont, hoverLabel, fillLegend } from "./common.js";
+import { $, token, nf, narrowScreen, MONTHS, chartFont, hoverLabel, fillLegend, appendSensorFixNote, FIX_FACTOR } from "./common.js";
+import { SENSOR_FIX } from "./sensor-fix.js";
 import { t } from "./i18n.js";
 import { summarizeMonths, peak } from "./monthly.js";
 
@@ -98,6 +99,9 @@ export function renderMonthlyText(months) {
   $("mo-note").textContent =
     t("Monthly totals add up only days with complete sensor data. ", "Los totales mensuales suman solo los días con datos completos del sensor. ") +
     (partial.length ? t("† marks a month with missing days (or the month in progress), so its totals read low.", "† indica un mes con días faltantes (o el mes en curso), por lo que sus totales se leen bajos.") : "");
+  if (months.some((m) => m.month >= SENSOR_FIX.from.slice(0, 7) && m.month <= SENSOR_FIX.to.slice(0, 7))) {
+    appendSensorFixNote($("mo-note"), t(`, so ETo for those days is worked out from solar radiation divided by ${FIX_FACTOR}.`, `, así que la ETo de esos días se calcula con la radiación solar dividida entre ${FIX_FACTOR}.`));
+  }
 
   const table = $("mo-table");
   table.replaceChildren();

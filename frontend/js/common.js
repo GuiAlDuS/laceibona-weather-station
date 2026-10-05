@@ -1,4 +1,5 @@
 import { t, nf, MONTHS } from "./i18n.js";
+import { SENSOR_FIX } from "./sensor-fix.js";
 
 export const $ = (id) => document.getElementById(id);
 export const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -17,12 +18,29 @@ export const el = (tag, className, text) => {
   return node;
 };
 
-// From about this date the station's light sensor reads about 1.35x too high (solar and UV together, at every light
-// level; confirmed against two nearby stations in data_review/). Cause still being checked; see PROJECT.md.
-// Charts built on those readings flag the affected months or years.
-export const SENSOR_HIGH_FROM = "2026-08-25";
-// Appends a highlighted caveat line to a summary paragraph (after its textContent has been set).
-export const addCaveat = (node, text) => node.append(el("span", "caveat", text));
+// Notes on charts whose light-sensor readings are corrected (sensor-fix.js): the period, the opening every note shares,
+// and a link to the page that explains the correction.
+const dayMonth = (iso) => `${+iso.slice(8)} ${MONTHS[+iso.slice(5, 7) - 1]}`;
+// The factor as text: 1.35 (1,35 in Spanish).
+export const FIX_FACTOR = t(String(SENSOR_FIX.factor), String(SENSOR_FIX.factor).replace(".", ","));
+const SENSOR_FIX_INTRO = t(
+  `Corrected: from ${dayMonth(SENSOR_FIX.from)} to ${dayMonth(SENSOR_FIX.to)} ${SENSOR_FIX.to.slice(0, 4)} the light sensor read about ${FIX_FACTOR}× too high`,
+  `Corregido: del ${dayMonth(SENSOR_FIX.from)} al ${dayMonth(SENSOR_FIX.to)} ${SENSOR_FIX.to.slice(0, 4)} el sensor de luz leyó cerca de ${FIX_FACTOR}× demasiado alto`,
+);
+function sensorFixLink() {
+  const a = el("a", null, t("How we checked and corrected it", "Cómo lo comprobamos y corregimos"));
+  a.href = t("/sensor-correction.html", "/es/sensor-correction.html");
+  return a;
+}
+// Appends the correction note to a summary paragraph (after its textContent has been set). `rest` finishes the
+// opening's sentence, e.g. ", so those days' readings are divided by 1.35."
+export function addSensorFixNote(node, rest) {
+  const note = el("span", "caveat settled", `${SENSOR_FIX_INTRO}${rest} `);
+  note.append(sensorFixLink(), ".");
+  node.append(note);
+}
+// The same note as running text, for the end of a "How to read this chart" paragraph.
+export const appendSensorFixNote = (node, rest) => node.append(` ${SENSOR_FIX_INTRO}${rest} `, sensorFixLink(), ".");
 
 export const num = (v, digits = 1) => (typeof v === "number" ? v.toFixed(digits) : "—");
 

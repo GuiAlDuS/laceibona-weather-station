@@ -1,10 +1,11 @@
-import { $, token, nf, chartFont, hoverLabel, SENSOR_HIGH_FROM, addCaveat } from "./common.js";
+import { $, token, nf, chartFont, hoverLabel, addSensorFixNote, FIX_FACTOR } from "./common.js";
+import { SENSOR_FIX } from "./sensor-fix.js";
 import { t, MONTHS } from "./i18n.js";
 
 const md = (through) => `${+through.slice(3)} ${MONTHS[+through.slice(0, 2) - 1]}`;
 const perDay = (y) => y.total / y.days;
-// A year whose window reaches SENSOR_HIGH_FROM includes the light sensor's too-high readings.
-const sensorHigh = (y) => `${y.year}-${y.through}` >= SENSOR_HIGH_FROM;
+// A year whose window reaches the days with corrected light-sensor readings (sensor-fix.js).
+const corrected = (y) => y.year === SENSOR_FIX.from.slice(0, 4) && y.through >= SENSOR_FIX.from.slice(5);
 
 export function renderSolarYearChart(years) {
   const font = chartFont();
@@ -13,10 +14,8 @@ export function renderSolarYearChart(years) {
     type: "bar",
     x: years.map((y) => y.year),
     y: years.map((y) => y.total),
-    // The affected year is hatched, so the caveat shows on the chart itself.
-    marker: { color: token("--sun"), pattern: { shape: years.map((y) => (sensorHigh(y) ? "/" : "")), fillmode: "overlay", fgcolor: token("--surface"), fgopacity: 0.7, solidity: 0.3 } },
-    customdata: years.map((y) => (sensorHigh(y) ? t("<br>includes readings that are too high", "<br>incluye lecturas demasiado altas") : "")),
-    hovertemplate: "%{y:,.0f} kWh/m²%{customdata}<extra></extra>",
+    marker: { color: token("--sun") },
+    hovertemplate: "%{y:,.0f} kWh/m²<extra></extra>",
   };
   const layout = {
     font,
@@ -38,15 +37,9 @@ export function renderSolarYearText(years) {
   summary.textContent =
     years.map((y) => t(`${y.year}: ${nf.format(Math.round(y.total))} kWh/m² (${perDay(y).toFixed(1)} kWh/m²/day)`, `${y.year}: ${nf.format(Math.round(y.total))} kWh/m² (${perDay(y).toFixed(1)} kWh/m²/día)`)).join(" · ") +
     t(` (1 Jan to ${through}).`, ` (1 ene al ${through}).`);
-  const high = years.filter(sensorHigh).map((y) => y.year);
-  if (high.length) {
-    addCaveat(
-      summary,
-      t(
-        `Under review: since about 25 Aug 2026 the light sensor has read about 1.35× too high at all light levels (checked against two nearby stations), so the ${high.join(", ")} total (hatched) is somewhat overstated. We're checking the sensor; readings before that date are not affected.`,
-        `En revisión: desde alrededor del 25 ago 2026 el sensor de luz lee cerca de 1,35× demasiado alto con cualquier nivel de luz (comparado con dos estaciones cercanas), así que el total de ${high.join(", ")} (rayado) está algo sobreestimado. Estamos revisando el sensor; las lecturas anteriores a esa fecha no están afectadas.`,
-      ),
-    );
+  const fixed = years.filter(corrected).map((y) => y.year);
+  if (fixed.length) {
+    addSensorFixNote(summary, t(`, so the ${fixed.join(", ")} total uses those days' readings divided by ${FIX_FACTOR}.`, `, así que el total de ${fixed.join(", ")} usa las lecturas de esos días divididas entre ${FIX_FACTOR}.`));
   }
   $("sy-note").textContent = t(
     `Total solar irradiation per year, from raw hourly observations (not the stats endpoint used elsewhere on this page, so this is not affected by the solar-bias caveat on the water balance chart). Every year covers the same window, 1 January to ${through}, so a partial year is compared fairly. Years with under 30 days in that window are left out.`,

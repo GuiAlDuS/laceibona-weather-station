@@ -16,6 +16,14 @@ Periods: June to September 2025 (baseline) and 1 June 2026 to the latest day.
 
 **Result:** from about 25 Aug 2026 ours reads about 1.35× high at every light level, and neither neighbour changed; see `results/findings.md` (tables) and `results/report.html` (the same with charts).
 
+**Outcome (5 Oct 2026):** Tempest support recalibrated the sensor overnight into 1 Oct. With data to 4 Oct the midday solar ratio against IESPAR72 is 1.01 before 25 Aug, 1.37 from 25 Aug to 30 Sep and 1.00 since (UV 1.00 / 1.35 / 1.03). The dashboard now divides those 37 days by 1.35 (`frontend/js/sensor-fix.js`; PROJECT.md Phase 15).
+
+`sensor_peaks.py` writes `frontend/js/sensor-peaks.js`, each day's peak solar radiation from our own 1-minute readings (`tempest-minutes.mjs`), for the chart on the site's `sensor-correction.html`:
+
+```
+python3 data_review/sensor_peaks.py
+```
+
 `results/` is git-ignored: everything in it is built from other owners' Weather Underground data, which their terms allow for personal use only. The scripts rebuild `compare.json` and the two HTML reports; `findings.md` is written by hand and exists only locally.
 
 Our own station's Weather Underground feed only starts on 23 Sep 2026, so our side comes from Tempest directly. IPUNTA186 only reports from 30 Jul 2026.

@@ -1,4 +1,5 @@
-import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin, stackDomains, panelTitle, PANEL_GAP_PX, perPanel, weekNightBands, SENSOR_HIGH_FROM, addCaveat, nowRing } from "./common.js";
+import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin, stackDomains, panelTitle, PANEL_GAP_PX, perPanel, weekNightBands, addSensorFixNote, FIX_FACTOR, nowRing } from "./common.js";
+import { sensorFixed } from "./sensor-fix.js";
 import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { fineDaySummaries, finePeak } from "./rainfine.js";
@@ -13,8 +14,8 @@ const rgba = (hex, a) => `rgba(${[1, 3, 5].map((k) => parseInt(hex.slice(k, k + 
 // Five panels over one shared day axis, top to bottom: temperature, solar radiation, air humidity, station pressure
 // and rain intensity. Each has its own y axis and a name above it, so no scale is shared or doubled up.
 const PANEL_WEIGHTS = [1, 1, 1, 1, 1.2];
-// The week is on or after the date the light sensor started reading high, so the solar panel is flagged.
-const sensorHigh = (buckets) => buckets.some((b) => b.date >= SENSOR_HIGH_FROM && b.solar !== null);
+// The window still shows days with corrected light-sensor readings (sensor-fix.js).
+const corrected = (buckets) => buckets.some((b) => sensorFixed(b.date) && b.solar !== null);
 
 // first: the week's first local date (see weekStart); the x axis always spans WEEK_DAYS days from it.
 export function renderRainFineChart(buckets, first, now = null) {
@@ -67,7 +68,7 @@ export function renderRainFineChart(buckets, first, now = null) {
   const nightShapes = perPanel(weekNightBands(span), [tempD, solarD, rhD, pD, rainD]);
   const names = [
     t("Temperature (°C)", "Temperatura (°C)"),
-    sensorHigh(buckets) ? t("Solar radiation (W/m², under review)", "Radiación solar (W/m², en revisión)") : t("Solar radiation (W/m²)", "Radiación solar (W/m²)"),
+    t("Solar radiation (W/m²)", "Radiación solar (W/m²)"),
     t("Air humidity (%)", "Humedad del aire (%)"),
     t("Station pressure (hPa)", "Presión de la estación (hPa)"),
     t("Rain intensity (mm/h)", "Intensidad de la lluvia (mm/h)"),
@@ -140,14 +141,8 @@ export function renderRainFineText(buckets) {
     (peak
       ? t(`${total.toFixed(0)} mm of rain. Heaviest 10 minutes: ${peak.rate.toFixed(1)} mm/h on ${dayLabel(peak.date)} at ${hourLabel(peak.hour, peak.minute)}.`, `${total.toFixed(0)} mm de lluvia. Los 10 minutos más intensos: ${peak.rate.toFixed(1)} mm/h el ${dayLabel(peak.date)} a las ${hourLabel(peak.hour, peak.minute)}.`)
       : t(`${total.toFixed(0)} mm of rain. No rain in this window.`, `${total.toFixed(0)} mm de lluvia. Sin lluvia en este período.`));
-  if (sensorHigh(buckets)) {
-    addCaveat(
-      summary,
-      t(
-        "Under review: since about 25 Aug 2026 the light sensor has read about 1.35× too high at all light levels (checked against two nearby stations), so the solar radiation panel is overstated. We're checking the sensor.",
-        "En revisión: desde alrededor del 25 ago 2026 el sensor de luz lee cerca de 1,35× demasiado alto con cualquier nivel de luz (comparado con dos estaciones cercanas), así que el panel de radiación solar está sobreestimado. Estamos revisando el sensor.",
-      ),
-    );
+  if (corrected(buckets)) {
+    addSensorFixNote(summary, t(`, so the solar radiation panel shows those days' readings divided by ${FIX_FACTOR}.`, `, así que el panel de radiación solar muestra las lecturas de esos días divididas entre ${FIX_FACTOR}.`));
   }
   $("rf-note").textContent = t(
     "Five panels over the same 7 days, each with its own scale; every value is a 10-minute average, except the rings at the end of the lines: those are the station's current readings, as in Current conditions, joined to the last average by a dotted line. Station pressure is measured at the station's height, so it reads about 9–10 hPa below the sea-level pressure in forecasts; it rises and falls twice a day on its own, and a sharp drop often comes before a storm. Each rain bar is one 10-minute window, shown as its hourly rate, so a short burst reads at its true intensity instead of being smeared across the hour. Night (18:00–06:00) is shaded.",

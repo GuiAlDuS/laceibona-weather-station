@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Light sensor correction · La Ceibona Weather Station</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="lang-switch" aria-label="Language">
+    <span aria-current="true">EN</span>
+    <span class="sep" aria-hidden="true">/</span>
+    <a href="/es/sensor-correction.html">ES</a>
+  </div>
+  <main class="article">
+    <header class="page-head">
+      <p class="station-id"><a href="/">← Back to the dashboard</a></p>
+      <h1>Light sensor correction, 25 Aug to 30 Sep 2026</h1>
+      <p class="muted">For 37 days the station's light sensor read about 1.35 times too high. The dashboard divides those days' solar radiation and UV readings by 1.35. This page shows how we found the problem and what the correction changes.</p>
+    </header>
+
+    <section class="card" aria-labelledby="what-title">
+      <h3 id="what-title">What happened</h3>
+        <p>Solar radiation and the UV index both come from one light sensor on the Tempest. From the morning of 25 August 2026 its readings were higher than before at every light level, and they stayed that way until the night of 30 September. On 1 October the readings were back to normal.</p>
+        <p>We inspected and cleaned the sensor on 27 September and found nothing wrong, and the station has not moved since it was set up. We then wrote to Tempest support, who answered on 1 October that an automatic calibration had corrected the measurements. That fixed the readings from then on, but the 37 days already recorded stay as they were, so we correct them here.</p>
+    </section>
+
+    <section class="card" aria-labelledby="sp-title">
+      <h3 id="sp-title">Each day's peak solar radiation</h3>
+      <p class="muted">The highest 10-minute average of each day, June to October. Cloudy days fall well below the rest in any year.</p>
+      <div id="sp-frame" class="chart-frame">
+        <div id="sp-chart" role="img" aria-label="Dot chart of each day's peak solar radiation from June to October: 2025, 2026 as reported, and 2026 corrected for 25 August to 30 September"></div>
+        <p id="sp-status" class="status">Loading…</p>
+      </div>
+      <ul id="sp-legend" class="legend" aria-label="Legend"></ul>
+      <details class="table-view">
+        <summary>Table view</summary>
+        <div class="table-scroll tall"><table id="sp-table"></table></div>
+      </details>
+      <p class="after-chart">On clear days the peak is usually close to 1,000 W/m², as in 2025 and in 2026 up to 24 August. Between 25 August and 30 September it was around 1,400 W/m², and it dropped back on 1 October. Divided by 1.35, those days line up with the rest.</p>
+    </section>
+
+    <section class="card" aria-labelledby="how-title">
+      <h3 id="how-title">How we checked</h3>
+        <p><strong>Our own readings.</strong> The typical daily peak went from 985 W/m² (1 June to 24 August) to 1,370 W/m² (25 August to 30 September), about 1.39 times higher. In the same weeks of 2025 it was 968 W/m². The step up and the step down each happened from one day to the next.</p>
+        <p><strong>Two nearby stations.</strong> We compared our readings, moment by moment, with a station of the same model in Esparza and one of another make near Puntarenas. Neither of them changed on those dates. Against both, our readings went up by about 1.35 times on 25 August, at every hour and light level, and matched them again from 1 October. Their data belongs to their owners, so we describe the result here without publishing their readings.</p>
+        <p><strong>The factor.</strong> The different ways of measuring it give between 1.32 and 1.42. We use 1.35, so the corrected values could be off by about 4% either way.</p>
+    </section>
+
+    <section class="card" aria-labelledby="changes-title">
+      <h3 id="changes-title">What the correction changes</h3>
+      <p>The charts that use the light sensor, with the affected days before and after the correction:</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th></th><th>As reported</th><th>Corrected</th></tr></thead>
+          <tbody>
+            <tr><td>Median daily peak UV index, September 2026</td><td>18.9</td><td>14.0</td></tr>
+            <tr><td>Solar irradiation, September 2026</td><td>199 kWh/m²</td><td>147 kWh/m²</td></tr>
+            <tr><td>Solar irradiation, August 2026</td><td>154 kWh/m²</td><td>143 kWh/m²</td></tr>
+            <tr><td>ETo, September 2026</td><td>157 mm</td><td>121 mm</td></tr>
+            <tr><td>ETo, August 2026</td><td>126 mm</td><td>119 mm</td></tr>
+            <tr><td>Water balance (rain minus ETo), 2026 to 4 October</td><td>−540 mm</td><td>−497 mm</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="after-chart">ETo (how much water a reference grass crop would use in a day) is calculated from solar radiation, temperature, humidity and wind. We recalculate it for the affected days with the corrected solar radiation, so it changes by less than the solar radiation does.</p>
+    </section>
+
+    <section class="card" aria-labelledby="not-title">
+      <h3 id="not-title">What stays the same</h3>
+        <p>The readings stored by the station are not changed. Our data service, the Tempest app and Weather Underground still show those 37 days as the station reported them. The division is done by the dashboard when it draws the charts.</p>
+        <p>Readings before 25 August and from 1 October are not touched.</p>
+        <p>Temperature, humidity, rain, wind, pressure and lightning do not use the light sensor and were not affected.</p>
+    </section>
+
+    <footer class="site-footer">
+      <p class="muted small">Figures on this page use readings up to 4 October 2026. The correction is in <code>frontend/js/sensor-fix.js</code> in the <a href="https://github.com/GuiAlDuS/laceibona-weather-station">source on GitHub</a>.</p>
+    </footer>
+  </main>
+
+  <script src="vendor/plotly-cartesian.min.js"></script>
+  <script type="module" src="js/sensor-page.js"></script>
+</body>
+</html>

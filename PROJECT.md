@@ -811,3 +811,34 @@ Owner decisions worth remembering:
 - **Fetcher**: `next_hours`/`hours` records carry `precip` (mm). Tempest computes rain in
   2–4 hour steps and spreads each evenly, so neighbouring hours often share a value; amounts are
   unconditional model rain (0.09 mm at 0% chance happens).
+
+**Phase 15 — Light sensor recalibrated; 25 Aug to 30 Sep 2026 corrected (Oct 2026)**
+
+- **Resolved**: the owner cleaned the sensor on 27 Sep (no change) and wrote to Tempest support,
+  who replied on 1 Oct that an automatic calibration had corrected it (firmware unchanged, ST fw
+  179). The neighbour comparison re-run on 5 Oct confirms it: midday solar ratio against IESPAR72
+  1.01 before, 1.37 from 25 Aug to 30 Sep, 1.00 on 1, 3 and 4 Oct (UV 1.00 / 1.35 / 1.03).
+- **The period is whole local days, 25 Aug to 30 Sep 2026.** Our own 1-minute readings against
+  a clear-sky curve step up on the morning of 25 Aug and are back to normal from sunrise on 1 Oct.
+  16 Aug has about 25 bright minutes that look like the same thing; it is left alone.
+- **Factor 1.35**: the estimates run from 1.32 to 1.42 (our own clear-sky index and daily peaks
+  against earlier 2026 and the same weeks of 2025; both neighbours, hour by hour), so corrected
+  values are good to about ±4%.
+- **The correction is applied by the dashboard, not to stored data** (`frontend/js/sensor-fix.js`):
+  the API and KV keep the readings as reported (Tempest's own API also still serves the inflated
+  values). `fixObsMonth` and `fixFine` divide solar and UV in the `obs:` and `fine7d` documents as
+  they are loaded; `fixDaily` divides the daily light fields and recomputes ETo. For that the ETo
+  formula moved to `frontend/js/eto.js`; `fetcher/src/eto.js` re-exports it, so there is one copy.
+  Effect: Sep 2026 ETo 157 → 121 mm, 2026 water balance to 4 Oct −540 → −497 mm, Sep solar
+  199 → 147 kWh/m², Sep median daily peak UV 18.9 → 14.0.
+- **Notes**: the "Under review" caveats, faded UV months and hatched solar bar are gone
+  (`SENSOR_HIGH_FROM` removed). Charts showing corrected days carry a "Corrected: …" note with a
+  link to `sensor-correction.html` (and `/es/`): in the summary of UV by month, solar by year, the
+  cumulative water balance and the 7-day panels, and under "How to read this chart" for monthly
+  rain vs ETo and the week's rain and ETo. Each note disappears once its chart no longer shows
+  those days.
+- **`sensor-correction.html`**: a short page on what happened, how it was checked and what
+  changes, with a chart of each day's peak solar radiation (2025, 2026 as reported, 2026
+  corrected) from `frontend/js/sensor-peaks.js`, which `data_review/sensor_peaks.py` writes from
+  our own 1-minute readings. The neighbours are described in words only (WU terms, Phase 13).
+- The separate ~4% stats-average caveat (§2, `SOLAR_NOTE`) is unchanged and still open.

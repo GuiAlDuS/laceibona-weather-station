@@ -1,4 +1,5 @@
 import { API_BASE } from "./config.js";
+import { fixObsMonth } from "./sensor-fix.js";
 
 const TTL_MS = 5 * 60_000;
 const cache = new Map(); // month key -> { at, promise }
@@ -13,7 +14,7 @@ async function fetchMonth(key) {
   const res = await fetch(`${API_BASE}/api/obs/${key}`);
   if (res.status === 404) return null; // no data that month
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return fixObsMonth(await res.json());
 }
 
 // obs:YYYY-MM documents for the last n months (months with no data are dropped). Shared by every chart

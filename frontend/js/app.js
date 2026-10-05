@@ -35,6 +35,7 @@ import { recentStrikes } from "./lightning24h.js";
 import { renderLightningChart, renderLightningText } from "./lightning24h-view.js";
 import { annualSolarTotals } from "./solar.js";
 import { renderSolarYearChart, renderSolarYearText } from "./solar-view.js";
+import { fixDaily, fixFine } from "./sensor-fix.js";
 
 const NO_USABLE_DATA = () => new Error(t("no usable data yet", "todavía no hay datos utilizables"));
 const couldNotLoad = (msg) => t(`Could not load data (${msg}). `, `No se pudieron cargar los datos (${msg}). `);
@@ -166,7 +167,7 @@ async function load() {
   try {
     const res = await fetch(`${API_BASE}/api/daily`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const doc = await res.json();
+    const doc = fixDaily(await res.json());
     balance = cumulativeByYear(doc.days);
     months = monthlyTotals(doc.days);
     rain = cumulativeRainByYear(doc.days);
@@ -279,7 +280,7 @@ async function loadRainFine() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const doc = await res.json();
     if (doc.available === false) throw new Error(t("no data yet", "todavía no hay datos"));
-    fineBucketsData = fineBuckets(doc);
+    fineBucketsData = fineBuckets(fixFine(doc));
     if (fineBucketsData.every((b) => b.rate === null && b.p === null && b.solar === null)) throw NO_USABLE_DATA();
     drawRainFine();
     drawLightning(); // its rain bars come from this same document

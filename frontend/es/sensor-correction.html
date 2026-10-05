@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Corrección del sensor de luz · Estación Meteorológica La Ceibona</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="lang-switch" aria-label="Idioma">
+    <a href="/sensor-correction.html">EN</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span aria-current="true">ES</span>
+  </div>
+  <main class="article">
+    <header class="page-head">
+      <p class="station-id"><a href="/es/">← Volver al panel</a></p>
+      <h1>Corrección del sensor de luz, del 25 ago al 30 sep 2026</h1>
+      <p class="muted">Durante 37 días el sensor de luz de la estación leyó cerca de 1,35 veces demasiado alto. El panel divide entre 1,35 las lecturas de radiación solar y de índice UV de esos días. Esta página muestra cómo encontramos el problema y qué cambia con la corrección.</p>
+    </header>
+
+    <section class="card" aria-labelledby="what-title">
+      <h3 id="what-title">Qué pasó</h3>
+        <p>La radiación solar y el índice UV salen de un mismo sensor de luz del Tempest. Desde la mañana del 25 de agosto de 2026 sus lecturas fueron más altas que antes con cualquier nivel de luz, y siguieron así hasta la noche del 30 de setiembre. El 1 de octubre las lecturas volvieron a la normalidad.</p>
+        <p>Revisamos y limpiamos el sensor el 27 de setiembre y no encontramos nada malo, y la estación no se ha movido desde que se instaló. Después escribimos al soporte de Tempest, que respondió el 1 de octubre que una calibración automática había corregido las mediciones. Eso arregló las lecturas de ahí en adelante, pero los 37 días ya registrados quedan como estaban, así que los corregimos aquí.</p>
+    </section>
+
+    <section class="card" aria-labelledby="sp-title">
+      <h3 id="sp-title">Máximo diario de radiación solar</h3>
+      <p class="muted">El promedio de 10 minutos más alto de cada día, de junio a octubre. Los días nublados quedan muy por debajo del resto en cualquier año.</p>
+      <div id="sp-frame" class="chart-frame">
+        <div id="sp-chart" role="img" aria-label="Gráfico de puntos del máximo diario de radiación solar de junio a octubre: 2025, 2026 como se reportó y 2026 corregido del 25 de agosto al 30 de setiembre"></div>
+        <p id="sp-status" class="status">Cargando…</p>
+      </div>
+      <ul id="sp-legend" class="legend" aria-label="Leyenda"></ul>
+      <details class="table-view">
+        <summary>Ver tabla</summary>
+        <div class="table-scroll tall"><table id="sp-table"></table></div>
+      </details>
+      <p class="after-chart">En días despejados el máximo suele estar cerca de 1.000 W/m², como en 2025 y en 2026 hasta el 24 de agosto. Entre el 25 de agosto y el 30 de setiembre estuvo alrededor de 1.400 W/m², y bajó de nuevo el 1 de octubre. Divididos entre 1,35, esos días quedan en línea con el resto.</p>
+    </section>
+
+    <section class="card" aria-labelledby="how-title">
+      <h3 id="how-title">Cómo lo comprobamos</h3>
+        <p><strong>Nuestras propias lecturas.</strong> El máximo diario típico pasó de 985 W/m² (1 de junio al 24 de agosto) a 1.370 W/m² (25 de agosto al 30 de setiembre), cerca de 1,39 veces más alto. En las mismas semanas de 2025 fue de 968 W/m². La subida y la bajada ocurrieron cada una de un día para otro.</p>
+        <p><strong>Dos estaciones cercanas.</strong> Comparamos nuestras lecturas, momento a momento, con una estación del mismo modelo en Esparza y otra de otra marca cerca de Puntarenas. Ninguna de las dos cambió en esas fechas. Frente a ambas, nuestras lecturas subieron cerca de 1,35 veces el 25 de agosto, a toda hora y con cualquier nivel de luz, y volvieron a coincidir desde el 1 de octubre. Sus datos pertenecen a sus dueños, así que aquí describimos el resultado sin publicar sus lecturas.</p>
+        <p><strong>El factor.</strong> Las distintas formas de medirlo dan entre 1,32 y 1,42. Usamos 1,35, así que los valores corregidos podrían estar desviados cerca de un 4% hacia arriba o hacia abajo.</p>
+    </section>
+
+    <section class="card" aria-labelledby="changes-title">
+      <h3 id="changes-title">Qué cambia con la corrección</h3>
+      <p>Los gráficos que usan el sensor de luz, con los días afectados antes y después de la corrección:</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th></th><th>Como se reportó</th><th>Corregido</th></tr></thead>
+          <tbody>
+            <tr><td>Mediana del índice UV máximo diario, setiembre 2026</td><td>18,9</td><td>14,0</td></tr>
+            <tr><td>Irradiación solar, setiembre 2026</td><td>199 kWh/m²</td><td>147 kWh/m²</td></tr>
+            <tr><td>Irradiación solar, agosto 2026</td><td>154 kWh/m²</td><td>143 kWh/m²</td></tr>
+            <tr><td>ETo, setiembre 2026</td><td>157 mm</td><td>121 mm</td></tr>
+            <tr><td>ETo, agosto 2026</td><td>126 mm</td><td>119 mm</td></tr>
+            <tr><td>Balance hídrico (lluvia menos ETo), 2026 al 4 de octubre</td><td>−540 mm</td><td>−497 mm</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="after-chart">La ETo (cuánta agua usaría en un día un cultivo de pasto de referencia) se calcula con la radiación solar, la temperatura, la humedad y el viento. La recalculamos para los días afectados con la radiación solar corregida, por eso cambia menos que la radiación solar.</p>
+    </section>
+
+    <section class="card" aria-labelledby="not-title">
+      <h3 id="not-title">Qué queda igual</h3>
+        <p>Las lecturas guardadas por la estación no se modifican. Nuestro servicio de datos, la aplicación de Tempest y Weather Underground siguen mostrando esos 37 días como los reportó la estación. La división la hace el panel al dibujar los gráficos.</p>
+        <p>Las lecturas anteriores al 25 de agosto y desde el 1 de octubre no se tocan.</p>
+        <p>La temperatura, la humedad, la lluvia, el viento, la presión y los rayos no usan el sensor de luz y no se vieron afectados.</p>
+    </section>
+
+    <footer class="site-footer">
+      <p class="muted small">Las cifras de esta página usan lecturas hasta el 4 de octubre de 2026. La corrección está en <code>frontend/js/sensor-fix.js</code>, en el <a href="https://github.com/GuiAlDuS/laceibona-weather-station">código en GitHub</a>.</p>
+    </footer>
+  </main>
+
+  <script src="/vendor/plotly-cartesian.min.js"></script>
+  <script type="module" src="/js/sensor-page.js"></script>
+</body>
+</html>

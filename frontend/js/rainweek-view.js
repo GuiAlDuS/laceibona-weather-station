@@ -1,4 +1,5 @@
-import { $, token, nf, chartFont, hoverLabel, categoryDayTicks, keepDayLabel, stackDomains, panelTitle, PANEL_GAP_PX } from "./common.js";
+import { $, token, nf, chartFont, hoverLabel, categoryDayTicks, keepDayLabel, stackDomains, panelTitle, PANEL_GAP_PX, appendSensorFixNote, FIX_FACTOR } from "./common.js";
+import { sensorFixed } from "./sensor-fix.js";
 import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { weekTotals } from "./rainweek.js";
@@ -106,6 +107,9 @@ export function renderRainWeekText(rows) {
           "La ETo de hoy no se muestra: se calcula una vez al día para el día terminado, así que no puede calcularse para hoy. La lluvia y la duración de hoy son totales hasta ahora. ",
         )
       : "") + t("Rain duration is the number of minutes with rain in the day, shown in hours.", "La duración de la lluvia es la cantidad de minutos con lluvia en el día, mostrada en horas.");
+  if (rows.some((r) => sensorFixed(r.date) && r.eto !== null)) {
+    appendSensorFixNote($("rw-note"), t(`, so ETo for those days is worked out from solar radiation divided by ${FIX_FACTOR}.`, `, así que la ETo de esos días se calcula con la radiación solar dividida entre ${FIX_FACTOR}.`));
+  }
 
   const table = $("rw-table");
   table.replaceChildren();
