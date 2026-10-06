@@ -6,14 +6,14 @@ export const dayLabel = (iso) => {
   return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
 };
 
-// One categorical colour per day, latest day first (blue), then orange, aqua, yellow, magenta, green, violet.
-const dayHex = (i, count) => token(`--series-${count - i}`);
+// The latest day is red, like temperature on every other chart; the earlier days are context, in one grey.
+const dayHex = (i, count) => token(i === count - 1 ? "--hot" : "--series-context");
 
-// Older days fade quickly: the latest day is fully opaque and each day back keeps 70% of the one after it
-// (1, 0.7, 0.49, 0.34, ...), never below 20%, so the last two or three days clearly stand out.
-const FADE = 0.7;
-const MIN_ALPHA = 0.2;
-export const dayAlpha = (i, count) => Math.max(MIN_ALPHA, FADE ** (count - 1 - i));
+// The earlier days lighten with age: yesterday is fully opaque and each day back keeps 75% of the one after it
+// (1, 0.75, 0.56, 0.42, ...), never below 25%, so how recent a grey line is can be read from how dark it is.
+const FADE = 0.75;
+const MIN_ALPHA = 0.25;
+export const dayAlpha = (i, count) => (i === count - 1 ? 1 : Math.max(MIN_ALPHA, FADE ** (count - 2 - i)));
 const rgba = (hex, a) => `rgba(${[1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16)).join(",")},${a.toFixed(2)})`;
 export const dayColor = (i, count) => rgba(dayHex(i, count), dayAlpha(i, count));
 
@@ -21,7 +21,7 @@ const hourLabel = (h) => `${String(h).padStart(2, "0")}:00`;
 
 export function renderTempDailyChart(days, now = null) {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const latestIdx = days.length - 1;
   const traces = days.map((d, i) => ({
     type: "scatter",
@@ -29,7 +29,7 @@ export function renderTempDailyChart(days, now = null) {
     name: dayLabel(d.date),
     x: d.points.map((p) => p.hour),
     y: d.points.map((p) => p.t),
-    line: { color: dayColor(i, days.length), width: 2 },
+    line: { color: dayColor(i, days.length), width: i === latestIdx ? 2.5 : 1.5 },
     hovertemplate: "%{y:.1f} °C",
   }));
   // The current temperature as a ring (see nowRing) at its hour and minute, joined to the latest day's last point
@@ -83,11 +83,15 @@ export function renderTempDailyChart(days, now = null) {
 }
 
 export function renderTempDailyText(days) {
-  fillLegend(
-    $("td-legend"),
-    [...days].reverse().map((d) => ({ label: dayLabel(d.date), color: dayColor(days.indexOf(d), days.length) })),
-    "line",
-  );
+  // Three entries, not seven: the latest day, the day before, and the rest as a group (told apart by how light they are).
+  const n = days.length;
+  const entries = [{ label: dayLabel(days[n - 1].date), color: dayColor(n - 1, n) }];
+  if (n > 1) entries.push({ label: dayLabel(days[n - 2].date), color: dayColor(n - 2, n) });
+  if (n > 2) {
+    const older = n > 3 ? t(`${dayLabel(days[0].date)} to ${dayLabel(days[n - 3].date)}`, `${dayLabel(days[0].date)} a ${dayLabel(days[n - 3].date)}`) : dayLabel(days[0].date);
+    entries.push({ label: n > 3 ? t(`${older} (lighter the older)`, `${older} (más claro cuanto más antiguo)`) : older, color: dayColor(Math.max(0, n - 4), n) });
+  }
+  fillLegend($("td-legend"), entries, "line");
   const latest = days.at(-1);
   const lo = Math.min(...latest.points.map((p) => p.tmin ?? p.t));
   const hi = Math.max(...latest.points.map((p) => p.tmax ?? p.t));
@@ -96,8 +100,8 @@ export function renderTempDailyText(days) {
     `${dayLabel(latest.date)}: ${lo.toFixed(1)} a ${hi.toFixed(1)} °C${latest.points.length < 24 ? " hasta ahora" : ""}.`,
   );
   $("td-note").textContent = t(
-    "Hourly mean temperature by local hour (UTC-6), for the last 7 days with data. Each day has its own colour, starting with blue for the most recent day, and older days fade so the recent ones stand out; the legend lists them in that order. The hour in progress is shown as its average so far; the ring is the station's current reading, as in Current conditions, joined to that average by a dotted line.",
-    "Temperatura media por hora local (UTC-6), para los últimos 7 días con datos. Cada día tiene su propio color, empezando en azul para el más reciente, y los días anteriores se desvanecen para que los recientes resalten; la leyenda los enumera en ese orden. La hora en curso se muestra con su promedio hasta el momento; el círculo es la lectura actual de la estación, como en Condiciones actuales, unido a ese promedio por una línea punteada.",
+    "Hourly mean temperature by local hour (UTC-6), for the last 7 days with data. The most recent day is the red line; the earlier days are grey, lighter the older they are, and hovering over the chart names each one. The hour in progress is shown as its average so far; the ring is the station's current reading, as in Current conditions, joined to that average by a dotted line.",
+    "Temperatura media por hora local (UTC-6), para los últimos 7 días con datos. El día más reciente es la línea roja; los días anteriores van en gris, más claro cuanto más antiguos, y al pasar el cursor por el gráfico se nombra cada uno. La hora en curso se muestra con su promedio hasta el momento; el círculo es la lectura actual de la estación, como en Condiciones actuales, unido a ese promedio por una línea punteada.",
   );
 
   const table = $("td-table");

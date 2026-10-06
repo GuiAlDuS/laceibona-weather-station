@@ -23,6 +23,7 @@
         <li><a href="#typical-day">A typical day</a></li>
         <li><a href="#monthly">Month by month</a></li>
         <li><a href="#yearly">Year over year</a></li>
+        <li><a href="#extremes">Extremes</a></li>
       </ul>
     </nav>
 
@@ -154,7 +155,7 @@
       <div class="row row-pair">
         <section class="card" aria-labelledby="td-title">
           <h3 id="td-title">Temperature, last 7 days</h3>
-          <p class="muted">Hour-by-hour temperature for the past week, one colour per day.</p>
+          <p class="muted">Hour-by-hour temperature for the past week, with the latest day in red.</p>
           <p id="td-summary" class="summary" aria-live="polite"></p>
 
           <div id="td-frame" class="chart-frame">
@@ -180,7 +181,7 @@
           <p id="rw-summary" class="summary" aria-live="polite"></p>
 
           <div id="rw-frame" class="chart-frame">
-            <div id="rw-chart" role="img" aria-label="Two stacked charts over the last 7 days: grouped bars of daily rain and ETo in millimetres above, and the hours of rain per day as a line below"></div>
+            <div id="rw-chart" role="img" aria-label="Two stacked charts over the last 7 days: grouped bars of daily rain and ETo in millimetres above, and the hours of rain per day as bars below"></div>
             <p id="rw-status" class="status">Loading…</p>
           </div>
           <ul id="rw-legend" class="legend" aria-label="Legend"></ul>
@@ -495,6 +496,29 @@
           </div>
         </section>
       </div>
+    </section>
+
+    <section class="group" id="extremes" aria-labelledby="extremes-heading">
+      <h2 id="extremes-heading" class="group-title">Extremes</h2>
+      <p id="ex-period" class="muted" aria-live="polite">The station's records since it started.</p>
+
+      <div class="row row-extremes">
+        <section class="card" aria-labelledby="xt-title">
+          <h3 id="xt-title">Temperature</h3>
+          <dl id="xt-body" class="ex-list"><div class="ex-row"><p class="muted">Loading…</p></div></dl>
+        </section>
+
+        <section class="card" aria-labelledby="xr-title">
+          <h3 id="xr-title">Rain</h3>
+          <dl id="xr-body" class="ex-list"><div class="ex-row"><p class="muted">Loading…</p></div></dl>
+        </section>
+
+        <section class="card" aria-labelledby="xs-title">
+          <h3 id="xs-title">Sun, air and wind</h3>
+          <dl id="xs-body" class="ex-list"><div class="ex-row"><p class="muted">Loading…</p></div></dl>
+        </section>
+      </div>
+      <p id="ex-foot" class="muted small ex-foot" aria-live="polite"></p>
     </section>
 
     <footer class="site-footer">

@@ -9,7 +9,7 @@ export const colorFor = (year, latest) => (year === latest ? token("--series-1")
 export function renderYearLines({ el, series, key, format, unit = "mm" }) {
   const latest = series.at(-1).year;
   const surface = token("--surface");
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const font = chartFont();
 
   const lines = series.map((y) => ({

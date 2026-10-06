@@ -39,7 +39,7 @@ const panelNames = () => [t("Temperature (°C)", "Temperatura (°C)"), t("Rain i
 
 export function renderLightningChart(s, buckets, now = null) {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const inWindow = bucketsInWindow(s, buckets);
   // Lines through the middle of each 10-minute bucket; a missing bucket leaves a gap rather than a made-up line.
   const mid = inWindow.map((b) => localStamp(b.t + BUCKET_S / 2));

@@ -1,6 +1,6 @@
 import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin, weekNightBands } from "./common.js";
 import { t, sectorLabel } from "./i18n.js";
-import { VIRIDIS } from "./heatmap-view.js";
+import { dotscale, WIND_SPEED_TOKEN } from "./heatmap-view.js";
 import { dayLabel } from "./tempdaily-view.js";
 import { CALM_BELOW, MS_TO_KMH } from "./windrose.js";
 import { sectorName, daySummaries } from "./winddaily.js";
@@ -18,15 +18,15 @@ const dayIndex = (iso, first) => Math.round((Date.parse(iso) - Date.parse(first)
 // days and margins as the rain intensity chart above it.
 export function renderWindDailyChart(hours, first) {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const span = WEEK_DAYS;
-  // Top of the colour scale: exactly the fastest hour, so it is always the yellowest dot, whatever the week.
+  // Top of the colour scale: exactly the fastest hour, so it is always the darkest dot, whatever the week.
   // Ticks at round speeds below it: every 1, 2 or 5 km/h, whichever gives about five.
   const cmax = Math.max(CMIN + 1, ...hours.map((h) => h.ws));
   const cstep = [1, 2, 5, 10].find((v) => (cmax - CMIN) / v <= 6) ?? 20;
   const cticks = [];
   for (let v = Math.ceil(CMIN / cstep) * cstep; v <= cmax; v += cstep) cticks.push(v);
-  // Slowest first, so where dots overlap the faster (yellower) ones are drawn on top.
+  // Slowest first, so where dots overlap the faster (darker) ones are drawn on top.
   const dots = [...hours].sort((a, b) => a.ws - b.ws);
   const trace = {
     type: "scatter",
@@ -41,7 +41,7 @@ export function renderWindDailyChart(hours, first) {
       color: dots.map((h) => h.ws),
       cmin: CMIN,
       cmax,
-      colorscale: VIRIDIS, // same scale as the wind speed heatmap: the strongest wind is the yellowest
+      colorscale: dotscale(WIND_SPEED_TOKEN), // same hue as the wind speed heatmap: the stronger the wind, the stronger the colour
       colorbar: { title: { text: "km/h", font: { color: muted, size: 12 } }, thickness: 12, len: 0.9, outlinewidth: 0, tickfont: { color: muted, size: 12 }, tickvals: cticks, ticktext: cticks.map(String) },
     },
   };
@@ -87,8 +87,8 @@ export function renderWindDailyText(hours) {
     `${dayLabel(days[0].date)} a ${dayLabel(days.at(-1).date)}. Viento horario más fuerte: ${top.ws.toFixed(1)} km/h desde ${sectorName(top.dir)} el ${dayLabel(top.date)}.`,
   );
   $("ds-note").textContent = t(
-    "Each dot is one hour, placed at its actual time of day (midnight at the left edge of each day), and coloured by the hour's mean speed, with the colour scale stretched to the days shown (the yellowest dot is the fastest hour), so daily patterns such as a sea breeze switching to a land breeze show up as a repeating shape. South is at both top and bottom, so the north and east winds sit in the middle. Calm hours (under 1.8 km/h) are left out. Night (18:00–06:00) is shaded.",
-    "Cada punto es una hora, ubicada en su momento real del día (la medianoche en el borde izquierdo de cada día), y coloreada según la velocidad media de la hora, con la escala de colores ajustada a los días mostrados (el punto más amarillo es la hora más ventosa), así que patrones diarios como el cambio de brisa marina a terral se ven como una forma que se repite. El sur está arriba y abajo, así que los vientos del norte y del este quedan en el medio. Las horas de calma (bajo 1,8 km/h) se excluyen. La noche (18:00–06:00) está sombreada.",
+    "Each dot is one hour, placed at its actual time of day (midnight at the left edge of each day), and coloured by the hour's mean speed, with the colour scale stretched to the days shown (the strongest colour is the fastest hour), so daily patterns such as a sea breeze switching to a land breeze show up as a repeating shape. South is at both top and bottom, so the north and east winds sit in the middle. Calm hours (under 1.8 km/h) are left out. Night (18:00–06:00) is shaded.",
+    "Cada punto es una hora, ubicada en su momento real del día (la medianoche en el borde izquierdo de cada día), y coloreada según la velocidad media de la hora, con la escala de colores ajustada a los días mostrados (el color más intenso es la hora más ventosa), así que patrones diarios como el cambio de brisa marina a terral se ven como una forma que se repite. El sur está arriba y abajo, así que los vientos del norte y del este quedan en el medio. Las horas de calma (bajo 1,8 km/h) se excluyen. La noche (18:00–06:00) está sombreada.",
   );
 
   const table = $("ds-table");

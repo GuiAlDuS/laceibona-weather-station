@@ -108,7 +108,7 @@ const chanceColor = (p, bins) => bins.find((b) => (p ?? 0) >= b.min).color;
 // forecast hour when that hour is still ahead. The x axis reaches back to include it.
 export function renderForecastHourlyChart(hours, now = null) {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const hot = token("--hot");
   const at = (h, offsetH = 0) => localStamp(h.time + offsetH * 3600);
   const x = hours.map((h) => at(h));

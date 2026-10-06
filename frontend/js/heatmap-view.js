@@ -8,18 +8,21 @@ export const mix = (a, b, f) => `rgb(${rgb(a).map((v, i) => Math.round(v + (rgb(
 // One hue from the page surface up to the series colour, so low is quiet and high is loud in both themes.
 export const colorscale = (colorToken) => [0, 0.25, 0.5, 0.75, 1].map((f, i) => [f, mix(token("--surface"), token(colorToken), [0.1, 0.32, 0.55, 0.78, 1][i])]);
 
-// Dark purple through teal and green to yellow: perceptually even, so the strongest values glow yellow.
-export const VIRIDIS = [[0, "#440154"], [0.25, "#3b528b"], [0.5, "#21918c"], [0.75, "#5ec962"], [1, "#fde725"]];
+// The same ramp for dots drawn on the page itself: it starts further from the surface, so the lowest value still shows.
+export const dotscale = (colorToken) => [0, 0.5, 1].map((f, i) => [f, mix(token("--surface"), token(colorToken), [0.35, 0.68, 1][i])]);
+// Wind speed's hue, on the month-by-hour heatmap and the day-by-day dots: violet, since red is temperature and blue
+// is how often the wind blows from a direction.
+export const WIND_SPEED_TOKEN = "--series-7";
 
 export const monthName = (key) => MONTHS[+key.slice(5, 7) - 1];
 export const longMonth = (m) => `${monthName(m.key)} ${m.key.slice(0, 4)}${m.partial ? t(" (incomplete)", " (incompleto)") : ""}`;
 export const tick = (m) => `${monthName(m.key)}${m.partial ? "†" : ""}<br>${m.key.slice(2, 4)}`;
 const hourLabel = (h) => `${String(h).padStart(2, "0")}:00`;
 
-// cfg: { prefix, unit, decimals, colorToken } — or `ramp` (a Plotly colorscale) instead of colorToken
+// cfg: { prefix, unit, decimals, colorToken }
 export function renderMonthHourChart(cfg, hm) {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const x = hm.months.map(tick);
   const trace = {
     type: "heatmap",
@@ -31,7 +34,7 @@ export function renderMonthHourChart(cfg, hm) {
     hoverongaps: false,
     xgap: 2,
     ygap: 2,
-    colorscale: cfg.ramp ?? colorscale(cfg.colorToken),
+    colorscale: colorscale(cfg.colorToken),
     colorbar: { title: { text: cfg.unit, font: { color: muted, size: 12 } }, thickness: 12, len: 0.9, outlinewidth: 0, tickfont: { color: muted, size: 12 } },
   };
   const layout = {

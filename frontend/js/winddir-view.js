@@ -9,7 +9,7 @@ const f1 = (v) => `${v.toFixed(1)}%`;
 
 export function renderWindDirChart(hm) {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const names = ROW_SECTORS.map(sectorLabel);
   const x = hm.months.map(tick);
   const trace = {

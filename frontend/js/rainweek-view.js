@@ -13,8 +13,7 @@ const PANEL_WEIGHTS = [2, 1];
 const MARGIN = { l: 56, r: 12, t: 24, b: 48 };
 export function renderRainWeekChart(rows) {
   const font = chartFont();
-  const muted = token("--text-muted");
-  const surface = token("--surface");
+  const muted = token("--text-secondary");
   const x = rows.map(label);
   const bar = (name, key, color) => ({
     type: "bar",
@@ -28,16 +27,18 @@ export function renderRainWeekChart(rows) {
   });
   const peak = rows.reduce((b, r, i) => ((r.rain ?? -1) > (rows[b].rain ?? -1) ? i : b), 0);
   const rain = { ...bar(t("Rain", "Lluvia"), "rain", token("--series-1")), text: rows.map((r, i) => (i === peak && r.rain ? nf.format(Math.round(r.rain)) : "")), textposition: "outside", textfont: { color: font.color, size: 12 }, cliponaxis: false };
+  // One slim bar per day, centred on the day (an explicit width and offset keep it out of the rain/ETo grouping):
+  // each day's total stands alone, so no line joins them.
   const duration = {
-    type: "scatter",
-    mode: "lines+markers",
+    type: "bar",
     name: t("Rain duration", "Duración de la lluvia"),
     x,
     y: rows.map((r) => r.hours),
     xaxis: "x",
     yaxis: "y2",
-    line: { color: token("--series-3"), width: 2 },
-    marker: { size: 8, color: token("--series-3"), line: { color: surface, width: 2 } },
+    width: 0.28,
+    offset: -0.14,
+    marker: { color: token("--series-3"), cornerradius: 4 },
     hovertemplate: "%{y:.1f} h",
   };
   const [mmD, hoursD] = stackDomains(PANEL_WEIGHTS, PANEL_GAP_PX, $("rw-chart").clientHeight - MARGIN.t - MARGIN.b);
@@ -81,7 +82,7 @@ export function renderRainWeekText(rows) {
   for (const [name, color, cls] of [
     [t("Rain", "Lluvia"), token("--series-1"), "rect"],
     [t("ETo (evapotranspiration)", "ETo (evapotranspiración)"), token("--series-2"), "rect"],
-    [t("Rain duration (lower panel)", "Duración de la lluvia (panel inferior)"), token("--series-3"), "line"],
+    [t("Rain duration (lower panel)", "Duración de la lluvia (panel inferior)"), token("--series-3"), "rect"],
   ]) {
     const li = document.createElement("li");
     const key = document.createElement("span");

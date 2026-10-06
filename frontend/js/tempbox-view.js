@@ -32,7 +32,7 @@ const cells = (s, d = 1) => [s.min, s.q1, s.median, s.q3, s.max, s.mean].map((v)
 
 function boxChart(el, labels, longLabels, stats, unit = "°C", bands = null) {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const color = token("--series-1");
   const band = bands && bandLayout(bands, stats);
   const boxes = {

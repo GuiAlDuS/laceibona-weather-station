@@ -27,6 +27,7 @@ A section menu on the left jumps between the groups below.
 - **A typical day**: month-by-hour heatmaps of temperature and wind speed, and a month-by-direction heatmap of wind direction.
 - **Month by month**: rain vs ETo for the last 13 months, and box plots of monthly temperature and wind speed.
 - **Year over year**: box plots of temperature per year (same calendar window), cumulative rain, cumulative lightning and the cumulative water balance (rain minus ETo) by day of year.
+- **Extremes**: the station's records since it started, in three lists: temperature (highest, lowest, daily range, warmest night, coolest day), rain (wettest day, hour and month, longest wet and dry spells) and sun and air (daily irradiation, ETo, lowest humidity, most lightning in a day, windiest day, strongest gust). The wind records skip days with gusts of 80 km/h or more, when the wind sensor read unrealistically high for hours during and after heavy storms.
 
 ETo is the FAO-56 Penman-Monteith daily reference evapotranspiration, computed from the station's own readings (`frontend/js/eto.js`, shared with the fetcher, validated against the worked example in FAO Irrigation and Drainage Paper 56).
 

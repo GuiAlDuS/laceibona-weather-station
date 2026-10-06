@@ -842,3 +842,82 @@ Owner decisions worth remembering:
   corrected) from `frontend/js/sensor-peaks.js`, which `data_review/sensor_peaks.py` writes from
   our own 1-minute readings. The neighbours are described in words only (WU terms, Phase 13).
 - The separate ~4% stats-average caveat (§2, `SOLAR_NOTE`) is unchanged and still open.
+
+**Phase 16 — Extremes tables (Oct 2026)**
+
+- **New group "Extremes" / "Valores extremos"** at the end of the page: three lists (temperature,
+  rain, sun and air) of the station's records, each with its value and when it happened.
+  `frontend/js/extremes.js` (pure) and `extremes-view.js`; no new API calls.
+- **Sources**: readings with an hour and the day and month totals come from the hourly `obs:`
+  documents; ETo, time with rain (`rain_min`) and the lowest humidity (`rh_min`) from `daily:all`.
+  The hour shown for the lowest humidity is the hour with the lowest mean that day, since the
+  hourly documents hold no minimum. Rain totals here are sums of every hourly reading, so the
+  wettest month (Oct 2025, 1,196 mm) is a little above the monthly chart's 1,192 mm, which counts
+  complete days only, and the wettest day (26 Sep 2025, 347.7 mm) differs from the stats row's
+  355.5 mm (§6.2).
+- **Day rules**: range, warmest night, coolest day, irradiation and ETo need all 24 hours and
+  1,200 readings. ETo needs the 24 hours because the stats mean runs high when night hours are
+  missing (13 Apr 2025: 22 hours, ETo 6.73 from a 7.5 kWh/m² mean against 6.6 from the hours).
+  Sunshine and ETo count from 1 Jan 2025 (`SUN_FROM`): 22 and 23 Dec 2024 have hourly means up to
+  1,233 W/m² and peaks above 1,400.
+- **Spells**: a day is wet with 1 mm or more, and dry with 1,200 readings and less than 1 mm. A
+  day without data ends a wet run but, by the owner's decision, not a dry one: between two dry
+  days it is counted as dry. The longest dry spell is 67 days (16 Dec 2025 to 20 Feb 2026), 9 of
+  them in the outage of 15 to 23 Jan 2026 (a footnote says so); counting measured days only it
+  would be 38 (22 Feb to 31 Mar 2026).
+- **Windiest day** (mean of the day's 24 hourly means, every day of the year) skips days with a
+  gust of 80 km/h or more (`WIND_FAULT_GUST`), taken as a sensor fault. The 1-minute data has
+  gusts of 120-160 km/h on 10-11 Jul, 23-24 Aug and 26 Sep 2025 and 83 km/h on 17 Aug 2025,
+  lasting up to 15 hours after heavy rain; those days have 18 to 534 minutes at 40 km/h or more,
+  ordinary storms 1 to 3. Unfiltered, the windiest day would be 10 Jul 2025 (14.3 km/h), then
+  23 Aug 2025 (9.6); with them out it is 2 Feb 2026 (8.7 km/h), the same for any limit from 69
+  to 144 km/h.
+- **Strongest gust** uses the same rule: the highest gust on any day below 80 km/h, which is
+  68.4 km/h on 25 Sep 2026, 19-20 h (ten minutes above 60 km/h just after 30 mm of rain; the
+  owner confirms a storm brought a tree down at the house that day, so the reading is plausible). A dry-weather-only gust (32.8 km/h) was tried and rejected: the
+  owner has seen storms bring down large trees. A real storm day reaching 80 km/h would be skipped
+  by the rule, so the owner will report days of very strong wind with rain, to decide case by
+  case whether to include them (a dated allow-list next to `WIND_FAULT_GUST` would do it).
+- **Left out**: peak rain intensity (needs 1-minute rain, which is not stored). Lightning is
+  Tempest's filtered count, which the owner trusts over the hub's raw count.
+- `loadObsCharts` now asks for every month since `FIRST_MONTH` (config.js) instead of the last 24,
+  so the year-over-year charts keep Dec 2024 after November 2026.
+
+**Phase 17 — Design review, first four fixes (Oct 2026)**
+
+Reviewed the test page against the dataviz and frontend-design skills. The series palette passes
+the validator in light and dark (green, amber and pink are under 3:1 on the light surface, which
+the table views cover). Done so far:
+
+- **"Temperature, last 7 days"**: the latest day is red (`--hot`, like temperature everywhere
+  else) and 2.5 px; the earlier days are one grey (`--series-context`) at 1.5 px, lighter the
+  older (alpha 1, 0.75, 0.56, ... never below 0.25). The legend has three entries (latest day, the
+  day before, the rest as a group) instead of seven; hover still names each day.
+- **Current-reading labels in the 7-day panels** sit to the right of their rings (`nowRing`'s
+  `beside` option), where the chart is always empty, instead of above or below, where they ran
+  into the next panel or the line. On phones that chart's right margin is 46 px to hold them.
+- **Axis and tick text** uses `--text-secondary` instead of `--text-muted` (about 3.4:1 on the
+  page, too faint for 12 px text) in every chart.
+- **Links** in running text use `--seq-1` (dark blue; light blue in dark mode) instead of the
+  browser default.
+
+Second batch (same day):
+
+- **Wind speed is one violet ramp** (`WIND_SPEED_TOKEN`, `--series-7`) from the page surface up,
+  on the month-by-hour heatmap and the day-by-day direction dots (`dotscale`, which starts
+  further from the surface so the slowest dot still shows). Viridis is gone: red is temperature,
+  blue is how often the wind blows from a direction, and calm no longer reads as a dark block.
+- **Solar irradiation by year**: slim bars (30% of the slot) with each total written above.
+- **Rain duration** in "Rain and ETo, last 7 days" is one slim bar per day instead of a line
+  joining the days.
+- **Monthly rain vs ETo left as it is**: the 1,192 mm of Oct 2025 flattens the other months, but
+  the chart shows 13 months, so that bar leaves it on 1 Nov 2026.
+
+Third batch (same day):
+
+- **Monospace is kept for table cells only**, where figures line up in columns. The hero
+  temperature, the current-conditions tiles, the Extremes values, the group titles (now 1.5 rem),
+  the masthead facts and the wind-rose window buttons use IBM Plex Sans.
+- **Uneven card heights in paired rows: no change.** It was an artefact of the Playwright
+  Chromium (no subgrid). In Firefox the paired charts start level; a card with a legend just has
+  its toggles one line lower than its partner.

@@ -16,7 +16,7 @@ const corrected = (d) => Math.round(PEAKS[d] / SENSOR_FIX.factor);
 
 function render() {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const series = [
     { name: PREV, days: of(PREV), y: (d) => PEAKS[d], color: token("--series-context"), size: 5 },
     { name: t(`${YEAR}, as reported`, `${YEAR}, como se reportó`), days: of(YEAR), y: (d) => PEAKS[d], color: token("--series-1"), size: 7 },

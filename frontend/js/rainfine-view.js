@@ -1,4 +1,4 @@
-import { $, token, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin, stackDomains, panelTitle, PANEL_GAP_PX, perPanel, weekNightBands, addSensorFixNote, FIX_FACTOR, nowRing } from "./common.js";
+import { $, token, narrowScreen, chartFont, hoverLabel, dayAxisTicks, WEEK_DAYS, weekMargin, stackDomains, panelTitle, PANEL_GAP_PX, perPanel, weekNightBands, addSensorFixNote, FIX_FACTOR, nowRing } from "./common.js";
 import { sensorFixed } from "./sensor-fix.js";
 import { t } from "./i18n.js";
 import { dayLabel } from "./tempdaily-view.js";
@@ -20,9 +20,10 @@ const corrected = (buckets) => buckets.some((b) => sensorFixed(b.date) && b.sola
 // first: the week's first local date (see weekStart); the x axis always spans WEEK_DAYS days from it.
 export function renderRainFineChart(buckets, first, now = null) {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const span = WEEK_DAYS;
-  const margin = { ...weekMargin(), t: 24, b: 40 };
+  // On a phone the right margin is widened to hold the current readings, which sit to the right of their rings.
+  const margin = { ...weekMargin(), ...(narrowScreen.matches ? { r: 46 } : {}), t: 24, b: 40 };
   const x = buckets.map((b) => dayIndex(b.date, first) + (b.hour * 60 + b.minute) / 1440);
   // Every hover names the day and the 10-minute window it is in.
   const when = buckets.map((b) => `${dayLabel(b.date)} ${hourLabel(b.hour, b.minute)}`);
@@ -85,7 +86,7 @@ export function renderRainFineChart(buckets, first, now = null) {
   ].flatMap(([key, yaxis, color, digits]) => {
     if (now?.[key] == null || nowX > span) return [];
     const i = buckets.findLastIndex((b) => b[key] !== null);
-    return [nowRing(nowX, now[key], color, { join: i < 0 ? null : { x: x[i], y: buckets[i][key] }, yaxis, digits, frac: nowX / span })];
+    return [nowRing(nowX, now[key], color, { join: i < 0 ? null : { x: x[i], y: buckets[i][key] }, yaxis, digits, frac: nowX / span, beside: true })];
   });
   annotations.push(...rings.map((r) => r.label));
 

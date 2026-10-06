@@ -9,7 +9,7 @@ export const tickLabel = (m) => `${monthName(m.month)}${m.partial ? "†" : ""}<
 
 export function renderMonthlyChart(months) {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const x = months.map(longLabel);
   const labelOnly = (key) => {
     const i = peak(months, key);

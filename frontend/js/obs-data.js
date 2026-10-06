@@ -10,6 +10,12 @@ export function monthKeys(n, now = Date.now()) {
   return Array.from({ length: n }, (_, i) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - i, 1)).toISOString().slice(0, 7)).reverse();
 }
 
+// How many month keys run from `first` ("YYYY-MM") to the current local month, both included.
+export function monthsSince(first, now = Date.now()) {
+  const d = new Date(now - 6 * 3600_000);
+  return Math.max(1, (d.getUTCFullYear() - +first.slice(0, 4)) * 12 + d.getUTCMonth() + 1 - +first.slice(5, 7) + 1);
+}
+
 async function fetchMonth(key) {
   const res = await fetch(`${API_BASE}/api/obs/${key}`);
   if (res.status === 404) return null; // no data that month

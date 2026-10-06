@@ -142,12 +142,15 @@ export const weekNightBands = (span) =>
 // yaxis names the line's axis ("y3") on stacked charts; frac is how far along the x range the ring sits, so a label
 // near either edge turns inward instead of running off the plot. A null `join` (no line to join) is allowed.
 // Returns { traces, label }: add the traces after the lines and the label to the layout's annotations.
-export function nowRing(x, y, color, { join = null, yaxis = "y", digits = 1, frac = 0.5 } = {}) {
+// `beside` puts the value to the right of the ring instead, level with it: for stacked panels, where a value above or
+// below would run into the next panel, and the space to the right of "now" is always empty.
+export function nowRing(x, y, color, { join = null, yaxis = "y", digits = 1, frac = 0.5, beside = false } = {}) {
   const traces = [];
   if (join) traces.push({ type: "scatter", mode: "lines", x: [join.x, x], y: [join.y, y], yaxis, line: { color, width: 1.5, dash: "dot" }, hoverinfo: "skip", showlegend: false });
   traces.push({ type: "scatter", mode: "markers", x: [x], y: [y], yaxis, cliponaxis: false, marker: { size: 9, color: token("--surface"), line: { color, width: 2 } }, hoverinfo: "skip", showlegend: false });
   // The value sits on the side away from the line: below the ring when the line comes down to it, so it isn't struck through.
   const below = join !== null && join.y > y;
+  if (beside) return { traces, label: { x, y, xref: "x", yref: yaxis, xanchor: "left", yanchor: "middle", xshift: 9, showarrow: false, text: y.toFixed(digits), font: chartFont() } };
   const label = { x, y, xref: "x", yref: yaxis, xanchor: frac > 0.9 ? "right" : frac < 0.1 ? "left" : "center", yanchor: below ? "top" : "bottom", yshift: below ? -10 : 10, showarrow: false, text: y.toFixed(digits), font: chartFont() };
   return { traces, label };
 }

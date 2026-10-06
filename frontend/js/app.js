@@ -1,4 +1,4 @@
-import { API_BASE, STATION_POSITION } from "./config.js";
+import { API_BASE, STATION_POSITION, FIRST_MONTH } from "./config.js";
 import { initNav } from "./nav.js";
 import { $, narrowScreen, wideLayout, setStatus, longDate, weekStart, WEEK_DAYS } from "./common.js";
 import { t, TIME_LOCALE } from "./i18n.js";
@@ -18,7 +18,7 @@ import { nearbyStations } from "./nearby.js";
 import { renderNearbyMap, renderNearbyText, renderNearbyUnavailable } from "./nearby-view.js";
 import { forecastDays, forecastHours } from "./forecast.js";
 import { renderForecast, renderForecastUnavailable, renderForecastHourlyChart, renderForecastHourlyText } from "./forecast-view.js";
-import { getMonths, monthKeys } from "./obs-data.js";
+import { getMonths, monthKeys, monthsSince } from "./obs-data.js";
 import { lastDays } from "./tempdaily.js";
 import { monthHourMeans } from "./heatmap.js";
 import { monthDirectionFrequency } from "./winddir.js";
@@ -27,7 +27,7 @@ import { recentHours } from "./winddaily.js";
 import { renderWindDailyChart, renderWindDailyText } from "./winddaily-view.js";
 import { monthlyBoxes, yearlyBoxes, monthlyDailyMaxBoxes } from "./tempbox.js";
 import { WIND as WIND_BOX, UV as UV_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
-import { VIRIDIS, renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
+import { WIND_SPEED_TOKEN, renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
 import { windRose, sliceWindow, MS_TO_KMH } from "./windrose.js";
 import { renderWindRose } from "./windrose-view.js";
@@ -36,6 +36,8 @@ import { renderLightningChart, renderLightningText } from "./lightning24h-view.j
 import { annualSolarTotals } from "./solar.js";
 import { renderSolarYearChart, renderSolarYearText } from "./solar-view.js";
 import { fixDaily, fixFine } from "./sensor-fix.js";
+import { extremes } from "./extremes.js";
+import { renderExtremes, renderExtremesUnavailable } from "./extremes-view.js";
 
 const NO_USABLE_DATA = () => new Error(t("no usable data yet", "todavía no hay datos utilizables"));
 const couldNotLoad = (msg) => t(`Could not load data (${msg}). `, `No se pudieron cargar los datos (${msg}). `);
@@ -152,6 +154,19 @@ async function loadForecast() {
 }
 setInterval(loadForecast, 600_000);
 
+// The Extremes tables need both the daily document and the hourly history; each loader calls this when its part arrives.
+let dailyDays = null;
+let obsDocs = null;
+function drawExtremes() {
+  if (!dailyDays || !obsDocs) return;
+  try {
+    renderExtremes(extremes(obsDocs, dailyDays));
+  } catch (err) {
+    console.error("extremes:", err);
+    renderExtremesUnavailable(t("The records could not be worked out.", "No se pudieron calcular los registros."));
+  }
+}
+
 let balance = null;
 let months = null;
 let rain = null;
@@ -168,6 +183,8 @@ async function load() {
     const res = await fetch(`${API_BASE}/api/daily`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const doc = fixDaily(await res.json());
+    dailyDays = doc.days;
+    drawExtremes();
     balance = cumulativeByYear(doc.days);
     months = monthlyTotals(doc.days);
     rain = cumulativeRainByYear(doc.days);
@@ -189,6 +206,7 @@ async function load() {
   } catch (err) {
     console.error(err);
     if (!balance) for (const id of STATUSES) setStatus(id, couldNotLoad(err.message), load);
+    if (!dailyDays) renderExtremesUnavailable(couldNotLoad(err.message));
   } finally {
     for (const id of FRAMES) $(id).classList.remove("reloading");
   }
@@ -304,7 +322,7 @@ function drawRainFine() {
 
 // Charts built from the monthly `obs:` documents. Each is [id prefix, draw(docs)]; one failure does not stop the others.
 const TEMP_HEAT = { prefix: "th", unit: "°C", decimals: 1, colorToken: "--hot", high: t("Warmest", "Más cálido"), low: t("Coolest", "Más fresco"), what: t("Average temperature", "Temperatura media") };
-const WIND_HEAT = { prefix: "wh", unit: "km/h", decimals: 1, ramp: VIRIDIS, high: t("Windiest", "Más ventoso"), low: t("Calmest", "Más calmado"), what: t("Average wind speed", "Velocidad media del viento") };
+const WIND_HEAT = { prefix: "wh", unit: "km/h", decimals: 1, colorToken: WIND_SPEED_TOKEN, high: t("Windiest", "Más ventoso"), low: t("Calmest", "Más calmado"), what: t("Average wind speed", "Velocidad media del viento") };
 const obsState = {};
 const last13 = (docs) => docs.filter((d) => d.month >= monthKeys(13)[0]);
 const OBS_CHARTS = [
@@ -389,13 +407,16 @@ async function loadObsCharts() {
   let docs;
   let live = null; // the last 24 h feed; the charts still work without it, just up to an hour behind
   try {
-    [docs, live] = await Promise.all([getMonths(24), fetch(`${API_BASE}/api/wind24h`).then((r) => (r.ok ? r.json() : null)).catch(() => null)]);
+    [docs, live] = await Promise.all([getMonths(monthsSince(FIRST_MONTH)), fetch(`${API_BASE}/api/wind24h`).then((r) => (r.ok ? r.json() : null)).catch(() => null)]);
   } catch (err) {
     console.error(err);
     for (const p of ids) if (!obsState[p]) setStatus(`${p}-status`, couldNotLoad(err.message), loadObsCharts);
     for (const p of ids) $(`${p}-frame`).classList.remove("reloading");
+    if (!obsDocs) renderExtremesUnavailable(couldNotLoad(err.message));
     return;
   }
+  obsDocs = docs;
+  drawExtremes();
   for (const [p, prepare, draw] of OBS_CHARTS) {
     try {
       prepare(docs, live);

@@ -9,12 +9,17 @@ const corrected = (y) => y.year === SENSOR_FIX.from.slice(0, 4) && y.through >= 
 
 export function renderSolarYearChart(years) {
   const font = chartFont();
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
   const bar = {
     type: "bar",
     x: years.map((y) => y.year),
     y: years.map((y) => y.total),
-    marker: { color: token("--sun") },
+    width: 0.3, // slim bars: two or three years should not fill the card with solid yellow
+    marker: { color: token("--sun"), cornerradius: 4 },
+    text: years.map((y) => nf.format(Math.round(y.total))),
+    textposition: "outside",
+    textfont: { color: font.color, size: 12 },
+    cliponaxis: false,
     hovertemplate: "%{y:,.0f} kWh/m²<extra></extra>",
   };
   const layout = {

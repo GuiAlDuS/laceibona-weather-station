@@ -35,7 +35,7 @@ export function renderWindRose(rose, periodText) {
   const scale = (p) => (p / top) * R;
   const colors = seqColors();
   const grid = token("--grid");
-  const muted = token("--text-muted");
+  const muted = token("--text-secondary");
 
   for (let p = step; p <= top; p += step) {
     svg.append(el("circle", { cx: C, cy: C, r: scale(p), fill: "none", stroke: grid, "stroke-width": 1 }));
