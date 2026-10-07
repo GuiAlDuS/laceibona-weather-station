@@ -71,3 +71,30 @@ python3 data_review/temperature.py
 ```
 python3 data_review/temperature_report.py
 ```
+
+## WBGT: our formula against Tempest's own figure (Oct 2026)
+
+The dashboard's heat chart needs a wet-bulb globe temperature (WBGT) for every hour since Dec 2024. Tempest reports one with its current readings but keeps no history of it and does not publish the formula. Home Assistant (the WeatherFlow Forecast integration, which copies Tempest's `wet_bulb_globe_temperature`) has recorded it since 26 Jan 2025, so that record is the reference.
+
+Exports, read-only, from the Home Assistant machine (`data/ha/`, git-ignored):
+
+```
+ssh hassio@HOST "sqlite3 -readonly -csv /config/home-assistant_v2.db \"SELECT s.start_ts, s.mean, s.min, s.max FROM statistics s JOIN statistics_meta m ON m.id = s.metadata_id WHERE m.statistic_id = 'sensor.la_ceibona_sensors_wet_bulb_globe_temperature' ORDER BY s.start_ts\"" > data_review/data/ha/wbgt_hourly.csv
+ssh hassio@HOST "sqlite3 -readonly -csv /config/home-assistant_v2.db \"SELECT replace(m.entity_id,'sensor.la_ceibona_sensors_',''), s.last_updated_ts, s.state FROM states s JOIN states_meta m ON m.metadata_id = s.metadata_id WHERE m.entity_id IN ('sensor.la_ceibona_sensors_wet_bulb_globe_temperature','sensor.la_ceibona_sensors_wet_bulb_temperature','sensor.la_ceibona_sensors_temperature','sensor.la_ceibona_sensors_humidity','sensor.la_ceibona_sensors_solar_radiation','sensor.la_ceibona_sensors_wind_speed','sensor.la_ceibona_sensors_station_pressure','sensor.la_ceibona_sensors_dew_point') ORDER BY s.last_updated_ts\"" > data_review/data/ha/states_recent.csv
+```
+
+Our hourly documents go in `data/obs/` (`curl -o data_review/data/obs/2026-04.json https://laceibona-fetcher.gds506.workers.dev/api/obs/2026-04`, one per month). Then:
+
+```
+node data_review/wbgt_compare.mjs --fit
+```
+
+Results (7 Oct 2026; 4,018 raw polls from 27 Sep to 7 Oct, 11,683 hourly means from Jan 2025):
+
+- At night Tempest's WBGT is 0.7 × wet bulb + 0.3 × air temperature to the rounding, with the ordinary (psychrometric) wet bulb. So it is 0.7 wet bulb + 0.2 globe + 0.1 air with a globe temperature that only departs from the air in sunshine.
+- A globe formula of the Dimiceli, Piltz and Amburn (2011) form, with four constants fitted to the raw polls (`frontend/js/wbgt.js`), reproduces Tempest's WBGT to 0.04 °C on them, and Home Assistant's hourly means over 20 months to 0.22 °C (bias −0.10; 0.21 in sunshine, no drift between seasons). The fitted constants are not Tempest's own and one is physically odd (almost no direct-beam share): they reproduce the number, they do not explain it.
+- Liljegren's model (`liljegren.mjs`), the usual reference method, reads about 3 °C higher in sunshine here with its own minimum wind, and about 1.7 °C higher with the wind floored at 1 m/s. The station is sheltered (most hours under 1.5 m/s) and that model is very sensitive to calm air. It gives 4 to 8 hours a day in the top category against 1 to 5 with Tempest's method, and almost no seasonal dip.
+- Chosen for the dashboard (owner's decision, 7 Oct 2026): Tempest's method, so the chart agrees with the Tempest app and the Home Assistant history. There is no globe thermometer here to say which is closer to the truth.
+- September 2026 in Home Assistant shows 11.4 hours a day in the top category: Tempest computed it from the inflated light readings. The dashboard uses the corrected ones (4.8).
+- Hourly means are enough for this chart: on 16 sample days, counting from 1-minute readings instead moved each category by under half an hour a day (totals within 0.3).
+

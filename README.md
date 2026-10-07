@@ -21,11 +21,11 @@ Cloudflare Pages  (frontend/)  plain HTML + Plotly.js + Leaflet, no build step
 
 A section menu on the left jumps between the groups below.
 
-- **Now**: current conditions (temperature, humidity, wind, pressure trend, rain, UV, solar, lightning; flags stale data), a map of the latest temperature, rain and wind at our station and two nearby Weather Underground stations ([IESPAR72](https://www.wunderground.com/dashboard/pws/IESPAR72), Esparza, and [IPUNTA186](https://www.wunderground.com/dashboard/pws/IPUNTA186), Puntarenas), a wind rose for the last 24 hours, and the distance of each lightning strike over the last 24 hours.
+- **Now**: current conditions (temperature, humidity, wind, pressure trend, rain, UV, heat as WBGT, solar, lightning; flags stale data), a map of the latest temperature, rain and wind at our station and two nearby Weather Underground stations ([IESPAR72](https://www.wunderground.com/dashboard/pws/IESPAR72), Esparza, and [IPUNTA186](https://www.wunderground.com/dashboard/pws/IPUNTA186), Puntarenas), a wind rose for the last 24 hours, and the distance of each lightning strike over the last 24 hours.
 - **Forecast**: rain probability, thunderstorm hours and temperature for the next 24 hours, then daily tiles for the following 5 days.
 - **This week**: hourly temperature for the last 7 days, daily rain and ETo bars with hours of rain, and wind direction hour by hour.
 - **A typical day**: month-by-hour heatmaps of temperature and wind speed, and a month-by-direction heatmap of wind direction.
-- **Month by month**: rain vs ETo for the last 13 months, box plots of monthly temperature and wind speed, and the hours a day the UV index spends at each risk level.
+- **Month by month**: rain vs ETo for the last 13 months, a box plot of monthly temperature, and the hours a day spent at each heat (WBGT) category and each UV index risk level.
 - **Year over year**: box plots of temperature per year (same calendar window), cumulative rain, cumulative lightning and the cumulative water balance (rain minus ETo) by day of year.
 - **Extremes**: the station's records since it started, in three lists: temperature (highest, lowest, daily range, warmest night, coolest day), rain (wettest day, hour and month, longest wet and dry spells) and sun and air (daily irradiation, ETo, lowest humidity, most lightning in a day, windiest day, strongest gust). The wind records skip days with gusts of 80 km/h or more, when the wind sensor read unrealistically high for hours during and after heavy storms.
 

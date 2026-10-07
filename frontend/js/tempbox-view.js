@@ -3,7 +3,6 @@ import { t } from "./i18n.js";
 import { monthName, longMonth, tick } from "./heatmap-view.js";
 
 const TEMP = { prefix: "bm", unit: "°C", decimals: 1, basis: t("hourly temperatures", "las temperaturas horarias"), high: t("Highest typical temperature", "Temperatura típica más alta"), low: t("Lowest", "Más baja") };
-export const WIND = { prefix: "wk", unit: "km/h", decimals: 1, basis: t("hourly wind speeds", "las velocidades del viento horarias"), high: t("Windiest", "Más ventoso"), low: t("Calmest", "Más calmado") };
 const f1 = (v) => v.toFixed(1);
 const COLS = () => [t("Minimum", "Mínimo"), t("Lower quartile", "Cuartil inferior"), t("Median", "Mediana"), t("Upper quartile", "Cuartil superior"), t("Maximum", "Máximo"), t("Mean", "Media")];
 const cells = (s, d = 1) => [s.min, s.q1, s.median, s.q3, s.max, s.mean].map((v) => v.toFixed(d));
@@ -58,7 +57,6 @@ function fillTable(id, first, rows, unit = "°C", d = 1) {
   }
 }
 
-// cfg: TEMP (default) or WIND.
 export function renderTempBoxMonthly(boxes, cfg = TEMP) {
   return boxChart($(`${cfg.prefix}-chart`), boxes.map((m) => tick(m)), boxes.map(longMonth), boxes.map((m) => m.stats), cfg.unit);
 }

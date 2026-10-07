@@ -40,7 +40,7 @@ test("an ordinary tick refreshes only `current`", async () => {
   await worker.scheduled(at("2026-09-21T16:35:00Z"), s.env, s.ctx);
   await s.done();
   assert.deepEqual(Object.keys(s.writes).sort(), ["current", "wind24h"]);
-  assert.ok(s.calls.every((u) => u.includes("/observations/device/2")));
+  assert.ok(s.calls.every((u) => u.includes("/observations/device/2") || u.includes("/observations/station/1")));
 });
 
 test("the 07:00 UTC tick also rebuilds daily:all, forecast and yesterday's UV", async () => {
@@ -62,6 +62,23 @@ test("the UV job catches up on the days missed since the last one stored, a requ
   const dayCall = (d) => `time_start=${Date.UTC(2026, 8, d, 6) / 1000}&time_end=${Date.UTC(2026, 8, d, 6) / 1000 + 86399}`;
   assert.deepEqual([18, 19, 20, 21].map((d) => s.calls.some((u) => u.endsWith(dayCall(d)))), [false, true, true, true]);
   assert.equal(JSON.parse(s.writes["uv:2026-09"]).uv[17 * 72 + 30], 5);
+});
+
+test("`current` carries Tempest's WBGT from the station summary, or none when that call fails", async () => {
+  const s = setup();
+  const plain = globalThis.fetch;
+  globalThis.fetch = async (url) => (String(url).includes("/observations/station/") ? Response.json({ status: { status_code: 0 }, obs: [{ wet_bulb_globe_temperature: 31.4 }] }) : plain(url));
+  await worker.scheduled(at("2026-09-21T16:35:00Z"), s.env, s.ctx);
+  await s.done();
+  assert.equal(JSON.parse(s.writes.current).wbgt, 31.4);
+
+  const f = setup();
+  const base = globalThis.fetch;
+  globalThis.fetch = async (url) => (String(url).includes("/observations/station/") ? new Response("nope", { status: 500 }) : base(url));
+  await worker.scheduled(at("2026-09-21T16:35:00Z"), f.env, f.ctx);
+  await f.done();
+  assert.equal(JSON.parse(f.writes.current).wbgt, null);
+  assert.equal(f.writes["status:last_error"], undefined);
 });
 
 test("the 07:05 tick and the 06:55 tick do not rebuild daily:all", async () => {

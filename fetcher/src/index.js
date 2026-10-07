@@ -36,10 +36,14 @@ async function refreshCurrent(env, scheduledMs = Date.now()) {
   // Our reading and the neighbours' are independent: a failing neighbour keeps its last reading (withFallback), and
   // if our own station fails (Tempest down, or no readings yet today after a power cut) the neighbours are still
   // refreshed into the previous document (every 15 minutes, see below), then the error is reported as usual.
-  const [ours, fresh, previous] = await Promise.all([
+  const [ours, wbgt, fresh, previous] = await Promise.all([
     tempestGet(env, `/observations/device/${env.DEVICE_ID}?time_start=${start}&time_end=${Math.floor(now / 1000)}`)
       .then((body) => buildCurrent(body.obs ?? [], now))
       .catch((err) => err),
+    // Tempest's own wet-bulb globe temperature: only its station summary carries it, and only for the latest reading.
+    tempestGet(env, `/observations/station/${env.STATION_ID}`)
+      .then((body) => (typeof body.obs?.[0]?.wet_bulb_globe_temperature === "number" ? body.obs[0].wet_bulb_globe_temperature : null))
+      .catch(() => null),
     fetchNeighbours(env.WU_API_KEY),
     env.WEATHER_DATA.get("current", "json"),
   ]);
@@ -50,7 +54,7 @@ async function refreshCurrent(env, scheduledMs = Date.now()) {
     if (previous && new Date(scheduledMs).getUTCMinutes() % 15 < 5) await env.WEATHER_DATA.put("current", JSON.stringify({ ...previous, nearby }));
     throw ours;
   }
-  const doc = { ...ours, nearby };
+  const doc = { ...ours, wbgt, nearby };
   await env.WEATHER_DATA.put("current", JSON.stringify(doc));
   return doc;
 }

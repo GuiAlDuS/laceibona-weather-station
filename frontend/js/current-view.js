@@ -1,6 +1,6 @@
 import { $, el, num, tile } from "./common.js";
 import { t } from "./i18n.js";
-import { cardinal, kmh, ageMinutes, formatAge, isStale, uvBand, pressureTrend, lastStrikeText, rainNowText, stationTime, STALE_AFTER_MIN } from "./conditions.js";
+import { cardinal, kmh, ageMinutes, formatAge, isStale, uvBand, heatBand, pressureTrend, lastStrikeText, rainNowText, stationTime, STALE_AFTER_MIN } from "./conditions.js";
 
 export function renderCurrent(doc, nowMs) {
   const age = ageMinutes(doc.updated_at, nowMs);
@@ -38,6 +38,7 @@ export function renderCurrent(doc, nowMs) {
     tile(t("Pressure (station)", "Presión (estación)"), num(doc.pressure), "hPa", [pressureTrend(doc.pressure_change_3h)]),
     tile(t("Rain today", "Lluvia hoy"), num(today.rain_mm), "mm", [rainNowText(doc.rain_rate)]),
     tile(t("UV index", "Índice UV"), num(doc.uv), "", [uvBand(doc.uv), t(`Max today ${num(today.uv_max)}`, `Máximo hoy ${num(today.uv_max)}`)]),
+    tile(t("Heat (WBGT)", "Calor (WBGT)"), num(doc.wbgt), "°C", [heatBand(doc.wbgt)]),
     tile(t("Solar radiation", "Radiación solar"), num(doc.solar, 0), "W/m²"),
     tile(t("Lightning today", "Rayos hoy"), typeof today.lightning === "number" ? String(today.lightning) : "—", t("strikes", "rayos"), [lastStrikeText(doc.last_lightning, nowMs)]),
   );

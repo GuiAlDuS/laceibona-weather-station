@@ -1,5 +1,6 @@
 // Formatting helpers for the current-conditions panel. Pure functions; no DOM.
 import { t, sectorLabel, TIME_LOCALE } from "./i18n.js";
+import { heatLevel } from "./wbgthours.js";
 
 export const STALE_AFTER_MIN = 15;
 
@@ -27,6 +28,12 @@ export function uvBand(uv) {
   if (uv < 8) return t("High", "Alto");
   if (uv < 11) return t("Very high", "Muy alto");
   return t("Extreme", "Extremo");
+}
+
+// US Army heat categories for a wet-bulb globe temperature in °C (wbgthours.js).
+export function heatBand(wbgt) {
+  if (typeof wbgt !== "number") return null;
+  return { caution: t("Caution", "Precaución"), moderate: t("Moderate", "Moderado"), high: t("High", "Alto"), veryHigh: t("Very high", "Muy alto"), extreme: t("Extreme", "Extremo") }[heatLevel(wbgt)] ?? t("Low", "Bajo");
 }
 
 // Change over three hours in hPa; small changes read as steady.

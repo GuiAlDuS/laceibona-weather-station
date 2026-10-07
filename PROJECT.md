@@ -946,3 +946,29 @@ Third batch (same day):
   and `daily:all` keeps Tempest's own daily UV figures.
 - **Day rule**: a day counts when no more than an hour of its 72 daylight slots is missing and it
   saw some UV. The 25 Aug–30 Sep 2026 correction is applied on load (`fixUvMonth`), as elsewhere.
+
+### Heat hours by WBGT level, a WBGT tile, and a shared risk scale (7 Oct 2026)
+
+- **"Hours of heat a day, by WBGT level"** (Month by month, beside the UV hours chart): stacked bars for the last
+  13 months, the mean hours a day in each US Army heat category (TB MED 507: from 78, 82, 85, 88 and 90 °F),
+  the strongest at the bottom. Asked for from the owner's Home Assistant chart.
+- **Computed in the browser from the hourly `obs:` documents** (`wbgthours.js`), so no Worker, KV or backfill
+  cost. Hourly means are enough: against 1-minute readings each category moves by under half an hour a day.
+- **Method: Tempest's own, reproduced** (`wbgt.js`). Tempest only reports WBGT for the current moment, with no
+  history and no published formula. From the Home Assistant record of that figure it is 0.7 psychrometric wet
+  bulb + 0.2 globe + 0.1 air, with a simplified globe formula whose four constants were fitted to ten days of
+  readings; it matches Tempest to 0.04 °C on them and the hourly means of 20 months to 0.2 °C.
+  Liljegren's model was built and tried first; it reads about 3 °C hotter in sunshine at this sheltered site
+  and the owner chose Tempest's method. Both, and the comparison, are in `data_review/` (README, WBGT section).
+- **"Heat (WBGT)" tile** in Current conditions, next to the UV index: Tempest's own figure, from its station
+  summary (`observations/station`), fetched in the 5-minute `current` job and stored as `wbgt` in the `current`
+  document (one more Tempest request per run, no extra KV write; a failed request leaves it null).
+- **One risk scale for UV and heat** (`--risk-1` to `--risk-5`, light and dark): yellow to orange to red to
+  magenta to violet, each step also darker than the last. The earlier colours failed the dataviz validator
+  (two heat levels too close; "very high" lighter than "high" in dark mode). UV uses steps 1, 2, 3 and 5.
+  Stacked segments have a 2 px surface gap and rounded bar tops. The single-hue ramp the checklist prefers
+  for ordered levels was not used: yellow-to-violet is the convention for these warnings.
+- **`levelhours-view.js`** draws both charts; `uvhours-view.js` and `wbgthours-view.js` hold their levels and text.
+- **"Wind speed range by month" removed** at the owner's request (the box plot and its code); the second
+  Month by month row is now heat | UV.
+

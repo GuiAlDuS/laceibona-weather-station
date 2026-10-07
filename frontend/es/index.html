@@ -359,6 +359,28 @@
       </div>
 
       <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="hw-title">
+          <h3 id="hw-title">Horas de calor por día, según nivel (WBGT)</h3>
+          <p class="muted">Cuántas horas de un día promedio alcanza el calor cada categoría de estrés por calor, mes a mes.</p>
+          <p id="hw-summary" class="summary" aria-live="polite"></p>
+
+          <div id="hw-frame" class="chart-frame">
+            <div id="hw-chart" role="img" aria-label="Gráfico de barras apiladas de las horas por día en cada categoría de calor, para cada uno de los últimos 13 meses"></div>
+            <p id="hw-status" class="status">Cargando…</p>
+          </div>
+          <ul id="hw-legend" class="legend" aria-label="Leyenda"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>Cómo leer este gráfico</summary>
+              <p id="hw-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Ver tabla</summary>
+              <div class="table-scroll tall"><table id="hw-table"></table></div>
+            </details>
+          </div>
+        </section>
+
         <section class="card" aria-labelledby="uv-title">
           <h3 id="uv-title">Horas de sol por día, según nivel UV</h3>
           <p class="muted">Cuántas horas de un día promedio alcanza el índice UV cada nivel de riesgo, mes a mes.</p>
@@ -377,27 +399,6 @@
             <details class="table-view">
               <summary>Ver tabla</summary>
               <div class="table-scroll tall"><table id="uv-table"></table></div>
-            </details>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="wk-title">
-          <h3 id="wk-title">Rango de velocidad del viento por mes</h3>
-          <p class="muted">Qué tan ventoso se pone cada mes, según cada hora del mes.</p>
-          <p id="wk-summary" class="summary" aria-live="polite"></p>
-
-          <div id="wk-frame" class="chart-frame">
-            <div id="wk-chart" role="img" aria-label="Diagrama de caja de la velocidad del viento horaria de cada mes"></div>
-            <p id="wk-status" class="status">Cargando…</p>
-          </div>
-          <div class="card-foot">
-            <details class="note-view">
-              <summary>Cómo leer este gráfico</summary>
-              <p id="wk-note" class="muted small"></p>
-            </details>
-            <details class="table-view">
-              <summary>Ver tabla</summary>
-              <div class="table-scroll tall"><table id="wk-table"></table></div>
             </details>
           </div>
         </section>

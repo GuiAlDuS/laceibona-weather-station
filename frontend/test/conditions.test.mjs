@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cardinal, kmh, ageMinutes, formatAge, isStale, uvBand, pressureTrend, lastStrikeText, rainNowText, stationTime } from "../js/conditions.js";
+import { cardinal, kmh, ageMinutes, formatAge, isStale, uvBand, heatBand, pressureTrend, lastStrikeText, rainNowText, stationTime } from "../js/conditions.js";
 
 test("cardinal points", () => {
   assert.equal(cardinal(0), "N");
@@ -36,6 +36,11 @@ test("UV bands", () => {
   assert.equal(uvBand(10), "Very high");
   assert.equal(uvBand(12), "Extreme");
   assert.equal(uvBand(null), null);
+  assert.equal(heatBand(24), "Low");
+  assert.equal(heatBand(26), "Caution");
+  assert.equal(heatBand(31.5), "Very high");
+  assert.equal(heatBand(36.8), "Extreme");
+  assert.equal(heatBand(null), null);
 });
 
 test("pressure trend text", () => {

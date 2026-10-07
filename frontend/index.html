@@ -359,6 +359,28 @@
       </div>
 
       <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="hw-title">
+          <h3 id="hw-title">Hours of heat a day, by WBGT level</h3>
+          <p class="muted">How many hours of an average day the heat reaches each heat-stress category, month by month.</p>
+          <p id="hw-summary" class="summary" aria-live="polite"></p>
+
+          <div id="hw-frame" class="chart-frame">
+            <div id="hw-chart" role="img" aria-label="Stacked bar chart of the hours per day in each heat category, for each of the last 13 months"></div>
+            <p id="hw-status" class="status">Loading…</p>
+          </div>
+          <ul id="hw-legend" class="legend" aria-label="Legend"></ul>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="hw-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll tall"><table id="hw-table"></table></div>
+            </details>
+          </div>
+        </section>
+
         <section class="card" aria-labelledby="uv-title">
           <h3 id="uv-title">Hours of sun a day, by UV level</h3>
           <p class="muted">How many hours of an average day the UV index reaches each risk level, month by month.</p>
@@ -377,27 +399,6 @@
             <details class="table-view">
               <summary>Table view</summary>
               <div class="table-scroll tall"><table id="uv-table"></table></div>
-            </details>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="wk-title">
-          <h3 id="wk-title">Wind speed range by month</h3>
-          <p class="muted">How windy each month gets, based on every hour of the month.</p>
-          <p id="wk-summary" class="summary" aria-live="polite"></p>
-
-          <div id="wk-frame" class="chart-frame">
-            <div id="wk-chart" role="img" aria-label="Box plot of hourly wind speed for each month"></div>
-            <p id="wk-status" class="status">Loading…</p>
-          </div>
-          <div class="card-foot">
-            <details class="note-view">
-              <summary>How to read this chart</summary>
-              <p id="wk-note" class="muted small"></p>
-            </details>
-            <details class="table-view">
-              <summary>Table view</summary>
-              <div class="table-scroll tall"><table id="wk-table"></table></div>
             </details>
           </div>
         </section>

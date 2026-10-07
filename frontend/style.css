@@ -20,6 +20,13 @@
   --series-context: #898781;
   --hot: #d1341f;
   --sun: #f2c200;
+  /* Risk levels, lowest to highest (UV index, heat): one ordered scale from yellow to violet that also darkens step by
+     step, so the order reads without telling the hues apart. Each theme's steps are checked for separation. */
+  --risk-1: #d8af00;
+  --risk-2: #ed6c1f;
+  --risk-3: #cc1125;
+  --risk-4: #8c0c5a;
+  --risk-5: #2e298d;
   --seq-1: #174a8f;
   --seq-2: #2a78d6;
   --seq-3: #7fb0ea;
@@ -45,6 +52,11 @@
     --series-7: #9085e9;
     --hot: #ff6a52;
     --sun: #ffd23f;
+    --risk-1: #fbe46a;
+    --risk-2: #fa9d4c;
+    --risk-3: #ff4014;
+    --risk-4: #d22a98;
+    --risk-5: #6153d0;
     --seq-1: #a9cdf7;
     --seq-2: #5a9cec;
     --seq-3: #3a71bd;
@@ -70,6 +82,11 @@
   --series-7: #9085e9;
   --hot: #ff6a52;
   --sun: #ffd23f;
+  --risk-1: #fbe46a;
+  --risk-2: #fa9d4c;
+  --risk-3: #ff4014;
+  --risk-4: #d22a98;
+  --risk-5: #6153d0;
   --seq-1: #a9cdf7;
   --seq-2: #5a9cec;
   --seq-3: #3a71bd;
@@ -172,7 +189,7 @@ a:hover { color: var(--text-primary); }
 /* Every Plotly chart needs an explicit height: with `responsive: true` and no height, a Plotly.react re-render
    (the 5-minute refresh) collapses the div to 0px while the absolutely positioned SVG stays 450px, so the
    x-axis labels spill onto the note below. 450px is the Plotly default these were already drawn at. */
-#th-chart, #wh-chart, #wd-chart, #bm-chart, #uv-chart, #wk-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
+#th-chart, #wh-chart, #wd-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
 #lg-chart { width: 100%; height: 460px; }
 #lg-frame { min-height: 460px; }
 /* The hourly forecast is a glance, not a study: shorter than the observation charts. */
@@ -228,7 +245,7 @@ td:first-child { font-family: var(--font-sans); }
   .card { padding-top: 4px; }
   .card + .card { margin-top: 24px; padding-top: 24px; }
   .chart-frame, #fh-frame, #td-frame, #rw-frame, #rf-frame, #ds-frame { min-height: 340px; }
-  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #wh-chart, #wd-chart, #ds-chart, #bm-chart, #uv-chart, #by-chart, #wk-chart, #fh-chart, #sy-chart { height: 340px; }
+  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #wh-chart, #wd-chart, #ds-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #fh-chart, #sy-chart { height: 340px; }
   #lg-chart { height: 460px; }
   #lg-frame { min-height: 460px; }
   #rf-chart { height: 640px; }
@@ -311,7 +328,7 @@ td:first-child { font-family: var(--font-sans); }
   .row-aligned > .card { display: grid; grid-row: span 6; grid-template-rows: subgrid; align-content: start; }
   /* A pair row holding a single card (e.g. before its partner chart is released) uses the full width. */
   .row-pair > .card:only-child { grid-column: 1 / -1; }
-  #mo-chart, #bm-chart, #wk-chart, #uv-chart, #by-chart, #sy-chart { height: 420px; }
+  #mo-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #sy-chart { height: 420px; }
   .row-three #th-chart, .row-three #wh-chart, .row-three #wd-chart { height: 420px; }
   .row-three .chart-frame { min-height: 420px; }
   .row-forecast { grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr); }

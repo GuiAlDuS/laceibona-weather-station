@@ -27,8 +27,11 @@ import { recentHours } from "./winddaily.js";
 import { renderWindDailyChart, renderWindDailyText } from "./winddaily-view.js";
 import { monthlyBoxes, yearlyBoxes } from "./tempbox.js";
 import { monthlyUvHours } from "./uvhours.js";
-import { renderUvHoursChart, renderUvHoursText } from "./uvhours-view.js";
-import { WIND as WIND_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
+import { UV_HOURS } from "./uvhours-view.js";
+import { monthlyWbgtHours } from "./wbgthours.js";
+import { WBGT_HOURS } from "./wbgthours-view.js";
+import { renderLevelHoursChart, renderLevelHoursText } from "./levelhours-view.js";
+import { renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
 import { WIND_SPEED_TOKEN, renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
 import { windRose, sliceWindow, MS_TO_KMH } from "./windrose.js";
@@ -373,12 +376,12 @@ const OBS_CHARTS = [
     renderTempBoxMonthlyText(obsState.bm);
     return renderTempBoxMonthly(obsState.bm);
   }],
-  ["wk", (docs) => {
-    obsState.wk = monthlyBoxes(last13(docs), "ws", MS_TO_KMH);
-    if (obsState.wk.length === 0) throw NO_USABLE_DATA();
+  ["hw", (docs) => {
+    obsState.hw = monthlyWbgtHours(last13(docs));
+    if (obsState.hw.length === 0) throw NO_USABLE_DATA();
   }, () => {
-    renderTempBoxMonthlyText(obsState.wk, WIND_BOX);
-    return renderTempBoxMonthly(obsState.wk, WIND_BOX);
+    renderLevelHoursText(WBGT_HOURS, obsState.hw);
+    return renderLevelHoursChart(WBGT_HOURS, obsState.hw);
   }],
   ["by", (docs) => {
     obsState.by = yearlyBoxes(docs);
@@ -447,8 +450,8 @@ async function loadUvHours() {
 
 function drawUvHours() {
   if (!uvMonths) return;
-  renderUvHoursText(uvMonths);
-  return renderUvHoursChart(uvMonths);
+  renderLevelHoursText(UV_HOURS, uvMonths);
+  return renderLevelHoursChart(UV_HOURS, uvMonths);
 }
 
 function drawObsCharts() {
