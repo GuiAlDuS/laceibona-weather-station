@@ -43,11 +43,25 @@ test("an ordinary tick refreshes only `current`", async () => {
   assert.ok(s.calls.every((u) => u.includes("/observations/device/2")));
 });
 
-test("the 07:00 UTC tick also rebuilds daily:all and forecast", async () => {
+test("the 07:00 UTC tick also rebuilds daily:all, forecast and yesterday's UV", async () => {
   const s = setup();
   await worker.scheduled(at("2026-09-22T07:00:11Z"), s.env, s.ctx);
   await s.done();
-  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "daily:all", "fine7d", "forecast", "obs:2026-09", "wind24h"]);
+  assert.deepEqual(Object.keys(s.writes).sort(), ["current", "daily:all", "fine7d", "forecast", "obs:2026-09", "uv:2026-09", "wind24h"]);
+  // One request for yesterday's local day (21 Sep, UTC-6), and the reading lands in its 10-minute slot.
+  const day = Date.UTC(2026, 8, 21, 6) / 1000;
+  assert.ok(s.calls.includes(`https://swd.weatherflow.com/swd/rest/observations/device/2?time_start=${day}&time_end=${day + 86399}`));
+  assert.equal(JSON.parse(s.writes["uv:2026-09"]).uv.filter((v) => v !== null).length, 1);
+});
+
+test("the UV job catches up on the days missed since the last one stored, a request per day", async () => {
+  const stored = { "uv:2026-09": JSON.stringify({ month: "2026-09", start: Date.UTC(2026, 8, 1, 6) / 1000, step: 600, fromHour: 6, perDay: 72, uv: Object.assign(new Array(30 * 72).fill(null), { [17 * 72 + 30]: 5 }) }) };
+  const s = setup({ stored });
+  await worker.scheduled(at("2026-09-22T07:00:11Z"), s.env, s.ctx);
+  await s.done();
+  const dayCall = (d) => `time_start=${Date.UTC(2026, 8, d, 6) / 1000}&time_end=${Date.UTC(2026, 8, d, 6) / 1000 + 86399}`;
+  assert.deepEqual([18, 19, 20, 21].map((d) => s.calls.some((u) => u.endsWith(dayCall(d)))), [false, true, true, true]);
+  assert.equal(JSON.parse(s.writes["uv:2026-09"]).uv[17 * 72 + 30], 5);
 });
 
 test("the 07:05 tick and the 06:55 tick do not rebuild daily:all", async () => {
@@ -79,7 +93,7 @@ test("the Tempest token goes in a header, never in the URL", async () => {
 test("the first tick of an hour appends the finished hours to obs:YYYY-MM, starting after the last stored hour", async () => {
   const hourStart = Date.parse("2026-09-21T16:00:00Z") / 1000;
   const start = Date.UTC(2026, 8, 1, 6) / 1000;
-  const cols = Object.fromEntries(["t", "tmin", "tmax", "rh", "p", "ws", "gust", "wd", "rain", "solar", "uv", "ltn", "n"].map((c) => [c, new Array(720).fill(null)]));
+  const cols = Object.fromEntries(["t", "tmin", "tmax", "rh", "p", "ws", "gust", "wd", "rain", "solar", "ltn", "n"].map((c) => [c, new Array(720).fill(null)]));
   cols.n[(hourStart - 2 * 3600 - start) / 3600] = 60; // 14:00Z is the last stored hour
   const stored = { "obs:2026-09": JSON.stringify({ month: "2026-09", start, hours: 720, cols }) };
   const s = setup({ stored });

@@ -47,6 +47,8 @@ test("/api/obs/YYYY-MM and /api/lightning/YYYY serve the back-filled documents; 
   assert.deepEqual(await (await handleRequest(req("/api/lightning/2025"), env(data))).json(), { year: "2025" });
   assert.equal((await handleRequest(req("/api/lightning/2024"), env(data))).status, 404);
   assert.equal((await handleRequest(req("/api/obs/2025-13"), env(data))).status, 404);
+  assert.deepEqual(await (await handleRequest(req("/api/uv/2025-03"), env({ "uv:2025-03": '{"month":"2025-03"}' }))).json(), { month: "2025-03" });
+  assert.equal((await handleRequest(req("/api/uv/2025-04"), env(data))).status, 404);
   assert.equal((await handleRequest(req("/api/obs/meta"), env(data))).status, 404);
 });
 

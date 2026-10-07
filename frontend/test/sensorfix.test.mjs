@@ -14,16 +14,14 @@ test("the affected days are whole local days, both ends included", () => {
   assert.equal(sensorFixed("2025-09-10"), false);
 });
 
-test("hourly solar and UV are divided from local midnight of 25 Aug; other columns and days are untouched", () => {
+test("hourly solar is divided from local midnight of 25 Aug; other columns and days are untouched", () => {
   const hours = 31 * 24;
-  const doc = { month: "2026-08", start: localMidnight(2026, 8, 1), hours, cols: { t: new Array(hours).fill(27.3), solar: new Array(hours).fill(1350), uv: new Array(hours).fill(13.5) } };
+  const doc = { month: "2026-08", start: localMidnight(2026, 8, 1), hours, cols: { t: new Array(hours).fill(27.3), solar: new Array(hours).fill(1350) } };
   doc.cols.solar[0] = null;
   const out = fixObsMonth(doc);
   const first = 24 * 24; // 00:00 on 25 Aug
   assert.equal(out.cols.solar[first - 1], 1350);
   assert.equal(out.cols.solar[first], Math.round(1350 / F));
-  assert.equal(out.cols.uv[first - 1], 13.5);
-  assert.equal(out.cols.uv[first], Math.round((13.5 / F) * 10) / 10);
   assert.equal(out.cols.solar[0], null);
   assert.deepEqual(out.cols.t, doc.cols.t);
   assert.equal(doc.cols.solar[first], 1350, "the loaded document is not changed in place");
@@ -31,13 +29,13 @@ test("hourly solar and UV are divided from local midnight of 25 Aug; other colum
 
 test("the last affected hour is 23:00 on 30 Sep", () => {
   const hours = 2 * 24;
-  const out = fixObsMonth({ start: localMidnight(2026, 9, 30), hours, cols: { solar: new Array(hours).fill(1350), uv: new Array(hours).fill(13.5) } });
+  const out = fixObsMonth({ start: localMidnight(2026, 9, 30), hours, cols: { solar: new Array(hours).fill(1350) } });
   assert.equal(out.cols.solar[23], 1000);
   assert.equal(out.cols.solar[24], 1350);
 });
 
 test("a month outside the period comes back unchanged", () => {
-  const doc = { start: localMidnight(2025, 9, 1), hours: 24, cols: { solar: new Array(24).fill(900), uv: new Array(24).fill(9) } };
+  const doc = { start: localMidnight(2025, 9, 1), hours: 24, cols: { solar: new Array(24).fill(900) } };
   assert.deepEqual(fixObsMonth(doc), doc);
 });
 

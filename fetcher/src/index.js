@@ -3,6 +3,7 @@ import { buildCurrent, localMidnightSec } from "./current.js";
 import { buildWind24h } from "./wind.js";
 import { aggregateHours, mergeHours, lastFilledHour, monthKeyLocal } from "./hourly.js";
 import { aggregateFine, mergeFine, lastFilledBucket, windowEnd } from "./fine.js";
+import { aggregateUv, mergeUv, lastFilledDay } from "./uv.js";
 import { buildForecast } from "./forecast.js";
 import { handleRequest } from "./api.js";
 import { fetchNeighbours, withFallback } from "./nearby.js";
@@ -94,6 +95,30 @@ async function refreshFine(env, scheduledMs = Date.now()) {
   return doc;
 }
 
+// Adds the finished local days to the monthly `uv:` documents. Runs once a day, with `daily:all`. It starts after
+// the last day already stored (at most 5 days back, and with yesterday alone when the month's document is new),
+// one request per day so the readings stay at 1-minute resolution; a missed run heals itself on the next one.
+const UV_HEAL_DAYS = 5;
+async function refreshUv(env, scheduledMs = Date.now()) {
+  const today = localMidnightSec(scheduledMs);
+  const yesterday = today - 86400;
+  const lastKey = monthKeyLocal(yesterday);
+  const existing = await env.WEATHER_DATA.get(`uv:${lastKey}`, "json");
+  const last = existing ? lastFilledDay(existing) : null;
+  const from = last === null ? yesterday : Math.min(Math.max(last + 86400, today - UV_HEAL_DAYS * 86400), yesterday);
+  const buckets = new Map();
+  for (let day = from; day <= yesterday; day += 86400) {
+    const body = await tempestGet(env, `/observations/device/${env.DEVICE_ID}?time_start=${day}&time_end=${day + 86399}`);
+    for (const [b, v] of aggregateUv(body.obs ?? [])) buckets.set(b, v);
+  }
+  const keys = [...new Set([...buckets.keys()].map(monthKeyLocal))];
+  for (const key of keys) {
+    const doc = key === lastKey ? existing : await env.WEATHER_DATA.get(`uv:${key}`, "json");
+    await env.WEATHER_DATA.put(`uv:${key}`, JSON.stringify(mergeUv(doc, buckets, key)));
+  }
+  return keys;
+}
+
 // Refreshes the 7-day (today + 6) forecast. Runs twice an hour; forecasts don't move minute to minute.
 async function refreshForecast(env) {
   const body = await tempestGet(env, `/better_forecast?station_id=${env.STATION_ID}&units_temp=c&units_wind=kph&units_pressure=hpa&units_precip=mm`);
@@ -106,13 +131,13 @@ export default {
   fetch: handleRequest,
 
   async scheduled(controller, env, ctx) {
-    // One 5-minute cron drives everything: `current` and `wind24h` every run, `obs:` once an hour, `fine7d` every 10 minutes, `forecast` every 30 minutes, and `daily:all` once a day at 07:00 UTC (01:00 local).
+    // One 5-minute cron drives everything: `current` and `wind24h` every run, `obs:` once an hour, `fine7d` every 10 minutes, `forecast` every 30 minutes, and `daily:all` and `uv:` once a day at 07:00 UTC (01:00 local).
     const t = new Date(controller.scheduledTime);
     const jobs = [refreshCurrent, refreshWind];
     if (t.getUTCMinutes() < 5) jobs.push(refreshObs);
     if (t.getUTCMinutes() % 10 < 5) jobs.push(refreshFine);
     if (t.getUTCMinutes() % 30 < 5) jobs.push(refreshForecast);
-    if (t.getUTCHours() === 7 && t.getUTCMinutes() < 5) jobs.push(refreshDailyStats);
+    if (t.getUTCHours() === 7 && t.getUTCMinutes() < 5) jobs.push(refreshDailyStats, refreshUv);
     for (const job of jobs) {
       ctx.waitUntil(
         job(env, t.getTime()).catch(async (err) => {

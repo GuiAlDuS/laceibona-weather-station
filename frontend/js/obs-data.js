@@ -1,8 +1,10 @@
 import { API_BASE } from "./config.js";
-import { fixObsMonth } from "./sensor-fix.js";
+import { fixObsMonth, fixUvMonth } from "./sensor-fix.js";
 
 const TTL_MS = 5 * 60_000;
-const cache = new Map(); // month key -> { at, promise }
+const cache = new Map(); // "kind:month key" -> { at, promise }
+// The monthly document kinds: the API path each is served under and the sensor correction applied as it loads.
+const KINDS = { obs: fixObsMonth, uv: fixUvMonth };
 
 // The n most recent local (UTC-6) month keys, oldest first, ending with the current month.
 export function monthKeys(n, now = Date.now()) {
@@ -16,23 +18,24 @@ export function monthsSince(first, now = Date.now()) {
   return Math.max(1, (d.getUTCFullYear() - +first.slice(0, 4)) * 12 + d.getUTCMonth() + 1 - +first.slice(5, 7) + 1);
 }
 
-async function fetchMonth(key) {
-  const res = await fetch(`${API_BASE}/api/obs/${key}`);
+async function fetchMonth(kind, key) {
+  const res = await fetch(`${API_BASE}/api/${kind}/${key}`);
   if (res.status === 404) return null; // no data that month
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return fixObsMonth(await res.json());
+  return KINDS[kind](await res.json());
 }
 
-// obs:YYYY-MM documents for the last n months (months with no data are dropped). Shared by every chart
-// that needs them, so each month is fetched once per TTL.
-export function getMonths(n) {
+// obs:YYYY-MM documents (or another kind's) for the last n months (months with no data are dropped). Shared by
+// every chart that needs them, so each month is fetched once per TTL.
+export function getMonths(n, kind = "obs") {
   return Promise.all(
     monthKeys(n).map((key) => {
-      const hit = cache.get(key);
+      const id = `${kind}:${key}`;
+      const hit = cache.get(id);
       if (hit && Date.now() - hit.at < TTL_MS) return hit.promise;
-      const promise = fetchMonth(key);
-      cache.set(key, { at: Date.now(), promise });
-      promise.catch(() => cache.delete(key));
+      const promise = fetchMonth(kind, key);
+      cache.set(id, { at: Date.now(), promise });
+      promise.catch(() => cache.delete(id));
       return promise;
     }),
   ).then((docs) => docs.filter(Boolean));

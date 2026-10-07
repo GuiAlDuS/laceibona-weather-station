@@ -1,11 +1,11 @@
 // Turns raw 1-minute obs_st rows (PROJECT.md §2 layout, metric units) into hourly records,
 // monthly columnar KV documents, and lightning strike events. Pure functions; no I/O.
 
-const F = { ts: 0, avg: 2, gust: 3, dir: 4, pressure: 6, temp: 7, rh: 8, uv: 10, solar: 11, rain: 12, lightDist: 14, lightCount: 15 };
+const F = { ts: 0, avg: 2, gust: 3, dir: 4, pressure: 6, temp: 7, rh: 8, solar: 11, rain: 12, lightDist: 14, lightCount: 15 };
 const LOCAL_OFFSET_H = -6;
 
 // Column order of an hourly record / monthly document.
-export const COLS = ["t", "tmin", "tmax", "rh", "p", "ws", "gust", "wd", "rain", "solar", "uv", "ltn", "n"];
+export const COLS = ["t", "tmin", "tmax", "rh", "p", "ws", "gust", "wd", "rain", "solar", "ltn", "n"];
 
 const num = (v) => typeof v === "number" && Number.isFinite(v);
 const sum = (a) => a.reduce((s, v) => s + v, 0);
@@ -54,7 +54,6 @@ function hourRecord(rows) {
     wd: meanDirection(rows),
     rain: rains.length ? round(sum(rains), 2) : null,
     solar: round(mean(col(F.solar)), 0),
-    uv: round(max(col(F.uv)), 1),
     ltn: sum(col(F.lightCount)),
     n: rows.length,
   };

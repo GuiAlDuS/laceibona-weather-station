@@ -131,6 +131,9 @@ fine7d            → rolling 7-day, 10-minute-resolution rain/pressure/solar/hu
                     (fetcher/src/fine.js), refreshed every 10 min. Hourly `obs:`
                     was too coarse for this station's short convective bursts.
                     (write budget is now ~745/day: current + wind24h + fine7d + daily)
+uv:YYYY-MM        → 10-minute means of the UV index, 06:00-18:00 local only, 72 slots a
+                    day (fetcher/src/uv.js). Yesterday is added once a day with `daily:all`.
+                    Back-filled from Dec 2024 by fetcher/scripts/backfill-uv.mjs.
 ```
 
 Write budget: ~288 (`current`) + 1 (`daily:all`) + 288 (`obs` append) ≈
@@ -921,3 +924,25 @@ Third batch (same day):
 - **Uneven card heights in paired rows: no change.** It was an artefact of the Playwright
   Chromium (no subgrid). In Firefox the paired charts start level; a card with a legend just has
   its toggles one line lower than its partner.
+
+### UV hours by level replaces the UV box plot (7 Oct 2026)
+
+- **"Hours of sun a day, by UV level"** takes the place of "UV index by month" in the Month by
+  month group: stacked bars for the last 13 months, the mean hours a day at each standard UV risk
+  level, extreme at the bottom. The owner asked for it from a reference chart and found it easier
+  to read than the box plot of daily peaks, which is removed with its calculation
+  (`monthlyDailyMaxBoxes`) and the band shading only it used.
+- **Hourly data cannot do this.** The `obs:` documents held each hour's *highest* UV reading, so
+  one bright minute between clouds put the whole hour in "extreme": on 16 sample days extreme UV
+  came out at 2.0 / 1.3 / 5.8 / 2.5 h a day (Oct, Dec, Apr, Jul) against 0.7 / 0.2 / 4.0 / 0.5
+  from the 1-minute readings. Scaling the hourly solar mean was no better (UV/solar runs from
+  0.011 to 0.014). 10-minute means match the 1-minute count to about 0.2 h a day.
+- **New `uv:YYYY-MM` documents** (§3): 10-minute UV means over 06:00–18:00, served at
+  `/api/uv/YYYY-MM`. The Worker adds yesterday in the 07:00 UTC slot (one more KV write and one
+  more Tempest request a day; it catches up to 5 missed days). Back-filled from 21 Dec 2024 with
+  `scripts/backfill-uv.mjs` (653 requests, 23 keys, 249 KB).
+- **The hourly `uv` column is gone** from `hourly.js` and from the stored `obs:` documents
+  (rewritten without it); nothing else read it. "Max today" on the UV tile comes from `current`,
+  and `daily:all` keeps Tempest's own daily UV figures.
+- **Day rule**: a day counts when no more than an hour of its 72 daylight slots is missing and it
+  saw some UV. The 25 Aug–30 Sep 2026 correction is applied on load (`fixUvMonth`), as elsewhere.

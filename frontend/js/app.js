@@ -25,8 +25,10 @@ import { monthDirectionFrequency } from "./winddir.js";
 import { renderWindDirChart, renderWindDirText } from "./winddir-view.js";
 import { recentHours } from "./winddaily.js";
 import { renderWindDailyChart, renderWindDailyText } from "./winddaily-view.js";
-import { monthlyBoxes, yearlyBoxes, monthlyDailyMaxBoxes } from "./tempbox.js";
-import { WIND as WIND_BOX, UV as UV_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
+import { monthlyBoxes, yearlyBoxes } from "./tempbox.js";
+import { monthlyUvHours } from "./uvhours.js";
+import { renderUvHoursChart, renderUvHoursText } from "./uvhours-view.js";
+import { WIND as WIND_BOX, renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
 import { WIND_SPEED_TOKEN, renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
 import { windRose, sliceWindow, MS_TO_KMH } from "./windrose.js";
@@ -371,13 +373,6 @@ const OBS_CHARTS = [
     renderTempBoxMonthlyText(obsState.bm);
     return renderTempBoxMonthly(obsState.bm);
   }],
-  ["uv", (docs) => {
-    obsState.uv = monthlyDailyMaxBoxes(last13(docs), "uv");
-    if (obsState.uv.length === 0) throw NO_USABLE_DATA();
-  }, () => {
-    renderTempBoxMonthlyText(obsState.uv, UV_BOX);
-    return renderTempBoxMonthly(obsState.uv, UV_BOX);
-  }],
   ["wk", (docs) => {
     obsState.wk = monthlyBoxes(last13(docs), "ws", MS_TO_KMH);
     if (obsState.wk.length === 0) throw NO_USABLE_DATA();
@@ -431,6 +426,31 @@ async function loadObsCharts() {
   }
 }
 
+// Hours a day at each UV level, from the monthly `uv:` documents (10-minute UV index).
+let uvMonths = null;
+
+async function loadUvHours() {
+  $("uv-frame").classList.add("reloading");
+  try {
+    const months = monthlyUvHours(await getMonths(13, "uv"));
+    if (months.length === 0) throw NO_USABLE_DATA();
+    uvMonths = months;
+    await drawUvHours();
+    setStatus("uv-status", "");
+  } catch (err) {
+    console.error(err);
+    if (!uvMonths) setStatus("uv-status", couldNotLoad(err.message), loadUvHours);
+  } finally {
+    $("uv-frame").classList.remove("reloading");
+  }
+}
+
+function drawUvHours() {
+  if (!uvMonths) return;
+  renderUvHoursText(uvMonths);
+  return renderUvHoursChart(uvMonths);
+}
+
 function drawObsCharts() {
   for (const [p, , draw] of OBS_CHARTS) if (obsState[p]) draw();
 }
@@ -438,12 +458,14 @@ function drawObsCharts() {
 setInterval(load, 300_000);
 setInterval(loadWind, 300_000);
 setInterval(loadObsCharts, 300_000);
+setInterval(loadUvHours, 300_000);
 setInterval(loadRainFine, 300_000);
 
 function redraw() {
   drawWind();
   drawLightning();
   drawObsCharts();
+  drawUvHours();
   drawRainFine();
   if (forecastHourly) renderForecastHourlyChart(forecastHourly, nowReading());
   if (!balance) return;
@@ -495,4 +517,5 @@ loadForecast();
 load();
 loadWind();
 loadObsCharts();
+loadUvHours();
 loadRainFine();

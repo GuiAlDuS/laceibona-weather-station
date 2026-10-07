@@ -23,8 +23,14 @@ function fixSlots(doc, stepSec, digits) {
   return { ...doc, cols };
 }
 
-// An `obs:YYYY-MM` document (hourly): solar radiation and UV.
-export const fixObsMonth = (doc) => fixSlots(doc, 3600, { solar: 0, uv: 1 });
+// An `obs:YYYY-MM` document (hourly): solar radiation.
+export const fixObsMonth = (doc) => fixSlots(doc, 3600, { solar: 0 });
+
+// A `uv:YYYY-MM` document (10-minute UV index over each day's daylight hours, `perDay` slots a day).
+export function fixUvMonth(doc) {
+  const date = (i) => new Date((doc.start + Math.floor(i / doc.perDay) * 86400 + LOCAL_OFFSET_S) * 1000).toISOString().slice(0, 10);
+  return { ...doc, uv: doc.uv.map((v, i) => (sensorFixed(date(i)) ? scaled(v, 2) : v)) };
+}
 
 // The `fine7d` document (10-minute): solar radiation.
 export const fixFine = (doc) => fixSlots(doc, doc.step, { solar: 0 });
