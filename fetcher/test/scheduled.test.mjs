@@ -100,6 +100,12 @@ test("a failing job records status:last_error and leaves `current` and `wind24h`
   assert.match(err.error, /HTTP 500/);
 });
 
+test("a failing job does not make the run itself fail", async () => {
+  const s = setup({ failCurrent: true });
+  await worker.scheduled(at("2026-09-21T16:35:00Z"), s.env, s.ctx);
+  for (const r of await s.done()) assert.equal(r.status, "fulfilled");
+});
+
 test("the Tempest token goes in a header, never in the URL", async () => {
   const s = setup();
   await worker.scheduled(at("2026-09-22T07:00:11Z"), s.env, s.ctx);

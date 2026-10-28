@@ -146,9 +146,10 @@ export default {
       ctx.waitUntil(
         job(env, t.getTime()).catch(async (err) => {
           console.error(`${job.name} failed:`, err.message);
-          // Only failures are recorded (successes are visible as fresh data), so this costs no writes normally.
+          // Only failures are recorded (successes are visible as fresh data), so this costs no writes normally. The
+          // error is not rethrown: on 2026-10-28, 35 runs in a row ending in an exception (the station was offline)
+          // were followed by Cloudflare no longer firing the cron at all.
           await env.WEATHER_DATA.put("status:last_error", JSON.stringify({ job: job.name, at: new Date().toISOString(), error: String(err.message).slice(0, 500) }));
-          throw err;
         }),
       );
     }
