@@ -19,6 +19,7 @@ export const MS_TO_KMH = 3.6;
 const num = (v) => typeof v === "number" && Number.isFinite(v);
 const round = (v, d) => Math.round(v * 10 ** d) / 10 ** d;
 const nextDay = (iso) => new Date(Date.parse(iso) + 86400_000).toISOString().slice(0, 10);
+const prevDay = (iso) => new Date(Date.parse(iso) - 86400_000).toISOString().slice(0, 10);
 
 // One entry per local day (UTC-6) that has readings, oldest first: the day's totals and where its extremes fell.
 // `covered` marks days with enough readings to stand for the full day; `whole` ones also have all 24 hours.
@@ -70,6 +71,9 @@ function best(items, score, sign = 1) {
   return top;
 }
 
+// "wet" with WET_DAY_MM or more, whatever its coverage; "dry" when a covered day below that; null when we can't tell.
+const dayKind = (d) => (d && num(d.rain) && d.rain >= WET_DAY_MM ? "wet" : d && d.covered && num(d.rain) ? "dry" : null);
+
 // The longest runs of consecutive wet days and of dry days, each as { days, from, to, noData } or null. A day is wet
 // with WET_DAY_MM or more, whatever its coverage, and dry when it is a covered day below that. A day we can't tell
 // (missing, or mostly missing) ends a wet run but not a dry one: between two dry days it is taken as dry and counted,
@@ -81,8 +85,7 @@ export function longestSpells(stats) {
   let run = null;
   let pending = 0; // days without data since the dry run's last known day
   for (let date = stats[0].date; date <= stats.at(-1).date; date = nextDay(date)) {
-    const d = byDate.get(date);
-    const kind = d && num(d.rain) && d.rain >= WET_DAY_MM ? "wet" : d && d.covered && num(d.rain) ? "dry" : null;
+    const kind = dayKind(byDate.get(date));
     if (kind === null) {
       if (run?.kind === "dry") pending++;
       else run = null;
@@ -92,6 +95,35 @@ export function longestSpells(stats) {
     else run = { kind, from: date, to: date, days: 1, noData: 0 };
     pending = 0;
     if (out[kind] === null || run.days > out[kind].days) out[kind] = { days: run.days, from: run.from, to: run.to, noData: run.noData };
+  }
+  return out;
+}
+
+// The dry spell running up to `today` (YYYY-MM-DD; today itself is still in progress and not counted), as
+// { days, from, to, noData, lastWet }, with days taken as in longestSpells. days is 0 when the last day we can tell
+// about was wet; lastWet is the wet day before the spell, { date, rain }, or null when the spell runs back to the start
+// of the record.
+export function drySpellBefore(stats, today) {
+  const out = { days: 0, from: null, to: null, noData: 0, lastWet: null };
+  if (stats.length === 0) return out;
+  const byDate = new Map(stats.map((d) => [d.date, d]));
+  let pending = 0;
+  for (let date = prevDay(today); date >= stats[0].date; date = prevDay(date)) {
+    const d = byDate.get(date);
+    const kind = dayKind(d);
+    if (kind === null) {
+      if (out.days > 0) pending++; // the spell doesn't end on a day without data, so later ones aren't counted
+      continue;
+    }
+    if (kind === "wet") {
+      out.lastWet = { date, rain: d.rain };
+      break;
+    }
+    out.days += 1 + pending;
+    out.noData += pending;
+    pending = 0;
+    out.from = date;
+    out.to ??= date;
   }
   return out;
 }

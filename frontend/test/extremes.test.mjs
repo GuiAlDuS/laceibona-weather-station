@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { dayStats, longestSpells, extremes, SUN_FROM } from "../js/extremes.js";
+import { dayStats, longestSpells, drySpellBefore, extremes, SUN_FROM } from "../js/extremes.js";
 import { monthsSince } from "../js/obs-data.js";
 
 const COLS = ["tmax", "tmin", "rain", "solar", "ltn", "rh", "ws", "gust", "n"];
@@ -53,6 +53,21 @@ test("spells: days without data between dry days are counted as dry, but never a
   const stats = dayStats([doc(2025, 1, 1, [thin, dry, dry, thin].flat()), doc(2025, 1, 7, [dry, dry, dry, thin, wet].flat())]);
   assert.deepEqual(longestSpells(stats).dry, { days: 8, from: "2025-01-02", to: "2025-01-09", noData: 3 });
   assert.deepEqual(longestSpells([]), { wet: null, dry: null });
+});
+
+test("the dry spell before today: counted as longestSpells counts it, today left out", () => {
+  const dry = flat();
+  const wet = flat({ rain: 0.1 });
+  const trace = flat().map((h, i) => (i === 3 ? { ...h, rain: 0.9 } : h)); // under 1 mm: dry
+  const thin = flat().map((h, i) => (i < 8 ? h : null));
+  // wet, dry, thin, trace, dry, thin (yesterday), today
+  const stats = dayStats([doc(2025, 1, 1, [wet, dry, thin, trace, dry, thin, thin].flat())]);
+  assert.deepEqual(drySpellBefore(stats, "2025-01-07"), { days: 4, from: "2025-01-02", to: "2025-01-05", noData: 1, lastWet: { date: "2025-01-01", rain: 2.4 } });
+  assert.equal(longestSpells(stats).dry.days, 4);
+  // Yesterday wet: no spell. Back to the start of the record: no wet day before it.
+  assert.deepEqual(drySpellBefore(stats, "2025-01-02"), { days: 0, from: null, to: null, noData: 0, lastWet: { date: "2025-01-01", rain: 2.4 } });
+  assert.deepEqual(drySpellBefore(stats.slice(1), "2025-01-06"), { days: 4, from: "2025-01-02", to: "2025-01-05", noData: 1, lastWet: null });
+  assert.deepEqual(drySpellBefore([], "2025-01-06").days, 0);
 });
 
 test("extremes: records come from the right days, the earliest winning a tie", () => {

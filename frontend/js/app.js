@@ -36,7 +36,7 @@ import { renderLightningChart, renderLightningText } from "./lightning24h-view.j
 import { annualSolarTotals } from "./solar.js";
 import { renderSolarYearChart, renderSolarYearText } from "./solar-view.js";
 import { fixDaily, fixFine } from "./sensor-fix.js";
-import { extremes } from "./extremes.js";
+import { extremes, dayStats, drySpellBefore } from "./extremes.js";
 import { renderExtremes, renderExtremesUnavailable } from "./extremes-view.js";
 
 const NO_USABLE_DATA = () => new Error(t("no usable data yet", "todavía no hay datos utilizables"));
@@ -85,7 +85,7 @@ async function loadCurrent() {
       renderCurrentUnavailable(t("Live conditions will appear once the station data feed is running.", "Las condiciones en vivo aparecerán en cuanto el flujo de datos de la estación esté funcionando."));
     } else {
       currentDoc = doc;
-      renderCurrent(doc, Date.now());
+      renderCurrent(doc, Date.now(), drySpell());
       renderNearby();
       refreshLiveToday();
       refreshNowRings();
@@ -102,7 +102,15 @@ async function loadCurrent() {
 }
 
 // Ages advance between fetches, so re-render from the last document without refetching.
-setInterval(() => currentDoc && renderCurrent(currentDoc, Date.now()), 30_000);
+setInterval(() => currentDoc && renderCurrent(currentDoc, Date.now(), drySpell()), 30_000);
+
+// For the rain tile: the dry spell up to today, from the same day totals as the Extremes tables.
+// null until the hourly history has loaded.
+let obsStats = null;
+function drySpell() {
+  if (!obsStats?.length || !currentDoc?.local_date) return null;
+  return { now: drySpellBefore(obsStats, currentDoc.local_date) };
+}
 
 // The map is an extra: if Leaflet or the tiles fail to load, the rest of the page carries on.
 function renderNearby() {
@@ -411,6 +419,8 @@ async function loadObsCharts() {
     return;
   }
   obsDocs = docs;
+  obsStats = dayStats(docs);
+  if (currentDoc) renderCurrent(currentDoc, Date.now(), drySpell());
   drawExtremes();
   for (const [p, prepare, draw] of OBS_CHARTS) {
     try {
