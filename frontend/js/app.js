@@ -26,11 +26,6 @@ import { renderWindArrowsChart, renderWindArrowsText } from "./windarrows-view.j
 import { recentHours } from "./winddaily.js";
 import { renderWindDailyChart, renderWindDailyText } from "./winddaily-view.js";
 import { monthlyBoxes, yearlyBoxes } from "./tempbox.js";
-import { monthlyUvHours } from "./uvhours.js";
-import { UV_HOURS } from "./uvhours-view.js";
-import { monthlyWbgtHours } from "./wbgthours.js";
-import { WBGT_HOURS } from "./wbgthours-view.js";
-import { renderLevelHoursChart, renderLevelHoursText } from "./levelhours-view.js";
 import { renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
 import { renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
@@ -385,13 +380,6 @@ const OBS_CHARTS = [
     renderTempBoxMonthlyText(obsState.bm);
     return renderTempBoxMonthly(obsState.bm);
   }],
-  ["hw", (docs) => {
-    obsState.hw = monthlyWbgtHours(last13(docs));
-    if (obsState.hw.length === 0) throw NO_USABLE_DATA();
-  }, () => {
-    renderLevelHoursText(WBGT_HOURS, obsState.hw);
-    return renderLevelHoursChart(WBGT_HOURS, obsState.hw);
-  }],
   ["by", (docs) => {
     obsState.by = yearlyBoxes(docs);
     if (obsState.by.length === 0) throw NO_USABLE_DATA();
@@ -438,31 +426,6 @@ async function loadObsCharts() {
   }
 }
 
-// Hours a day at each UV level, from the monthly `uv:` documents (10-minute UV index).
-let uvMonths = null;
-
-async function loadUvHours() {
-  $("uv-frame").classList.add("reloading");
-  try {
-    const months = monthlyUvHours(await getMonths(13, "uv"));
-    if (months.length === 0) throw NO_USABLE_DATA();
-    uvMonths = months;
-    await drawUvHours();
-    setStatus("uv-status", "");
-  } catch (err) {
-    console.error(err);
-    if (!uvMonths) setStatus("uv-status", couldNotLoad(err.message), loadUvHours);
-  } finally {
-    $("uv-frame").classList.remove("reloading");
-  }
-}
-
-function drawUvHours() {
-  if (!uvMonths) return;
-  renderLevelHoursText(UV_HOURS, uvMonths);
-  return renderLevelHoursChart(UV_HOURS, uvMonths);
-}
-
 function drawObsCharts() {
   for (const [p, , draw] of OBS_CHARTS) if (obsState[p]) draw();
 }
@@ -470,14 +433,12 @@ function drawObsCharts() {
 setInterval(load, 300_000);
 setInterval(loadWind, 300_000);
 setInterval(loadObsCharts, 300_000);
-setInterval(loadUvHours, 300_000);
 setInterval(loadRainFine, 300_000);
 
 function redraw() {
   drawWind();
   drawLightning();
   drawObsCharts();
-  drawUvHours();
   drawRainFine();
   if (forecastHourly) renderForecastHourlyChart(forecastHourly, nowReading());
   if (!balance) return;
@@ -529,5 +490,4 @@ loadForecast();
 load();
 loadWind();
 loadObsCharts();
-loadUvHours();
 loadRainFine();

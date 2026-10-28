@@ -20,8 +20,7 @@
         <li><a href="#now">Now</a></li>
         <li><a href="#forecast">Forecast</a></li>
         <li><a href="#week">This week</a></li>
-        <li><a href="#typical-day">A typical day</a></li>
-        <li><a href="#monthly">Month by month</a></li>
+        <li><a href="#past-year">The past year</a></li>
         <li><a href="#yearly">Year over year</a></li>
         <li><a href="#extremes">Extremes</a></li>
       </ul>
@@ -241,8 +240,8 @@
       </section>
     </section>
 
-    <section class="group" id="typical-day" aria-labelledby="typical-day-heading">
-      <h2 id="typical-day-heading" class="group-title">A typical day</h2>
+    <section class="group" id="past-year" aria-labelledby="past-year-heading">
+      <h2 id="past-year-heading" class="group-title">The past year</h2>
 
       <div class="row row-pair row-aligned">
         <section class="card" aria-labelledby="th-title">
@@ -332,10 +331,6 @@
           </div>
         </section>
       </div>
-    </section>
-
-    <section class="group" id="monthly" aria-labelledby="monthly-heading">
-      <h2 id="monthly-heading" class="group-title">Month by month</h2>
 
       <div class="row row-pair row-aligned">
         <section class="card" aria-labelledby="mo-title">
@@ -377,52 +372,6 @@
             <details class="table-view">
               <summary>Table view</summary>
               <div class="table-scroll tall"><table id="bm-table"></table></div>
-            </details>
-          </div>
-        </section>
-      </div>
-
-      <div class="row row-pair row-aligned">
-        <section class="card" aria-labelledby="hw-title">
-          <h3 id="hw-title">Hours of heat a day, by WBGT level</h3>
-          <p class="muted">How many hours of an average day the heat reaches each heat-stress category, month by month.</p>
-          <p id="hw-summary" class="summary" aria-live="polite"></p>
-
-          <div id="hw-frame" class="chart-frame">
-            <div id="hw-chart" role="img" aria-label="Stacked bar chart of the hours per day in each heat category, for each of the last 13 months"></div>
-            <p id="hw-status" class="status">Loading…</p>
-          </div>
-          <ul id="hw-legend" class="legend" aria-label="Legend"></ul>
-          <div class="card-foot">
-            <details class="note-view">
-              <summary>How to read this chart</summary>
-              <p id="hw-note" class="muted small"></p>
-            </details>
-            <details class="table-view">
-              <summary>Table view</summary>
-              <div class="table-scroll tall"><table id="hw-table"></table></div>
-            </details>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="uv-title">
-          <h3 id="uv-title">Hours of sun a day, by UV level</h3>
-          <p class="muted">How many hours of an average day the UV index reaches each risk level, month by month.</p>
-          <p id="uv-summary" class="summary" aria-live="polite"></p>
-
-          <div id="uv-frame" class="chart-frame">
-            <div id="uv-chart" role="img" aria-label="Stacked bar chart of the hours per day at each UV risk level, for each of the last 13 months"></div>
-            <p id="uv-status" class="status">Loading…</p>
-          </div>
-          <ul id="uv-legend" class="legend" aria-label="Legend"></ul>
-          <div class="card-foot">
-            <details class="note-view">
-              <summary>How to read this chart</summary>
-              <p id="uv-note" class="muted small"></p>
-            </details>
-            <details class="table-view">
-              <summary>Table view</summary>
-              <div class="table-scroll tall"><table id="uv-table"></table></div>
             </details>
           </div>
         </section>

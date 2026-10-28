@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cardinal, kmh, ageMinutes, formatAge, isStale, uvBand, heatBand, pressureTrend, lastStrikeText, rainNowText, stationTime } from "../js/conditions.js";
+import { cardinal, kmh, ageMinutes, formatAge, isStale, uvBand, heatBand, heatLevel, HEAT_LEVELS, pressureTrend, lastStrikeText, rainNowText, stationTime } from "../js/conditions.js";
 
 test("cardinal points", () => {
   assert.equal(cardinal(0), "N");
@@ -63,4 +63,12 @@ test("lightning and rain text", () => {
 test("station time is UTC-6", () => {
   assert.equal(stationTime("2026-09-21T20:05:00Z"), "14:05");
   assert.equal(stationTime("2026-09-21T05:59:00Z"), "23:59");
+});
+
+test("heat categories start at 78, 82, 85, 88 and 90 °F", () => {
+  assert.deepEqual(HEAT_LEVELS.map((l) => Math.round(l.from * 10) / 10), [25.6, 27.8, 29.4, 31.1, 32.2]);
+  assert.equal(heatLevel(25.5), null);
+  assert.equal(heatLevel(25.6), "caution");
+  assert.equal(heatLevel(29.5), "high");
+  assert.equal(heatLevel(32.3), "extreme");
 });

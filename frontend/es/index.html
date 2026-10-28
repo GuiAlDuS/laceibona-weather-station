@@ -20,8 +20,7 @@
         <li><a href="#now">Ahora</a></li>
         <li><a href="#forecast">Pronóstico</a></li>
         <li><a href="#week">Esta semana</a></li>
-        <li><a href="#typical-day">Un día típico</a></li>
-        <li><a href="#monthly">Mes a mes</a></li>
+        <li><a href="#past-year">El último año</a></li>
         <li><a href="#yearly">Año contra año</a></li>
         <li><a href="#extremes">Valores extremos</a></li>
       </ul>
@@ -241,8 +240,8 @@
       </section>
     </section>
 
-    <section class="group" id="typical-day" aria-labelledby="typical-day-heading">
-      <h2 id="typical-day-heading" class="group-title">Un día típico</h2>
+    <section class="group" id="past-year" aria-labelledby="past-year-heading">
+      <h2 id="past-year-heading" class="group-title">El último año</h2>
 
       <div class="row row-pair row-aligned">
         <section class="card" aria-labelledby="th-title">
@@ -332,10 +331,6 @@
           </div>
         </section>
       </div>
-    </section>
-
-    <section class="group" id="monthly" aria-labelledby="monthly-heading">
-      <h2 id="monthly-heading" class="group-title">Mes a mes</h2>
 
       <div class="row row-pair row-aligned">
         <section class="card" aria-labelledby="mo-title">
@@ -377,52 +372,6 @@
             <details class="table-view">
               <summary>Ver tabla</summary>
               <div class="table-scroll tall"><table id="bm-table"></table></div>
-            </details>
-          </div>
-        </section>
-      </div>
-
-      <div class="row row-pair row-aligned">
-        <section class="card" aria-labelledby="hw-title">
-          <h3 id="hw-title">Horas de calor por día, según nivel (WBGT)</h3>
-          <p class="muted">Cuántas horas de un día promedio alcanza el calor cada categoría de estrés por calor, mes a mes.</p>
-          <p id="hw-summary" class="summary" aria-live="polite"></p>
-
-          <div id="hw-frame" class="chart-frame">
-            <div id="hw-chart" role="img" aria-label="Gráfico de barras apiladas de las horas por día en cada categoría de calor, para cada uno de los últimos 13 meses"></div>
-            <p id="hw-status" class="status">Cargando…</p>
-          </div>
-          <ul id="hw-legend" class="legend" aria-label="Leyenda"></ul>
-          <div class="card-foot">
-            <details class="note-view">
-              <summary>Cómo leer este gráfico</summary>
-              <p id="hw-note" class="muted small"></p>
-            </details>
-            <details class="table-view">
-              <summary>Ver tabla</summary>
-              <div class="table-scroll tall"><table id="hw-table"></table></div>
-            </details>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="uv-title">
-          <h3 id="uv-title">Horas de sol por día, según nivel UV</h3>
-          <p class="muted">Cuántas horas de un día promedio alcanza el índice UV cada nivel de riesgo, mes a mes.</p>
-          <p id="uv-summary" class="summary" aria-live="polite"></p>
-
-          <div id="uv-frame" class="chart-frame">
-            <div id="uv-chart" role="img" aria-label="Gráfico de barras apiladas de las horas por día en cada nivel de riesgo UV, para cada uno de los últimos 13 meses"></div>
-            <p id="uv-status" class="status">Cargando…</p>
-          </div>
-          <ul id="uv-legend" class="legend" aria-label="Leyenda"></ul>
-          <div class="card-foot">
-            <details class="note-view">
-              <summary>Cómo leer este gráfico</summary>
-              <p id="uv-note" class="muted small"></p>
-            </details>
-            <details class="table-view">
-              <summary>Ver tabla</summary>
-              <div class="table-scroll tall"><table id="uv-table"></table></div>
             </details>
           </div>
         </section>

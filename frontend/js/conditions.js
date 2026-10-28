@@ -1,6 +1,5 @@
 // Formatting helpers for the current-conditions panel. Pure functions; no DOM.
 import { t, sectorLabel, TIME_LOCALE } from "./i18n.js";
-import { heatLevel } from "./wbgthours.js";
 
 export const STALE_AFTER_MIN = 15;
 
@@ -30,7 +29,18 @@ export function uvBand(uv) {
   return t("Extreme", "Extremo");
 }
 
-// US Army heat categories for a wet-bulb globe temperature in °C (wbgthours.js).
+const fToC = (f) => ((f - 32) * 5) / 9;
+// US Army heat categories 1 to 5 (TB MED 507, in °F as published: 78, 82, 85, 88, 90), lowest first.
+export const HEAT_LEVELS = [
+  { key: "caution", from: fToC(78) },
+  { key: "moderate", from: fToC(82) },
+  { key: "high", from: fToC(85) },
+  { key: "veryHigh", from: fToC(88) },
+  { key: "extreme", from: fToC(90) },
+];
+export const heatLevel = (wbgt) => HEAT_LEVELS.findLast((l) => wbgt >= l.from)?.key ?? null;
+
+// The heat category's name for a wet-bulb globe temperature in °C.
 export function heatBand(wbgt) {
   if (typeof wbgt !== "number") return null;
   return { caution: t("Caution", "Precaución"), moderate: t("Moderate", "Moderado"), high: t("High", "Alto"), veryHigh: t("Very high", "Muy alto"), extreme: t("Extreme", "Extremo") }[heatLevel(wbgt)] ?? t("Low", "Bajo");
