@@ -97,7 +97,21 @@ export function renderWindArrowsChart(hm) {
   );
   const labels = hm.months.map(tick);
   const shown = new Set(monthTicks(labels));
+  // A pale tile under every cell with data, 2px apart like the heatmaps beside it, so rows and columns can be followed.
+  // Halfway from the surface to the gridline gray: the lightest arrow and the gray ones still stand out on it.
+  const tile = mix(token("--surface"), token("--grid"), 0.5);
   const traces = [
+    {
+      type: "heatmap",
+      z: hm.cells.map((row) => row.map((c) => (c ? 1 : null))),
+      x: labels.map((_, i) => i),
+      y: hm.cells.map((_, h) => h),
+      colorscale: [[0, tile], [1, tile]],
+      showscale: false,
+      xgap: 2,
+      ygap: 2,
+      hoverinfo: "skip",
+    },
     { type: "scatter", mode: "markers", x: dots.x, y: dots.y, marker: { size: 4, color: token("--text-muted") }, hoverinfo: "skip" },
     // Invisible cell-sized targets carry the tooltip for every cell, arrow or not.
     { type: "scatter", mode: "markers", x: hover.x, y: hover.y, text: hover.text, marker: { size: 20, symbol: "square", color: "rgba(0,0,0,0)" }, hovertemplate: "%{text}<extra></extra>" },
