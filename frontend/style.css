@@ -189,7 +189,10 @@ a:hover { color: var(--text-primary); }
 /* Every Plotly chart needs an explicit height: with `responsive: true` and no height, a Plotly.react re-render
    (the 5-minute refresh) collapses the div to 0px while the absolutely positioned SVG stays 450px, so the
    x-axis labels spill onto the note below. 450px is the Plotly default these were already drawn at. */
-#th-chart, #wh-chart, #wd-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
+#th-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
+/* The wind arrows need room for 24 rows of 14px arrows, so the temperature heatmap beside it matches its height. */
+#wa-chart { width: 100%; height: 560px; }
+#wa-frame { min-height: 560px; }
 #lg-chart { width: 100%; height: 460px; }
 #lg-frame { min-height: 460px; }
 /* The hourly forecast is a glance, not a study: shorter than the observation charts. */
@@ -245,9 +248,11 @@ td:first-child { font-family: var(--font-sans); }
   .card { padding-top: 4px; }
   .card + .card { margin-top: 24px; padding-top: 24px; }
   .chart-frame, #fh-frame, #td-frame, #rw-frame, #rf-frame, #ds-frame { min-height: 340px; }
-  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #wh-chart, #wd-chart, #ds-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #fh-chart, #sy-chart { height: 340px; }
+  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #ds-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #fh-chart, #sy-chart { height: 340px; }
   #lg-chart { height: 460px; }
   #lg-frame { min-height: 460px; }
+  #wa-chart { height: 520px; }
+  #wa-frame { min-height: 520px; }
   #rf-chart { height: 640px; }
   #rf-frame { min-height: 640px; }
 }
@@ -319,18 +324,13 @@ td:first-child { font-family: var(--font-sans); }
   .row { display: grid; gap: 0 32px; }
   .row-live { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
   .row-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  /* Three cards of the same shape: each card's title, subtitle, summary, chart and toggles share row tracks
-     (subgrid), so the charts start at the same height even when one summary wraps to more lines. */
-  .row-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .row-three > .card { display: grid; grid-row: span 5; grid-template-rows: subgrid; align-content: start; }
   /* Cards whose first parts match (title, subtitle, summary, chart) share row tracks the same way, so paired
      charts start level; up to six parts, so a card with a legend and one without still line up. */
   .row-aligned > .card { display: grid; grid-row: span 6; grid-template-rows: subgrid; align-content: start; }
   /* A pair row holding a single card (e.g. before its partner chart is released) uses the full width. */
   .row-pair > .card:only-child { grid-column: 1 / -1; }
   #mo-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #sy-chart { height: 420px; }
-  .row-three #th-chart, .row-three #wh-chart, .row-three #wd-chart { height: 420px; }
-  .row-three .chart-frame { min-height: 420px; }
+  #th-chart { height: 560px; }
   .row-forecast { grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr); }
   /* The day table stretches to the hourly chart's height beside it, its rows sharing the extra space. */
   .row-forecast > .card:last-child { display: flex; flex-direction: column; }

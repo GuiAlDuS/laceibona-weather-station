@@ -10,8 +10,7 @@ export const colorscale = (colorToken) => [0, 0.25, 0.5, 0.75, 1].map((f, i) => 
 
 // The same ramp for dots drawn on the page itself: it starts further from the surface, so the lowest value still shows.
 export const dotscale = (colorToken) => [0, 0.5, 1].map((f, i) => [f, mix(token("--surface"), token(colorToken), [0.35, 0.68, 1][i])]);
-// Wind speed's hue, on the month-by-hour heatmap and the day-by-day dots: violet, since red is temperature and blue
-// is how often the wind blows from a direction.
+// Wind speed's hue, on the month-by-hour arrows and the day-by-day dots: violet, since red is temperature.
 export const WIND_SPEED_TOKEN = "--series-7";
 
 export const monthName = (key) => MONTHS[+key.slice(5, 7) - 1];

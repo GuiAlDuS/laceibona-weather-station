@@ -41,7 +41,7 @@ export function renderWindDailyChart(hours, first) {
       color: dots.map((h) => h.ws),
       cmin: CMIN,
       cmax,
-      colorscale: dotscale(WIND_SPEED_TOKEN), // same hue as the wind speed heatmap: the stronger the wind, the stronger the colour
+      colorscale: dotscale(WIND_SPEED_TOKEN), // same hue as the month-by-hour wind arrows: the stronger the wind, the stronger the colour
       colorbar: { title: { text: "km/h", font: { color: muted, size: 12 } }, thickness: 12, len: 0.9, outlinewidth: 0, tickfont: { color: muted, size: 12 }, tickvals: cticks, ticktext: cticks.map(String) },
     },
   };

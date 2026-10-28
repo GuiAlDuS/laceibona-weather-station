@@ -155,14 +155,16 @@ export function nowRing(x, y, color, { join = null, yaxis = "y", digits = 1, fra
   return { traces, label };
 }
 
-// entries: [{ label, color }]; shape "line" for line charts, "rect" for bars.
+// entries: [{ label, color, shape?, style? }]; shape "line" for line charts, "rect" for bars, "dot" for points (an
+// entry's own shape wins); style: extra CSS for the key, e.g. a line's thickness.
 export function fillLegend(ul, entries, shape) {
   ul.replaceChildren();
   for (const e of entries) {
     const li = document.createElement("li");
     const key = document.createElement("span");
-    key.className = `key ${shape}`;
+    key.className = `key ${e.shape ?? shape}`;
     key.style.background = e.color;
+    Object.assign(key.style, e.style);
     const text = document.createElement("span");
     text.textContent = e.label;
     li.append(key, text);

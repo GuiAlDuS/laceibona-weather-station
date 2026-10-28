@@ -244,7 +244,7 @@
     <section class="group" id="typical-day" aria-labelledby="typical-day-heading">
       <h2 id="typical-day-heading" class="group-title">Un día típico</h2>
 
-      <div class="row row-three">
+      <div class="row row-pair row-aligned">
         <section class="card" aria-labelledby="th-title">
           <h3 id="th-title">Temperatura por mes y hora</h3>
           <p class="muted">Temperatura media para cada hora del día, mes a mes, durante los últimos 13 meses.</p>
@@ -266,44 +266,24 @@
           </div>
         </section>
 
-        <section class="card" aria-labelledby="wh-title">
-          <h3 id="wh-title">Velocidad del viento por mes y hora</h3>
-          <p class="muted">Velocidad media del viento para cada hora del día, mes a mes, durante los últimos 13 meses.</p>
-          <p id="wh-summary" class="summary" aria-live="polite"></p>
+        <section class="card" aria-labelledby="wa-title">
+          <h3 id="wa-title">Viento por mes y hora</h3>
+          <p class="muted">La dirección y la velocidad habituales del viento para cada hora del día, mes a mes, durante los últimos 13 meses.</p>
+          <p id="wa-summary" class="summary" aria-live="polite"></p>
 
-          <div id="wh-frame" class="chart-frame">
-            <div id="wh-chart" role="img" aria-label="Mapa de calor de la velocidad media del viento por mes y hora del día"></div>
-            <p id="wh-status" class="status">Cargando…</p>
+          <div id="wa-frame" class="chart-frame">
+            <div id="wa-chart" role="img" aria-label="Cuadrícula de flechas por mes y hora del día, cada una apuntando hacia donde solía soplar el viento, más gruesa y oscura cuanto más rápido sopló"></div>
+            <p id="wa-status" class="status">Cargando…</p>
           </div>
+          <ul id="wa-legend" class="legend" aria-label="Leyenda"></ul>
           <div class="card-foot">
             <details class="note-view">
               <summary>Cómo leer este gráfico</summary>
-              <p id="wh-note" class="muted small"></p>
+              <p id="wa-note" class="muted small"></p>
             </details>
             <details class="table-view">
               <summary>Ver tabla</summary>
-              <div class="table-scroll tall"><table id="wh-table"></table></div>
-            </details>
-          </div>
-        </section>
-
-        <section class="card" aria-labelledby="wd-title">
-          <h3 id="wd-title">Dirección del viento por mes</h3>
-          <p class="muted">Con qué frecuencia sopla el viento desde cada dirección, mes a mes, durante los últimos 13 meses.</p>
-          <p id="wd-summary" class="summary" aria-live="polite"></p>
-
-          <div id="wd-frame" class="chart-frame">
-            <div id="wd-chart" role="img" aria-label="Mapa de calor de la proporción de horas en que el viento sopló desde cada dirección, por mes"></div>
-            <p id="wd-status" class="status">Cargando…</p>
-          </div>
-          <div class="card-foot">
-            <details class="note-view">
-              <summary>Cómo leer este gráfico</summary>
-              <p id="wd-note" class="muted small"></p>
-            </details>
-            <details class="table-view">
-              <summary>Ver tabla</summary>
-              <div class="table-scroll tall"><table id="wd-table"></table></div>
+              <div class="table-scroll tall"><table id="wa-table"></table></div>
             </details>
           </div>
         </section>

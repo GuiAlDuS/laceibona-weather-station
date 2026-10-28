@@ -21,8 +21,8 @@ import { renderForecast, renderForecastUnavailable, renderForecastHourlyChart, r
 import { getMonths, monthKeys, monthsSince } from "./obs-data.js";
 import { lastDays } from "./tempdaily.js";
 import { monthHourMeans } from "./heatmap.js";
-import { monthDirectionFrequency } from "./winddir.js";
-import { renderWindDirChart, renderWindDirText } from "./winddir-view.js";
+import { monthHourWind } from "./windarrows.js";
+import { renderWindArrowsChart, renderWindArrowsText } from "./windarrows-view.js";
 import { recentHours } from "./winddaily.js";
 import { renderWindDailyChart, renderWindDailyText } from "./winddaily-view.js";
 import { monthlyBoxes, yearlyBoxes } from "./tempbox.js";
@@ -32,9 +32,9 @@ import { monthlyWbgtHours } from "./wbgthours.js";
 import { WBGT_HOURS } from "./wbgthours-view.js";
 import { renderLevelHoursChart, renderLevelHoursText } from "./levelhours-view.js";
 import { renderTempBoxMonthly, renderTempBoxMonthlyText, renderTempBoxYearly, renderTempBoxYearlyText } from "./tempbox-view.js";
-import { WIND_SPEED_TOKEN, renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
+import { renderMonthHourChart, renderMonthHourText } from "./heatmap-view.js";
 import { renderTempDailyChart, renderTempDailyText } from "./tempdaily-view.js";
-import { windRose, sliceWindow, MS_TO_KMH } from "./windrose.js";
+import { windRose, sliceWindow } from "./windrose.js";
 import { renderWindRose } from "./windrose-view.js";
 import { recentStrikes } from "./lightning24h.js";
 import { renderLightningChart, renderLightningText } from "./lightning24h-view.js";
@@ -327,7 +327,6 @@ function drawRainFine() {
 
 // Charts built from the monthly `obs:` documents. Each is [id prefix, draw(docs)]; one failure does not stop the others.
 const TEMP_HEAT = { prefix: "th", unit: "°C", decimals: 1, colorToken: "--hot", high: t("Warmest", "Más cálido"), low: t("Coolest", "Más fresco"), what: t("Average temperature", "Temperatura media") };
-const WIND_HEAT = { prefix: "wh", unit: "km/h", decimals: 1, colorToken: WIND_SPEED_TOKEN, high: t("Windiest", "Más ventoso"), low: t("Calmest", "Más calmado"), what: t("Average wind speed", "Velocidad media del viento") };
 const obsState = {};
 const last13 = (docs) => docs.filter((d) => d.month >= monthKeys(13)[0]);
 const OBS_CHARTS = [
@@ -346,19 +345,12 @@ const OBS_CHARTS = [
     renderMonthHourText(TEMP_HEAT, obsState.th);
     return renderMonthHourChart(TEMP_HEAT, obsState.th);
   }],
-  ["wh", (docs) => {
-    obsState.wh = monthHourMeans(last13(docs), "ws", MS_TO_KMH);
-    if (obsState.wh.months.length === 0) throw NO_USABLE_DATA();
+  ["wa", (docs) => {
+    obsState.wa = monthHourWind(last13(docs));
+    if (obsState.wa.months.length === 0) throw NO_USABLE_DATA();
   }, () => {
-    renderMonthHourText(WIND_HEAT, obsState.wh);
-    return renderMonthHourChart(WIND_HEAT, obsState.wh);
-  }],
-  ["wd", (docs) => {
-    obsState.wd = monthDirectionFrequency(last13(docs));
-    if (obsState.wd.months.length === 0) throw NO_USABLE_DATA();
-  }, () => {
-    renderWindDirText(obsState.wd);
-    return renderWindDirChart(obsState.wd);
+    renderWindArrowsText(obsState.wa);
+    return renderWindArrowsChart(obsState.wa);
   }],
   ["ds", (docs) => {
     // A day more than the window, then cut to it, so a feed that is a day behind still fills the same week.
