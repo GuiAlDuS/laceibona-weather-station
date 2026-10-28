@@ -327,6 +327,9 @@ function drawRainFine() {
 
 // Charts built from the monthly `obs:` documents. Each is [id prefix, draw(docs)]; one failure does not stop the others.
 const TEMP_HEAT = { prefix: "th", unit: "°C", decimals: 1, colorToken: "--hot", high: t("Warmest", "Más cálido"), low: t("Coolest", "Más fresco"), what: t("Average temperature", "Temperatura media") };
+// Humidity in green and rain in blue, as on the 7-day charts.
+const RH_HEAT = { prefix: "hu", unit: "%", decimals: 0, colorToken: "--series-6", high: t("Most humid", "Más húmedo"), low: t("Driest", "Más seco"), what: t("Average relative humidity", "Humedad relativa media") };
+const RAIN_HEAT = { prefix: "ra", unit: "mm", decimals: 2, colorToken: "--series-1", curve: 2, zmin: 0, high: t("Wettest", "Más lluvioso"), what: t("Rain (dry days counted as 0 mm)", "Lluvia (los días secos cuentan como 0 mm)") };
 const obsState = {};
 const last13 = (docs) => docs.filter((d) => d.month >= monthKeys(13)[0]);
 const OBS_CHARTS = [
@@ -344,6 +347,20 @@ const OBS_CHARTS = [
   }, () => {
     renderMonthHourText(TEMP_HEAT, obsState.th);
     return renderMonthHourChart(TEMP_HEAT, obsState.th);
+  }],
+  ["hu", (docs) => {
+    obsState.hu = monthHourMeans(last13(docs), "rh");
+    if (obsState.hu.months.length === 0) throw NO_USABLE_DATA();
+  }, () => {
+    renderMonthHourText(RH_HEAT, obsState.hu);
+    return renderMonthHourChart(RH_HEAT, obsState.hu);
+  }],
+  ["ra", (docs) => {
+    obsState.ra = monthHourMeans(last13(docs), "rain");
+    if (obsState.ra.months.length === 0) throw NO_USABLE_DATA();
+  }, () => {
+    renderMonthHourText(RAIN_HEAT, obsState.ra);
+    return renderMonthHourChart(RAIN_HEAT, obsState.ra);
   }],
   ["wa", (docs) => {
     obsState.wa = monthHourWind(last13(docs));

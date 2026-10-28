@@ -189,8 +189,8 @@ a:hover { color: var(--text-primary); }
 /* Every Plotly chart needs an explicit height: with `responsive: true` and no height, a Plotly.react re-render
    (the 5-minute refresh) collapses the div to 0px while the absolutely positioned SVG stays 450px, so the
    x-axis labels spill onto the note below. 450px is the Plotly default these were already drawn at. */
-#th-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
-/* The wind arrows need room for 24 rows of 14px arrows, so the temperature heatmap beside it matches its height. */
+#th-chart, #hu-chart, #ra-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #sy-chart { width: 100%; height: 450px; }
+/* The wind arrows need room for 24 rows of 14px arrows; on wide screens the rain heatmap beside them matches. */
 #wa-chart { width: 100%; height: 560px; }
 #wa-frame { min-height: 560px; }
 #lg-chart { width: 100%; height: 460px; }
@@ -248,7 +248,7 @@ td:first-child { font-family: var(--font-sans); }
   .card { padding-top: 4px; }
   .card + .card { margin-top: 24px; padding-top: 24px; }
   .chart-frame, #fh-frame, #td-frame, #rw-frame, #rf-frame, #ds-frame { min-height: 340px; }
-  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #ds-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #fh-chart, #sy-chart { height: 340px; }
+  #wb-chart, #mo-chart, #rn-chart, #lt-chart, #rw-chart, #td-chart, #th-chart, #hu-chart, #ra-chart, #ds-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #fh-chart, #sy-chart { height: 340px; }
   #lg-chart { height: 460px; }
   #lg-frame { min-height: 460px; }
   #wa-chart { height: 520px; }
@@ -330,7 +330,8 @@ td:first-child { font-family: var(--font-sans); }
   /* A pair row holding a single card (e.g. before its partner chart is released) uses the full width. */
   .row-pair > .card:only-child { grid-column: 1 / -1; }
   #mo-chart, #bm-chart, #uv-chart, #hw-chart, #by-chart, #sy-chart { height: 420px; }
-  #th-chart { height: 560px; }
+  #ra-chart { height: 560px; }
+  #ra-frame { min-height: 560px; }
   .row-forecast { grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr); }
   /* The day table stretches to the hourly chart's height beside it, its rows sharing the extra space. */
   .row-forecast > .card:last-child { display: flex; flex-direction: column; }

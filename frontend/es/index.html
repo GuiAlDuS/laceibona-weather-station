@@ -266,6 +266,50 @@
           </div>
         </section>
 
+        <section class="card" aria-labelledby="hu-title">
+          <h3 id="hu-title">Humedad por mes y hora</h3>
+          <p class="muted">Humedad relativa media para cada hora del día, mes a mes, durante los últimos 13 meses.</p>
+          <p id="hu-summary" class="summary" aria-live="polite"></p>
+
+          <div id="hu-frame" class="chart-frame">
+            <div id="hu-chart" role="img" aria-label="Mapa de calor de la humedad relativa media por mes y hora del día"></div>
+            <p id="hu-status" class="status">Cargando…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>Cómo leer este gráfico</summary>
+              <p id="hu-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Ver tabla</summary>
+              <div class="table-scroll tall"><table id="hu-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
+
+      <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="ra-title">
+          <h3 id="ra-title">Lluvia por mes y hora</h3>
+          <p class="muted">Lluvia media en cada hora del día, mes a mes, durante los últimos 13 meses.</p>
+          <p id="ra-summary" class="summary" aria-live="polite"></p>
+
+          <div id="ra-frame" class="chart-frame">
+            <div id="ra-chart" role="img" aria-label="Mapa de calor de la lluvia media por mes y hora del día"></div>
+            <p id="ra-status" class="status">Cargando…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>Cómo leer este gráfico</summary>
+              <p id="ra-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Ver tabla</summary>
+              <div class="table-scroll tall"><table id="ra-table"></table></div>
+            </details>
+          </div>
+        </section>
+
         <section class="card" aria-labelledby="wa-title">
           <h3 id="wa-title">Viento por mes y hora</h3>
           <p class="muted">La dirección y la velocidad habituales del viento para cada hora del día, mes a mes, durante los últimos 13 meses.</p>

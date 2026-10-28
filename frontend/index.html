@@ -266,6 +266,50 @@
           </div>
         </section>
 
+        <section class="card" aria-labelledby="hu-title">
+          <h3 id="hu-title">Humidity by month and hour</h3>
+          <p class="muted">Average relative humidity for each hour of the day, month by month, for the last 13 months.</p>
+          <p id="hu-summary" class="summary" aria-live="polite"></p>
+
+          <div id="hu-frame" class="chart-frame">
+            <div id="hu-chart" role="img" aria-label="Heatmap of average relative humidity by month and hour of day"></div>
+            <p id="hu-status" class="status">Loading…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="hu-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll tall"><table id="hu-table"></table></div>
+            </details>
+          </div>
+        </section>
+      </div>
+
+      <div class="row row-pair row-aligned">
+        <section class="card" aria-labelledby="ra-title">
+          <h3 id="ra-title">Rain by month and hour</h3>
+          <p class="muted">Average rain in each hour of the day, month by month, for the last 13 months.</p>
+          <p id="ra-summary" class="summary" aria-live="polite"></p>
+
+          <div id="ra-frame" class="chart-frame">
+            <div id="ra-chart" role="img" aria-label="Heatmap of average rain by month and hour of day"></div>
+            <p id="ra-status" class="status">Loading…</p>
+          </div>
+          <div class="card-foot">
+            <details class="note-view">
+              <summary>How to read this chart</summary>
+              <p id="ra-note" class="muted small"></p>
+            </details>
+            <details class="table-view">
+              <summary>Table view</summary>
+              <div class="table-scroll tall"><table id="ra-table"></table></div>
+            </details>
+          </div>
+        </section>
+
         <section class="card" aria-labelledby="wa-title">
           <h3 id="wa-title">Wind by month and hour</h3>
           <p class="muted">The usual wind direction and speed for each hour of the day, month by month, for the last 13 months.</p>
