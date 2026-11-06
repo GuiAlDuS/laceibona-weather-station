@@ -7,7 +7,8 @@ const PARTIAL_BELOW = 0.9; // a month with less of its hours than this is marked
 export const MIN_WINDY_HOURS = 5; // fewer hours with wind than this and the cell gets no arrow
 // The prevailing direction is the most frequent of 8 compass sectors (the meteorological definition, rather than the
 // vector mean, which points between two alternating winds such as the trade wind and the sea breeze, at a direction
-// that rarely blows). Below this share of the windy hours no direction clearly prevails and the arrow is gray.
+// that rarely blows). Below this share of the windy hours, or when two sectors tie, no direction clearly prevails and
+// the chart draws a ring (variable wind) instead of an arrow.
 export const SECTORS_8 = 8;
 export const CLEAR_FROM = 0.4;
 // Upper bounds (km/h) of the speed classes, lowest first; the last class is open-ended.
@@ -21,18 +22,20 @@ export const sectorName = (deg) => sectorLabel(Math.round(deg / 22.5) % 16);
 
 const sectorOf = (deg) => Math.round(deg / (360 / SECTORS_8)) % SECTORS_8;
 
-// counts: hours per 8-sector. Returns the most frequent sector as { dir (degrees, from), share (0-1) }; a tie goes to
-// the sector first clockwise from north.
+// counts: hours per 8-sector. Returns the most frequent sector as { dir (degrees, from), share (0-1), clear (it had at
+// least CLEAR_FROM of the hours and no other sector tied it) }; a tie goes to the sector first clockwise from north.
 function prevailing(counts) {
   const total = counts.reduce((a, b) => a + b, 0);
-  const best = counts.indexOf(Math.max(...counts));
-  return { dir: best * (360 / SECTORS_8), share: counts[best] / total };
+  const top = Math.max(...counts);
+  const best = counts.indexOf(top);
+  const share = counts[best] / total;
+  return { dir: best * (360 / SECTORS_8), share, clear: share >= CLEAR_FROM && counts.filter((n) => n === top).length === 1 };
 }
 
 // docs: obs:YYYY-MM documents. Returns { months: [{ key, partial }], cells } where cells[hour][monthIndex] is null
 // with no data, else { speed (km/h, the mean over every hour, calm ones too), calm (share of calm hours, 0-1),
 // windy (hours with wind), counts (windy hours per 8-sector), dir and share (the prevailing sector and its share of
-// the windy hours; null under MIN_WINDY_HOURS) }.
+// the windy hours; null under MIN_WINDY_HOURS), clear (see prevailing; false under MIN_WINDY_HOURS) }.
 export function monthHourWind(docs) {
   const sorted = [...docs].sort((a, b) => a.month.localeCompare(b.month));
   const months = [];
@@ -56,7 +59,7 @@ export function monthHourWind(docs) {
         continue;
       }
       const windy = counts[h].reduce((a, b) => a + b, 0);
-      const top = windy >= MIN_WINDY_HOURS ? prevailing(counts[h]) : { dir: null, share: null };
+      const top = windy >= MIN_WINDY_HOURS ? prevailing(counts[h]) : { dir: null, share: null, clear: false };
       cells[h].push({ speed: (s.reduce((a, b) => a + b, 0) / s.length) * MS_TO_KMH, calm: s.filter((v) => v < CALM_BELOW).length / s.length, windy, counts: counts[h], ...top });
     }
   }

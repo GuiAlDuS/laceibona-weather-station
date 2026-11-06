@@ -209,6 +209,7 @@ a:hover { color: var(--text-primary); }
 .legend .key { width: 18px; height: 2px; border-radius: 1px; }
 .legend .key.rect { width: 10px; height: 10px; border-radius: 2px; }
 .legend .key.dot { width: 10px; height: 10px; border-radius: 50%; }
+.legend .key.ring { width: 10px; height: 10px; border-radius: 50%; border: 2.5px solid; box-sizing: border-box; }
 
 .table-view { margin-top: 12px; }
 .table-view summary, .note-view summary { cursor: pointer; color: var(--text-secondary); font-size: 0.875rem; }
