@@ -64,16 +64,14 @@ test("windiest cell, and the prevailing direction over given hours of every mont
   assert.equal(directionDuring(hm, [0, 1, 2]), 45); // a 6-6 tie between NE and E goes to NE, first from north
 });
 
-test("a direction is clear only with at least 40% of the windy hours and no tie", () => {
-  // 4 N, 4 SW, 2 NE: N wins the tie-break but is not clear
+test("only a tie for most frequent marks a cell tied, however small the top share", () => {
+  // 4 N, 4 SW, 2 NE: N wins the tie-break but is tied
   const tie = monthHourWind([doc("2026-03", 10, () => 2, (h, d) => (d < 4 ? 0 : d < 8 ? 225 : 45))]).cells[10][0];
   assert.equal(tie.dir, 0);
-  assert.equal(tie.clear, false);
-  // 3 N, 2 NE, 2 E, 2 SW, 1 W: 30%, under the threshold
+  assert.equal(tie.tied, true);
+  // 3 N, 2 NE, 2 E, 2 SW, 1 W: N has only 30% but is the single most frequent
   const low = monthHourWind([doc("2026-03", 10, () => 2, (h, d) => [0, 0, 0, 45, 45, 90, 90, 225, 225, 270][d])]).cells[10][0];
-  assert.equal(low.clear, false);
-  // 4 NE, 3 SW, 3 W: 40%, clear
-  const ok = monthHourWind([doc("2026-03", 10, () => 2, (h, d) => (d < 4 ? 45 : d < 7 ? 225 : 270))]).cells[10][0];
-  assert.equal(ok.clear, true);
-  assert.equal(monthHourWind([doc("2026-03", 2, () => 2, () => 0)]).cells[0][0].clear, false); // too few windy hours
+  assert.equal(low.dir, 0);
+  assert.equal(low.tied, false);
+  assert.equal(monthHourWind([doc("2026-03", 2, () => 2, () => 0)]).cells[0][0].tied, false); // too few windy hours
 });

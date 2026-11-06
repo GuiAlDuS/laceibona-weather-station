@@ -2,12 +2,12 @@ import { $, token, chartFont, hoverLabel, monthTicks, fillLegend } from "./commo
 import { t } from "./i18n.js";
 import { mix, monthName, longMonth, tick, WIND_SPEED_TOKEN } from "./heatmap-view.js";
 import { CALM_BELOW_KMH_TEXT } from "./windrose.js";
-import { SPEED_CLASSES, MIN_WINDY_HOURS, CLEAR_FROM, SECTORS_8, speedClass, sectorName, windiest, directionDuring } from "./windarrows.js";
+import { SPEED_CLASSES, MIN_WINDY_HOURS, SECTORS_8, speedClass, sectorName, windiest, directionDuring } from "./windarrows.js";
 
 // One arrow per month x hour cell, pointing downwind from the prevailing direction (as on the neighbours map). Every
-// arrow has the same length; its thickness and colour both give the average speed class. Where no direction clearly
-// prevailed the cell gets a gray ring instead (variable wind, "VRB" in weather reports; thickness still the speed):
-// an arrow would point to a direction that blew no more often than another. Gray sits outside the violet speed scale,
+// arrow has the same length; its thickness and colour both give the average speed class. Where two directions tied for
+// most frequent the cell gets a gray ring instead (thickness still the speed): an arrow would point to a direction
+// that blew no more often than another. Gray sits outside the violet speed scale,
 // so it never reads as a speed. A dot means too few hours with wind to give a direction.
 const ARROW_PX = 14; // fits the smallest cell: 13 months on a phone, 24 hours in the chart's height
 const HEAD_PX = 4;
@@ -28,7 +28,7 @@ const directionShares = (c) =>
     .map((d) => `${d.name} ${pct(d.share)}`)
     .join(", ");
 
-// "N/SW": the two most frequent directions of a variable cell, for the table.
+// "N/SW": the two most frequent directions of a tied cell, for the table.
 const topTwo = (c) =>
   c.counts
     .map((n, i) => ({ n, i }))
@@ -68,7 +68,7 @@ const describe = (c, m, h) => {
   const dir =
     c.dir === null
       ? t(`fewer than ${MIN_WINDY_HOURS} hours with wind`, `menos de ${MIN_WINDY_HOURS} horas con viento`)
-      : (c.clear ? t(`mostly from ${sectorName(c.dir)}`, `sobre todo desde ${sectorName(c.dir)}`) : t("variable: no clear prevailing direction", "variable: sin dirección predominante clara")) +
+      : (c.tied ? t(`tied: ${topTwo(c).replace("/", " and ")}`, `empate: ${topTwo(c).replace("/", " y ")}`) : t(`most often from ${sectorName(c.dir)}`, `más a menudo desde ${sectorName(c.dir)}`)) +
         `<br>${t("windy hours from", "horas con viento desde")} ${directionShares(c)}`;
   return `${longMonth(m)}, ${hourLabel(h)}<br>${dir}<br>${speed}`;
 };
@@ -94,7 +94,7 @@ export function renderWindArrowsChart(hm) {
       const k = cls[speedClass(c.speed)];
       const at = { xref: "x", yref: "y", xsizemode: "pixel", ysizemode: "pixel", xanchor: m, yanchor: h, layer: "above" };
       shapes.push(
-        c.clear
+        !c.tied
           ? { ...at, type: "path", path: arrowPath(c.dir), line: { color: k.color, width: k.width } }
           : { ...at, type: "circle", x0: -RING_PX, x1: RING_PX, y0: -RING_PX, y1: RING_PX, line: { color: token("--text-muted"), width: k.width } },
       );
@@ -164,7 +164,7 @@ export function renderWindArrowsText(hm) {
     $("wa-legend"),
     [
       ...cls.map((k) => ({ label: k.label, color: k.color, style: { height: `${k.width}px` } })),
-      { label: t("variable, no clear direction", "variable, sin dirección clara"), color: "transparent", shape: "ring", style: { borderColor: token("--text-muted") } },
+      { label: t("two directions tied", "dos direcciones empatadas"), color: "transparent", shape: "ring", style: { borderColor: token("--text-muted") } },
       { label: t("too few hours with wind", "muy pocas horas con viento"), color: token("--text-muted"), shape: "dot", style: { width: "4px", height: "4px" } },
     ],
     "line",
@@ -183,8 +183,8 @@ export function renderWindArrowsText(hm) {
   const partial = hm.months.some((m) => m.partial);
   $("wa-note").textContent =
     t(
-      `Each arrow shows the prevailing wind at that hour of the local day (UTC-6) through the month: it starts from the direction the wind came from most often (of 8 compass points, leaving out calm hours under ${CALM_BELOW_KMH_TEXT}) and points the way it blew. Thickness and colour give the average speed, calm hours included. A gray ring means the wind was variable: no direction clearly prevailed (the most frequent one had under ${pct(CLEAR_FROM)} of the windy hours, or two tied), as when trade-wind days and sea-breeze days take turns; its thickness still gives the speed. A dot means fewer than ${MIN_WINDY_HOURS} hours with wind that month. Hover over or tap a cell for the share of windy hours from each direction, the speed and the share of calm hours. In the table, a variable cell lists its two most frequent directions with a *.`,
-      `Cada flecha muestra el viento predominante a esa hora del día local (UTC-6) durante el mes: parte de la dirección desde la que el viento sopló más a menudo (de 8 puntos cardinales, sin las horas de calma bajo ${CALM_BELOW_KMH_TEXT}) y apunta hacia donde sopló. El grosor y el color dan la velocidad media, con las horas de calma. Un anillo gris indica viento variable: ninguna dirección predominó claramente (la más frecuente tuvo menos del ${pct(CLEAR_FROM)} de las horas con viento, o dos empataron), como cuando se alternan días de alisios y días de brisa marina; su grosor sigue dando la velocidad. Un punto indica menos de ${MIN_WINDY_HOURS} horas con viento ese mes. Pase el cursor o toque una celda para ver la proporción de horas con viento desde cada dirección, la velocidad y la proporción de horas de calma. En la tabla, una celda variable muestra sus dos direcciones más frecuentes con un *.`,
+      `Each arrow shows the prevailing wind at that hour of the local day (UTC-6) through the month: it starts from the direction the wind came from most often (of 8 compass points, leaving out calm hours under ${CALM_BELOW_KMH_TEXT}) and points the way it blew. Thickness and colour give the average speed, calm hours included. The arrow can stand for well under half the windy hours when trade-wind days and sea-breeze days take turns. A gray ring means two directions tied for most frequent; its thickness still gives the speed. A dot means fewer than ${MIN_WINDY_HOURS} hours with wind that month. Hover over or tap a cell for the share of windy hours from each direction, the speed and the share of calm hours. In the table, a tied cell lists both directions with a *.`,
+      `Cada flecha muestra el viento predominante a esa hora del día local (UTC-6) durante el mes: parte de la dirección desde la que el viento sopló más a menudo (de 8 puntos cardinales, sin las horas de calma bajo ${CALM_BELOW_KMH_TEXT}) y apunta hacia donde sopló. El grosor y el color dan la velocidad media, con las horas de calma. La flecha puede representar bastante menos de la mitad de las horas con viento cuando se alternan días de alisios y días de brisa marina. Un anillo gris indica que dos direcciones empataron como las más frecuentes; su grosor sigue dando la velocidad. Un punto indica menos de ${MIN_WINDY_HOURS} horas con viento ese mes. Pase el cursor o toque una celda para ver la proporción de horas con viento desde cada dirección, la velocidad y la proporción de horas de calma. En la tabla, una celda empatada muestra ambas direcciones con un *.`,
     ) + (partial ? t(" † marks a month with missing data (or the month in progress).", " † indica un mes con datos faltantes (o el mes en curso).") : "");
 
   const table = $("wa-table");
@@ -200,7 +200,7 @@ export function renderWindArrowsText(hm) {
     const r = body.insertRow();
     r.insertCell().textContent = hourLabel(h);
     for (const c of row) {
-      const dir = c?.dir == null ? "–" : c.clear ? sectorName(c.dir) : `${topTwo(c)}*`;
+      const dir = c?.dir == null ? "–" : c.tied ? `${topTwo(c)}*` : sectorName(c.dir);
       r.insertCell().textContent = c ? `${dir} ${n1(c.speed)}` : "";
     }
   });
